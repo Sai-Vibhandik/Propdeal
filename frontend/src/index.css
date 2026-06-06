@@ -1,0 +1,336 @@
+@import "tailwindcss";
+
+/* Custom CSS Variables */
+:root {
+  /* Colors */
+  --primary: #1e40af;
+  --primary-dark: #1e3a8a;
+  --secondary: #d4af37;
+  --accent: #059669;
+  --background: #fafafa;
+  --surface: #ffffff;
+  --text-primary: #1e293b;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+
+  /* Typography */
+  --font-heading: 'Inter', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-accent: 'Playfair Display', serif;
+}
+
+/* Base Styles */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  background-color: var(--background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+
+.font-accent {
+  font-family: var(--font-accent);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Utility Classes */
+.text-gradient {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.bg-gradient-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+}
+
+.bg-gradient-gold {
+  background: linear-gradient(135deg, var(--secondary) 0%, #b8860b 100%);
+}
+
+/* Animation Classes */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Focus States */
+.focus-ring {
+  outline: none;
+}
+.focus-ring:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Button Base */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+}
+.btn:focus {
+  outline: none;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  background-color: #1e40af;
+  color: white;
+  transition: all 0.2s;
+}
+.btn-primary:hover {
+  background-color: #1e3a8a;
+}
+.btn-primary:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  background-color: #f59e0b;
+  color: white;
+  transition: all 0.2s;
+}
+.btn-secondary:hover {
+  background-color: #d97706;
+}
+.btn-secondary:focus {
+  outline: 2px solid #f59e0b;
+  outline-offset: 2px;
+}
+
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  border: 2px solid #1e40af;
+  color: #1e40af;
+  background: transparent;
+  transition: all 0.2s;
+}
+.btn-outline:hover {
+  background-color: #1e40af;
+  color: white;
+}
+.btn-outline:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Card Styles */
+.card {
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.card-hover {
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  transition: all 0.3s;
+}
+.card-hover:hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  transform: translateY(-0.25rem);
+}
+
+/* Section Styles */
+.section {
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+}
+
+@media (min-width: 768px) {
+  .section {
+    padding-top: 6rem;
+    padding-bottom: 6rem;
+  }
+}
+
+.container {
+  max-width: 80rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* Form Styles */
+.form-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+}
+.form-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.form-error {
+  font-size: 0.875rem;
+  color: #dc2626;
+  margin-top: 0.25rem;
+}
+
+/* Loading Spinner */
+.spinner {
+  animation: spin 1s linear infinite;
+  border-radius: 9999px;
+  border-width: 4px;
+  border-color: #e5e7eb;
+  border-top-color: #1e40af;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Hide scrollbar for horizontal scroll */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Line clamp */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
