@@ -1,11 +1,37 @@
-// Property Types
+// Property Types (matching Property model schema)
 export const PROPERTY_TYPES = [
-  { value: 'apartment', label: 'Apartment' },
-  { value: 'villa', label: 'Villa' },
-  { value: 'plot', label: 'Plot' },
-  { value: 'row-house', label: 'Row House' },
-  { value: 'commercial', label: 'Commercial' },
-  { value: 'penthouse', label: 'Penthouse' },
+  // Residential
+  { value: 'apartment', label: 'Apartment', category: 'residential' },
+  { value: 'studio', label: 'Studio', category: 'residential' },
+  { value: 'duplex', label: 'Duplex', category: 'residential' },
+  { value: 'penthouse', label: 'Penthouse', category: 'residential' },
+  { value: 'villa', label: 'Villa', category: 'residential' },
+  { value: 'row-house', label: 'Row House', category: 'residential' },
+  { value: 'builder-floor', label: 'Builder Floor', category: 'residential' },
+  { value: 'bungalow', label: 'Bungalow', category: 'residential' },
+  { value: 'farm-house', label: 'Farm House', category: 'residential' },
+  // Land/Plots
+  { value: 'residential-plot', label: 'Residential Plot', category: 'land' },
+  { value: 'commercial-plot', label: 'Commercial Plot', category: 'land' },
+  { value: 'agricultural-land', label: 'Agricultural Land', category: 'land' },
+  { value: 'plot', label: 'Plot', category: 'land' }, // Legacy
+  // Commercial
+  { value: 'shop', label: 'Shop', category: 'commercial' },
+  { value: 'office', label: 'Office', category: 'commercial' },
+  { value: 'showroom', label: 'Showroom', category: 'commercial' },
+  { value: 'warehouse', label: 'Warehouse', category: 'commercial' },
+  { value: 'commercial', label: 'Commercial', category: 'commercial' }, // Legacy
+  // Industrial
+  { value: 'industrial-shed', label: 'Industrial Shed', category: 'industrial' },
+  { value: 'factory', label: 'Factory', category: 'industrial' },
+];
+
+// Property Categories (for grouping in filters)
+export const PROPERTY_TYPE_GROUPS = [
+  { label: 'Residential', types: ['apartment', 'studio', 'duplex', 'penthouse', 'villa', 'row-house', 'builder-floor', 'bungalow', 'farm-house'] },
+  { label: 'Land/Plots', types: ['residential-plot', 'commercial-plot', 'agricultural-land', 'plot'] },
+  { label: 'Commercial', types: ['shop', 'office', 'showroom', 'warehouse', 'commercial'] },
+  { label: 'Industrial', types: ['industrial-shed', 'factory'] },
 ];
 
 // Property Categories
@@ -45,6 +71,7 @@ export const LEAD_SOURCES = [
   { value: 'cta-brochure', label: 'Download Brochure CTA' },
   { value: 'cta-callback', label: 'Request Callback CTA' },
   { value: 'contact-page', label: 'Contact Page' },
+  { value: 'contact-section', label: 'Contact Section' },
 ];
 
 // Property Statuses
@@ -127,6 +154,7 @@ export const DEFAULT_THEME = {
 
 export default {
   PROPERTY_TYPES,
+  PROPERTY_TYPE_GROUPS,
   PROPERTY_CATEGORIES,
   CONFIGURATIONS,
   PRICE_UNITS,

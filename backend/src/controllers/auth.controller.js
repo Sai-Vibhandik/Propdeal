@@ -131,12 +131,23 @@ export const register = async (req, res) => {
 // @access  Private
 export const updateProfile = async (req, res) => {
   try {
-    const { name, avatar } = req.body;
+    const { name, email, phone, avatar } = req.body;
+
+    // Check if email is being changed and if it's already taken
+    if (email) {
+      const existingUser = await User.findOne({ email, _id: { $ne: req.user._id } });
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email is already in use by another account',
+        });
+      }
+    }
 
     const user = await User.findByIdAndUpdate(
       req.user._id,
-      { name, avatar },
-      { new: true, runValidators: true }
+      { name, email, phone, avatar },
+      { returnDocument: 'after', runValidators: true }
     );
 
     res.json({

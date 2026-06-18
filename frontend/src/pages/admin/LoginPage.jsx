@@ -50,9 +50,16 @@ const LoginPage = () => {
 
     setLoading(true);
     try {
-      await login(formData);
+      const response = await login(formData);
       toast.success('Login successful!');
-      navigate('/admin');
+
+      // Redirect based on user role
+      const userRole = response?.data?.user?.role;
+      if (userRole === 'telecaller') {
+        navigate('/telecaller');
+      } else {
+        navigate('/admin');
+      }
     } catch (error) {
       const message = error.response?.data?.message || 'Login failed. Please try again.';
       toast.error(message);

@@ -7,6 +7,10 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
+    "seed": "node src/scripts/seedAdmin.js",
+    "seed:telecaller": "node src/scripts/seedTelecaller.js",
+    "seed:leads": "node src/scripts/seedLeads.js",
+    "seed:content": "node src/scripts/seedSiteContent.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": ["real-estate", "property", "landing-page", "ai", "ollama"],

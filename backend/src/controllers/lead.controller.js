@@ -1,4 +1,4 @@
-import { Lead } from '../models/index.js';
+import { Lead, Property } from '../models/index.js';
 
 // @desc    Submit a lead (public)
 // @route   POST /api/leads
@@ -11,6 +11,26 @@ export const submitLead = async (req, res) => {
     leadData.utmSource = req.query.utm_source;
     leadData.utmMedium = req.query.utm_medium;
     leadData.utmCampaign = req.query.utm_campaign;
+
+    // Check if property has telecaller assignment with lead distribution enabled
+    if (leadData.propertyId) {
+      const property = await Property.findById(leadData.propertyId);
+
+      if (property && property.distributeLeads && property.assignedTelecallers?.length > 0) {
+        // Round-robin assignment
+        const telecallers = property.assignedTelecallers;
+        const currentIndex = property.lastAssignedIndex || 0;
+        const nextIndex = (currentIndex + 1) % telecallers.length;
+
+        // Assign to next telecaller in round-robin
+        leadData.assignedTo = telecallers[currentIndex];
+
+        // Update the last assigned index for next lead
+        await Property.findByIdAndUpdate(leadData.propertyId, {
+          lastAssignedIndex: nextIndex
+        });
+      }
+    }
 
     const lead = await Lead.create(leadData);
 
@@ -38,6 +58,7 @@ export const getLeads = async (req, res) => {
       limit = 20,
       status,
       propertyId,
+      source,
       search,
       sort = '-createdAt',
     } = req.query;
@@ -46,6 +67,7 @@ export const getLeads = async (req, res) => {
 
     if (status) query.status = status;
     if (propertyId) query.propertyId = propertyId;
+    if (source) query.source = source;
     if (search) {
       query.$or = [
         { name: new RegExp(search, 'i') },
@@ -59,7 +81,7 @@ export const getLeads = async (req, res) => {
       .skip((page - 1) * limit)
       .limit(Number(limit))
       .populate('propertyId', 'name slug')
-      .populate('assignedTo', 'name');
+      .populate('assignedTo', 'name phone');
 
     const total = await Lead.countDocuments(query);
 
@@ -89,7 +111,7 @@ export const getLead = async (req, res) => {
   try {
     const lead = await Lead.findById(req.params.id)
       .populate('propertyId', 'name slug')
-      .populate('assignedTo', 'name');
+      .populate('assignedTo', 'name phone');
 
     if (!lead) {
       return res.status(404).json({
@@ -121,7 +143,7 @@ export const updateLeadStatus = async (req, res) => {
     const lead = await Lead.findByIdAndUpdate(
       req.params.id,
       { status },
-      { new: true }
+      { returnDocument: 'after' }
     ).populate('propertyId', 'name slug');
 
     if (!lead) {
@@ -191,8 +213,8 @@ export const assignLead = async (req, res) => {
     const lead = await Lead.findByIdAndUpdate(
       req.params.id,
       { assignedTo: userId },
-      { new: true }
-    ).populate('assignedTo', 'name');
+      { returnDocument: 'after' }
+    ).populate('assignedTo', 'name phone');
 
     if (!lead) {
       return res.status(404).json({
@@ -224,7 +246,7 @@ export const setFollowUp = async (req, res) => {
     const lead = await Lead.findByIdAndUpdate(
       req.params.id,
       { nextFollowUp: date },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!lead) {
@@ -265,6 +287,7 @@ export const exportLeads = async (req, res) => {
 
     const leads = await Lead.find(query)
       .populate('propertyId', 'name')
+      .populate('assignedTo', 'name phone')
       .sort('-createdAt');
 
     // Generate CSV
@@ -275,6 +298,7 @@ export const exportLeads = async (req, res) => {
       'Property',
       'Source',
       'Status',
+      'Assigned To',
       'Message',
       'Created At',
     ];
@@ -286,6 +310,7 @@ export const exportLeads = async (req, res) => {
       lead.propertyId?.name || '',
       lead.source,
       lead.status,
+      lead.assignedTo?.name || 'Unassigned',
       lead.message || '',
       lead.createdAt.toISOString(),
     ]);

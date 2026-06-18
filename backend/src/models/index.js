@@ -4,6 +4,7 @@ import PropertyMedia from './PropertyMedia.js';
 import GeneratedContent from './GeneratedContent.js';
 import Lead from './Lead.js';
 import Analytics from './Analytics.js';
+import SiteContent from './SiteContent.js';
 
 export {
   User,
@@ -12,4 +13,5 @@ export {
   GeneratedContent,
   Lead,
   Analytics,
+  SiteContent,
 };

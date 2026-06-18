@@ -1,101 +1,134 @@
-import { useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, MapPin, ArrowRight } from 'lucide-react';
 import { formatPriceRange } from '../../utils/formatters.js';
+import { getFileUrl } from '../../services/api.js';
 
-const FeaturedSection = ({ properties = [], loading = false }) => {
-  const scrollContainerRef = useRef(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
+// Helper to get property image
+const getPropertyImage = (property) => {
+  // First try heroImages
+  if (property.heroImages && property.heroImages.length > 0 && property.heroImages[0].url) {
+    return getFileUrl(property.heroImages[0].url);
+  }
+  // Then try gallery
+  if (property.gallery && property.gallery.length > 0 && property.gallery[0].url) {
+    return getFileUrl(property.gallery[0].url);
+  }
+  // Fallback to placeholder
+  return 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&h=800&fit=crop';
+};
 
-  // Placeholder featured properties
-  const defaultProperties = [
+const FeaturedSection = ({ properties = [] }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+
+  // Featured properties data (fallback when no properties passed)
+  const featuredProperties = [
     {
       _id: '1',
-      name: 'Prestige Lakeside',
+      name: 'Prestige Lakeside Habitat',
       slug: 'prestige-lakeside',
       builder: 'Prestige Group',
-      propertyType: 'apartment',
       address: { locality: 'Whitefield', city: 'Bangalore' },
-      priceRange: { min: 8500000, max: 15000000 },
-      priceUnit: 'lac',
+      priceRange: { min: 85, max: 150, minUnit: 'lac', maxUnit: 'lac' },
       configurations: ['2BHK', '3BHK', '4BHK'],
-      image: 'https://placehold.co/600x400/1e3a8a/white?text=Prestige+Lakeside',
+      status: 'Ready to Move',
+      area: '15 Acres',
+      highlights: ['RERA Verified', '50+ Amenities', 'Lakeside Living', 'Ready to Move'],
+      image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&h=800&fit=crop',
     },
     {
       _id: '2',
       name: 'DLF The Camellias',
       slug: 'dlf-camellias',
       builder: 'DLF Group',
-      propertyType: 'apartment',
       address: { locality: 'Sector 42', city: 'Gurgaon' },
-      priceRange: { min: 5, max: 12 },
-      priceUnit: 'cr',
+      priceRange: { min: 5, max: 12, minUnit: 'cr', maxUnit: 'cr' },
       configurations: ['3BHK', '4BHK', '5BHK'],
-      image: 'https://placehold.co/600x400/0f172a/white?text=DLF+Camellias',
+      status: 'Ready to Move',
+      area: '20 Acres',
+      highlights: ['Luxury Living', 'Golf Course View', 'Premium Amenities', 'Ready Possession'],
+      image: 'https://images.unsplash.com/photo-1600585154340-be9168c6a96a?w=1200&h=800&fit=crop',
     },
     {
       _id: '3',
       name: 'Lodha World Towers',
       slug: 'lodha-world-towers',
       builder: 'Lodha Group',
-      propertyType: 'apartment',
       address: { locality: 'Worli', city: 'Mumbai' },
-      priceRange: { min: 8, max: 25 },
-      priceUnit: 'cr',
+      priceRange: { min: 8, max: 25, minUnit: 'cr', maxUnit: 'cr' },
       configurations: ['3BHK', '4BHK', 'Penthouse'],
-      image: 'https://placehold.co/600x400/1e40af/white?text=Lodha+World',
+      status: 'Under Construction',
+      area: '18 Acres',
+      highlights: ['World\'s Tallest Tower', 'Sea View', 'Luxury Interiors', '2025 Possession'],
+      image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&h=800&fit=crop',
     },
     {
       _id: '4',
       name: 'Brigade Gateway',
       slug: 'brigade-gateway',
       builder: 'Brigade Group',
-      propertyType: 'apartment',
       address: { locality: 'Rajajinagar', city: 'Bangalore' },
-      priceRange: { min: 12000000, max: 28000000 },
-      priceUnit: 'lac',
+      priceRange: { min: 120, max: 280, minUnit: 'lac', maxUnit: 'lac' },
       configurations: ['2BHK', '3BHK'],
-      image: 'https://placehold.co/600x400/1e3a8a/white?text=Brigade+Gateway',
+      status: 'Ready to Move',
+      area: '12 Acres',
+      highlights: ['Metro Connected', 'Mall Inside', 'School On Campus', 'Ready to Move'],
+      image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=1200&h=800&fit=crop',
     },
     {
       _id: '5',
-      name: 'Godrej Properties',
-      slug: 'godrej-properties',
-      builder: 'Godrej Group',
-      propertyType: 'villa',
+      name: 'Godrej Eden Estate',
+      slug: 'godrej-eden',
+      builder: 'Godrej Properties',
       address: { locality: 'Kanakapura Road', city: 'Bangalore' },
-      priceRange: { min: 2, max: 5 },
-      priceUnit: 'cr',
+      priceRange: { min: 2, max: 5, minUnit: 'cr', maxUnit: 'cr' },
       configurations: ['3BHK', '4BHK'],
-      image: 'https://placehold.co/600x400/0f172a/white?text=Godrej+Villas',
+      status: 'New Launch',
+      area: '25 Acres',
+      highlights: ['New Launch Offer', 'Green Township', 'Club House', 'Best Price'],
+      image: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&h=800&fit=crop',
     },
   ];
 
-  const displayProperties = properties.length > 0 ? properties : defaultProperties;
+  const displayProperties = properties.length > 0 ? properties : featuredProperties;
+  const currentProperty = displayProperties[currentIndex];
 
-  const checkScrollButtons = () => {
-    if (scrollContainerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-      setCanScrollLeft(scrollLeft > 0);
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
-    }
-  };
+  // Get the image URL for the current property
+  const currentPropertyImage = properties.length > 0
+    ? getPropertyImage(currentProperty)
+    : currentProperty.image;
 
-  const scroll = (direction) => {
-    if (scrollContainerRef.current) {
-      const scrollAmount = 400;
-      scrollContainerRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth',
-      });
-      setTimeout(checkScrollButtons, 300);
-    }
-  };
+  // Auto-rotate
+  useEffect(() => {
+    if (!isAutoPlaying) return;
+
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % displayProperties.length);
+    }, 6000);
+
+    return () => clearInterval(interval);
+  }, [isAutoPlaying, displayProperties.length]);
+
+  const goToSlide = useCallback((index) => {
+    setCurrentIndex(index);
+    setIsAutoPlaying(false);
+
+    // Resume auto-play after 10 seconds
+    setTimeout(() => setIsAutoPlaying(true), 10000);
+  }, []);
+
+  const nextSlide = useCallback(() => {
+    goToSlide((currentIndex + 1) % displayProperties.length);
+  }, [currentIndex, displayProperties.length, goToSlide]);
+
+  const prevSlide = useCallback(() => {
+    goToSlide((currentIndex - 1 + displayProperties.length) % displayProperties.length);
+  }, [currentIndex, displayProperties.length, goToSlide]);
 
   return (
-    <section className="py-16 md:py-24 bg-gray-50">
+    <section id="featured" className="py-12 md:py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-10">
@@ -104,141 +137,129 @@ const FeaturedSection = ({ properties = [], loading = false }) => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <span className="text-amber-600 font-semibold text-sm uppercase tracking-wider">
-              Handpicked for You
+            <span className="text-amber-500 font-semibold text-sm uppercase tracking-wider">
+              Editor's Pick
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2">
-              Featured Properties
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mt-2">
+              Featured Property
             </h2>
-            <p className="text-gray-600 mt-3 max-w-lg">
-              Explore our curated selection of premium properties that offer the best in luxury, location, and lifestyle.
+            <p className="text-slate-600 mt-3 max-w-lg">
+              Handpicked properties offering the best in luxury, location, and lifestyle.
             </p>
           </motion.div>
 
-          {/* Navigation Buttons */}
+          {/* Navigation */}
           <div className="flex gap-3 mt-6 md:mt-0">
-            <button
-              onClick={() => scroll('left')}
-              disabled={!canScrollLeft}
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
-                canScrollLeft
-                  ? 'bg-white shadow-md hover:bg-blue-800 hover:text-white text-gray-700'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              }`}
-              aria-label="Scroll left"
+            <motion.button
+              onClick={prevSlide}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="w-12 h-12 rounded-full bg-white shadow-lg shadow-slate-200/50 flex items-center justify-center text-slate-700 hover:bg-slate-800 hover:text-white transition-all cursor-pointer"
+              aria-label="Previous property"
             >
               <ChevronLeft className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => scroll('right')}
-              disabled={!canScrollRight}
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
-                canScrollRight
-                  ? 'bg-white shadow-md hover:bg-blue-800 hover:text-white text-gray-700'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              }`}
-              aria-label="Scroll right"
+            </motion.button>
+            <motion.button
+              onClick={nextSlide}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="w-12 h-12 rounded-full bg-white shadow-lg shadow-slate-200/50 flex items-center justify-center text-slate-700 hover:bg-slate-800 hover:text-white transition-all cursor-pointer"
+              aria-label="Next property"
             >
               <ChevronRight className="w-5 h-5" />
-            </button>
+            </motion.button>
           </div>
         </div>
 
-        {/* Horizontal Scroll Container */}
-        <div
-          ref={scrollContainerRef}
-          onScroll={checkScrollButtons}
-          className="flex gap-6 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          {displayProperties.map((property, index) => (
-            <motion.div
-              key={property._id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              className="flex-shrink-0 w-[320px] md:w-[380px]"
-            >
-              <Link to={`/property/${property.slug}`} className="block group">
-                <div className="relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500">
-                  {/* Image */}
-                  <div className="relative h-56 overflow-hidden">
-                    <img
-                      src={property.image || `https://placehold.co/600x400/1e3a8a/white?text=${encodeURIComponent(property.name)}`}
-                      alt={property.name}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-
-                    {/* Featured Badge */}
-                    <div className="absolute top-4 left-4 px-3 py-1 bg-amber-500 text-white text-xs font-semibold rounded-full">
-                      Featured
-                    </div>
-
-                    {/* Price Badge */}
-                    <div className="absolute bottom-4 left-4 px-4 py-2 bg-white/90 backdrop-blur-sm rounded-lg">
-                      <p className="text-sm text-gray-600">Starting from</p>
-                      <p className="text-lg font-bold text-blue-800">
-                        {formatPriceRange(property.priceRange?.min, property.priceRange?.max, property.priceUnit)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Content */}
-                  <div className="p-5">
-                    {/* Location */}
-                    <div className="flex items-center text-gray-500 text-sm mb-2">
-                      <MapPin className="w-4 h-4 mr-1.5 flex-shrink-0" />
-                      <span className="truncate">
-                        {property.address?.locality && `${property.address.locality}, `}
-                        {property.address?.city}
-                      </span>
-                    </div>
-
-                    {/* Name */}
-                    <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-blue-800 transition-colors">
-                      {property.name}
-                    </h3>
-
-                    {/* Builder */}
-                    <p className="text-sm text-gray-600 mb-4">
-                      by <span className="font-medium">{property.builder}</span>
-                    </p>
-
-                    {/* Configurations */}
-                    <div className="flex flex-wrap gap-2">
-                      {property.configurations?.slice(0, 3).map((config) => (
-                        <span
-                          key={config}
-                          className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
-                        >
-                          {config}
-                        </span>
-                      ))}
-                    </div>
-
-                    {/* View Details Arrow */}
-                    <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
-                      <span className="text-sm text-gray-500">View Details</span>
-                      <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-blue-800 group-hover:translate-x-1 transition-all" />
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* View All Button */}
-        <div className="text-center mt-10">
-          <Link
-            to="/properties"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-blue-800 text-white font-semibold rounded-xl hover:bg-blue-900 transition-all shadow-lg shadow-blue-800/30"
+        {/* Featured Property Card */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentIndex}
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -50 }}
+            transition={{ duration: 0.4 }}
+            className="grid lg:grid-cols-5 gap-8"
           >
-            View All Properties
-            <ArrowRight className="w-5 h-5" />
-          </Link>
+            {/* Image Section - 60% */}
+            <div className="lg:col-span-3">
+              <div className="relative rounded-2xl overflow-hidden h-[400px] lg:h-[500px]">
+                <img
+                  src={currentPropertyImage}
+                  alt={currentProperty.name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+                {/* Property Name Overlay on Mobile */}
+                <div className="absolute bottom-4 left-4 right-4 lg:hidden">
+                  <h3 className="text-2xl font-bold text-white mb-1">{currentProperty.name}</h3>
+                  <p className="text-white/80 flex items-center gap-1">
+                    <MapPin className="w-4 h-4" />
+                    {currentProperty.address.locality}, {currentProperty.address.city}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Details Section - 40% */}
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-2xl p-6 md:p-8 shadow-lg shadow-slate-200/50 h-full">
+                {/* Builder */}
+                <p className="text-amber-500 font-medium text-sm mb-2">
+                  by {currentProperty.builder}
+                </p>
+
+                {/* Property Name */}
+                <h3 className="text-2xl md:text-3xl font-bold text-slate-800 mb-2">
+                  {currentProperty.name}
+                </h3>
+
+                {/* Location */}
+                <div className="flex items-center text-slate-600 mb-4">
+                  <MapPin className="w-5 h-5 mr-2 text-slate-700" />
+                  <span>{currentProperty.address.locality}, {currentProperty.address.city}</span>
+                </div>
+
+                {/* Price */}
+                <div className="mb-6">
+                  <p className="text-sm text-slate-500 mb-1">Starting from</p>
+                  <p className="text-3xl font-bold text-slate-800">
+                    {formatPriceRange(currentProperty.priceRange?.min, currentProperty.priceRange?.max, currentProperty.priceRange?.minUnit, currentProperty.priceRange?.maxUnit)}
+                  </p>
+                </div>
+
+                {/* CTA Button */}
+                <motion.span whileHover={{ scale: 1.02, y: -2 }} whileTap={{ scale: 0.98 }} className="block">
+                  <Link
+                    to={`/property/${currentProperty.slug}`}
+                    className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-slate-800 text-white font-semibold rounded-xl hover:bg-slate-700 transition-all shadow-lg shadow-slate-800/30 cursor-pointer"
+                  >
+                    View Full Details
+                    <ArrowRight className="w-5 h-5" />
+                  </Link>
+                </motion.span>
+              </div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Dots Navigation */}
+        <div className="flex justify-center gap-2 mt-8">
+          {displayProperties.map((_, index) => (
+            <motion.button
+              key={index}
+              onClick={() => goToSlide(index)}
+              whileHover={{ scale: 1.2 }}
+              whileTap={{ scale: 0.9 }}
+              className={`transition-all duration-300 cursor-pointer ${
+                index === currentIndex
+                  ? 'w-8 h-2 bg-slate-700 rounded-full'
+                  : 'w-2 h-2 bg-slate-300 rounded-full hover:bg-slate-400'
+              }`}
+              aria-label={`Go to property ${index + 1}`}
+            />
+          ))}
         </div>
       </div>
     </section>

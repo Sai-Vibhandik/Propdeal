@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams } from 'react-router-dom';
-import { SlidersHorizontal, Grid, List, Search, X, ChevronDown } from 'lucide-react';
+import { SlidersHorizontal, Grid, List, Search, X, ChevronDown, Loader2 } from 'lucide-react';
 import PropertyGrid from '../../components/public/PropertyGrid.jsx';
 import Button from '../../components/common/Button.jsx';
-import { useProperties } from '../../hooks/useProperties.js';
-import { INDIAN_CITIES, PROPERTY_TYPES, PROPERTY_CATEGORIES, CONFIGURATIONS } from '../../utils/constants.js';
+import { propertiesAPI } from '../../services/api.js';
+import { INDIAN_CITIES, PROPERTY_TYPES, PROPERTY_TYPE_GROUPS, PROPERTY_CATEGORIES, CONFIGURATIONS } from '../../utils/constants.js';
 
 const FiltersPanel = ({ isOpen, onClose, filters, onFilterChange, onClearAll }) => {
   const [localFilters, setLocalFilters] = useState(filters);
@@ -152,24 +152,34 @@ const FiltersPanel = ({ isOpen, onClose, filters, onFilterChange, onClearAll }) 
                   />
                 </button>
                 {expandedSections.type && (
-                  <div className="mt-3 grid grid-cols-2 gap-2">
-                    {PROPERTY_TYPES.map((type) => (
-                      <button
-                        key={type.value}
-                        onClick={() =>
-                          handleLocalChange(
-                            'propertyType',
-                            localFilters.propertyType === type.value ? '' : type.value
-                          )
-                        }
-                        className={`px-3 py-2 text-sm rounded-lg border transition-all ${
-                          localFilters.propertyType === type.value
-                            ? 'bg-blue-800 text-white border-blue-800'
-                            : 'bg-white text-gray-700 border-gray-200 hover:border-blue-800'
-                        }`}
-                      >
-                        {type.label}
-                      </button>
+                  <div className="mt-3 space-y-3">
+                    {PROPERTY_TYPE_GROUPS.map((group) => (
+                      <div key={group.label}>
+                        <p className="text-xs font-medium text-gray-500 mb-2">{group.label}</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {group.types.map((typeValue) => {
+                            const type = PROPERTY_TYPES.find((t) => t.value === typeValue);
+                            return (
+                              <button
+                                key={typeValue}
+                                onClick={() =>
+                                  handleLocalChange(
+                                    'propertyType',
+                                    localFilters.propertyType === typeValue ? '' : typeValue
+                                  )
+                                }
+                                className={`px-3 py-2 text-sm rounded-lg border transition-all ${
+                                  localFilters.propertyType === typeValue
+                                    ? 'bg-blue-800 text-white border-blue-800'
+                                    : 'bg-white text-gray-700 border-gray-200 hover:border-blue-800'
+                                }`}
+                              >
+                                {type?.label || typeValue}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -304,11 +314,29 @@ const FiltersPanel = ({ isOpen, onClose, filters, onFilterChange, onClearAll }) 
   );
 };
 
+// Map MongoDB sort values to frontend display values
+const SORT_VALUE_MAP = {
+  '-createdAt': 'newest',
+  'priceRange.min': 'price-low',
+  '-priceRange.min': 'price-high',
+  '-featured': 'featured',
+};
+
 const PropertiesPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState('grid');
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [sortBy, setSortBy] = useState('newest');
+
+  // Scroll to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  // Get sort from URL and convert to display value
+  const urlSort = searchParams.get('sort') || '-createdAt';
+  const initialSortBy = SORT_VALUE_MAP[urlSort] || 'newest';
+
+  const [sortBy, setSortBy] = useState(initialSortBy);
 
   // Initialize filters from URL
   const [filters, setFilters] = useState({
@@ -319,13 +347,45 @@ const PropertiesPage = () => {
     minPrice: searchParams.get('minPrice') || '',
     maxPrice: searchParams.get('maxPrice') || '',
     search: searchParams.get('q') || '',
-    sort: searchParams.get('sort') || '-createdAt',
+    sort: urlSort,
   });
 
-  // Placeholder data - will be replaced with API
-  const properties = [];
-  const loading = false;
-  const pagination = { page: 1, limit: 12, total: 0, pages: 0 };
+  // Properties state
+  const [properties, setProperties] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState({ page: 1, limit: 12, total: 0, pages: 0 });
+
+  // Fetch properties when filters change
+  useEffect(() => {
+    fetchProperties();
+  }, [filters]);
+
+  const fetchProperties = async () => {
+    try {
+      setLoading(true);
+
+      // Build query params
+      const params = {};
+      if (filters.city) params.city = filters.city;
+      if (filters.propertyType) params.propertyType = filters.propertyType;
+      if (filters.category) params.category = filters.category;
+      if (filters.configuration) params.configuration = filters.configuration;
+      if (filters.minPrice) params.minPrice = filters.minPrice;
+      if (filters.maxPrice) params.maxPrice = filters.maxPrice;
+      if (filters.search) params.search = filters.search;
+      if (filters.sort) params.sort = filters.sort;
+      params.status = 'published'; // Only show published properties
+
+      const response = await propertiesAPI.getAll(params);
+      setProperties(response.data.data || []);
+      setPagination(response.data.pagination || { page: 1, limit: 12, total: 0, pages: 0 });
+    } catch (error) {
+      console.error('Error fetching properties:', error);
+      setProperties([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const updateFilters = (newFilters) => {
     setFilters(newFilters);
@@ -349,13 +409,23 @@ const PropertiesPage = () => {
       sort: '-createdAt',
     };
     setFilters(clearedFilters);
+    setSortBy('newest');
     setSearchParams({});
   };
 
   const handleSortChange = (e) => {
-    const sort = e.target.value;
-    setSortBy(sort);
-    updateFilters({ ...filters, sort });
+    const sortValue = e.target.value;
+    setSortBy(sortValue);
+
+    // Convert frontend sort values to MongoDB sort values
+    const sortMap = {
+      'newest': '-createdAt',
+      'price-low': 'priceRange.min',
+      'price-high': '-priceRange.min',
+      'featured': '-featured',
+    };
+
+    updateFilters({ ...filters, sort: sortMap[sortValue] || '-createdAt' });
   };
 
   const activeFilterCount = Object.values(filters).filter((v) => v && v !== '-createdAt').length;
@@ -460,6 +530,29 @@ const PropertiesPage = () => {
                   </button>
                 </span>
               )}
+              {(filters.minPrice || filters.maxPrice) && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                  {(() => {
+                    const formatPrice = (value) => {
+                      if (!value) return '';
+                      if (value >= 10000000) {
+                        return `₹${(value / 10000000).toFixed(value % 10000000 === 0 ? 0 : 1)} Cr`;
+                      }
+                      return `₹${(value / 100000).toFixed(0)} Lac`;
+                    };
+                    if (filters.minPrice && filters.maxPrice) {
+                      return `${formatPrice(filters.minPrice)} - ${formatPrice(filters.maxPrice)}`;
+                    }
+                    if (filters.minPrice) {
+                      return `Above ${formatPrice(filters.minPrice)}`;
+                    }
+                    return `Under ${formatPrice(filters.maxPrice)}`;
+                  })()}
+                  <button onClick={() => updateFilters({ ...filters, minPrice: '', maxPrice: '' })}>
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </span>
+              )}
               <button
                 onClick={clearAllFilters}
                 className="text-sm text-red-600 hover:text-red-700 underline"
@@ -494,30 +587,32 @@ const PropertiesPage = () => {
 
         {/* Pagination */}
         {pagination.pages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-8">
+          <div className="flex flex-wrap items-center justify-center gap-2 mt-8">
             <button
               disabled={pagination.page === 1}
-              className="px-4 py-2 border border-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              className="px-3 sm:px-4 py-2 border border-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors text-sm sm:text-base cursor-pointer"
             >
               Previous
             </button>
-            {Array.from({ length: pagination.pages }, (_, i) => i + 1)
-              .slice(Math.max(0, pagination.page - 3), Math.min(pagination.pages, pagination.page + 2))
-              .map((page) => (
-                <button
-                  key={page}
-                  className={`px-4 py-2 rounded-lg ${
-                    page === pagination.page
-                      ? 'bg-blue-800 text-white'
-                      : 'border border-gray-200 hover:bg-gray-50'
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
+            <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2">
+              {Array.from({ length: pagination.pages }, (_, i) => i + 1)
+                .slice(Math.max(0, pagination.page - 3), Math.min(pagination.pages, pagination.page + 2))
+                .map((page) => (
+                  <button
+                    key={page}
+                    className={`px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base cursor-pointer ${
+                      page === pagination.page
+                        ? 'bg-blue-800 text-white'
+                        : 'border border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+            </div>
             <button
               disabled={pagination.page === pagination.pages}
-              className="px-4 py-2 border border-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              className="px-3 sm:px-4 py-2 border border-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors text-sm sm:text-base cursor-pointer"
             >
               Next
             </button>

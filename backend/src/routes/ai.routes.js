@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   getAIStatus,
+  getProviders,
   generateSectionContent,
   saveContent,
   getPropertyContent,
@@ -13,6 +14,7 @@ const router = express.Router();
 router.use(protect);
 
 router.get('/status', getAIStatus);
+router.get('/providers', getProviders);
 router.post('/generate/:section', generateSectionContent);
 router.put('/content/:propertyId/:section', saveContent);
 router.get('/content/:propertyId', getPropertyContent);

@@ -1,71 +1,14 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Plus, Search, Filter, MoreVertical, Eye, Edit, Trash2, Star, StarOff } from 'lucide-react';
+import { Plus, Search, Eye, Edit, Trash2, Star, StarOff, Loader2 } from 'lucide-react';
 import AdminLayout from '../../components/admin/AdminLayout.jsx';
 import Button from '../../components/common/Button.jsx';
 import { PROPERTY_TYPES, PROPERTY_CATEGORIES, PROPERTY_STATUSES } from '../../utils/constants.js';
 import { formatPriceRange, formatDate } from '../../utils/formatters.js';
-
-// Placeholder data - will be replaced with API
-const placeholderProperties = [
-  {
-    _id: '1',
-    name: 'Prestige Lakeside Habitat',
-    slug: 'prestige-lakeside',
-    builder: 'Prestige Group',
-    propertyType: 'apartment',
-    category: 'ready-to-move',
-    address: { city: 'Bangalore', locality: 'Whitefield' },
-    priceRange: { min: 8500000, max: 15000000 },
-    priceUnit: 'lac',
-    status: 'published',
-    featured: true,
-    createdAt: '2024-01-10',
-  },
-  {
-    _id: '2',
-    name: 'DLF The Camellias',
-    slug: 'dlf-camellias',
-    builder: 'DLF Group',
-    propertyType: 'apartment',
-    category: 'ready-to-move',
-    address: { city: 'Gurgaon', locality: 'Sector 42' },
-    priceRange: { min: 5, max: 12 },
-    priceUnit: 'cr',
-    status: 'published',
-    featured: true,
-    createdAt: '2024-01-08',
-  },
-  {
-    _id: '3',
-    name: 'Godrej Eden Estate',
-    slug: 'godrej-eden',
-    builder: 'Godrej Properties',
-    propertyType: 'villa',
-    category: 'new-launch',
-    address: { city: 'Bangalore', locality: 'Kanakapura Road' },
-    priceRange: { min: 2, max: 5 },
-    priceUnit: 'cr',
-    status: 'draft',
-    featured: false,
-    createdAt: '2024-01-12',
-  },
-  {
-    _id: '4',
-    name: 'Sobha Dream Acres',
-    slug: 'sobha-dream-acres',
-    builder: 'Sobha Limited',
-    propertyType: 'apartment',
-    category: 'under-construction',
-    address: { city: 'Bangalore', locality: 'Panathur' },
-    priceRange: { min: 6500000, max: 12000000 },
-    priceUnit: 'lac',
-    status: 'published',
-    featured: false,
-    createdAt: '2024-01-05',
-  },
-];
+import { useAdminProperties } from '../../hooks/useProperty.js';
+import { propertiesAPI } from '../../services/api.js';
+import toast from 'react-hot-toast';
 
 const AdminPropertiesPage = () => {
   const [search, setSearch] = useState('');
@@ -73,10 +16,17 @@ const AdminPropertiesPage = () => {
   const [typeFilter, setTypeFilter] = useState('');
   const [selectedProperties, setSelectedProperties] = useState([]);
 
-  const filteredProperties = placeholderProperties.filter((property) => {
-    const matchesSearch = property.name.toLowerCase().includes(search.toLowerCase()) ||
-      property.builder.toLowerCase().includes(search.toLowerCase()) ||
-      property.address.city.toLowerCase().includes(search.toLowerCase());
+  const { properties, loading, error, refetch } = useAdminProperties({
+    search,
+    status: statusFilter,
+    propertyType: typeFilter,
+  });
+
+  const filteredProperties = properties.filter((property) => {
+    const matchesSearch = !search ||
+      property.name?.toLowerCase().includes(search.toLowerCase()) ||
+      property.builder?.toLowerCase().includes(search.toLowerCase()) ||
+      property.address?.city?.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = !statusFilter || property.status === statusFilter;
     const matchesType = !typeFilter || property.propertyType === typeFilter;
     return matchesSearch && matchesStatus && matchesType;
@@ -95,6 +45,59 @@ const AdminPropertiesPage = () => {
       setSelectedProperties(filteredProperties.map((p) => p._id));
     }
   };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this property?')) return;
+
+    try {
+      await propertiesAPI.delete(id);
+      toast.success('Property deleted successfully');
+      refetch();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete property');
+    }
+  };
+
+  const handleToggleFeatured = async (id, currentFeatured) => {
+    try {
+      await propertiesAPI.toggleFeatured(id);
+      toast.success(currentFeatured ? 'Property unfeatured' : 'Property featured');
+      refetch();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update property');
+    }
+  };
+
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      await propertiesAPI.updateStatus(id, newStatus);
+      toast.success('Status updated successfully');
+      refetch();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update status');
+    }
+  };
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-800" />
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout>
+        <div className="text-center py-12">
+          <p className="text-red-500 mb-4">{error}</p>
+          <Button onClick={refetch}>Try Again</Button>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -160,127 +163,141 @@ const AdminPropertiesPage = () => {
 
         {/* Properties Table */}
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="w-12 px-4 py-3">
-                    <input
-                      type="checkbox"
-                      checked={selectedProperties.length === filteredProperties.length && filteredProperties.length > 0}
-                      onChange={toggleSelectAll}
-                      className="w-4 h-4 rounded border-gray-300"
-                    />
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Property</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Type</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Location</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Price</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Status</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Featured</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Created</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filteredProperties.map((property) => (
-                  <motion.tr
-                    key={property._id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="hover:bg-gray-50"
-                  >
-                    <td className="px-4 py-3">
-                      <input
-                        type="checkbox"
-                        checked={selectedProperties.includes(property._id)}
-                        onChange={() => toggleSelect(property._id)}
-                        className="w-4 h-4 rounded border-gray-300"
-                      />
-                    </td>
-                    <td className="px-4 py-3">
-                      <div>
-                        <p className="font-medium text-gray-900">{property.name}</p>
-                        <p className="text-sm text-gray-500">{property.builder}</p>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="px-2 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
-                        {property.propertyType}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {property.address.locality}, {property.address.city}
-                    </td>
-                    <td className="px-4 py-3 font-medium text-gray-900">
-                      {formatPriceRange(property.priceRange.min, property.priceRange.max, property.priceUnit)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        PROPERTY_STATUSES.find((s) => s.value === property.status)?.color || 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {PROPERTY_STATUSES.find((s) => s.value === property.status)?.label || property.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      {property.featured ? (
-                        <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
-                      ) : (
-                        <StarOff className="w-5 h-5 text-gray-300" />
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 text-sm">
-                      {formatDate(property.createdAt)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <a
-                          href={`/property/${property.slug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-2 text-gray-400 hover:text-blue-800 hover:bg-gray-100 rounded-lg"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </a>
-                        <Link
-                          to={`/admin/properties/${property._id}/edit`}
-                          className="p-2 text-gray-400 hover:text-blue-800 hover:bg-gray-100 rounded-lg"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Link>
-                        <button
-                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-gray-100 rounded-lg"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          <div className="px-4 py-3 border-t border-gray-200 flex items-center justify-between">
-            <p className="text-sm text-gray-500">
-              Showing {filteredProperties.length} of {placeholderProperties.length} properties
-            </p>
-            <div className="flex items-center gap-2">
-              <button className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm hover:bg-gray-50">
-                Previous
-              </button>
-              <button className="px-3 py-1.5 bg-blue-800 text-white rounded-lg text-sm">
-                1
-              </button>
-              <button className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm hover:bg-gray-50">
-                2
-              </button>
-              <button className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm hover:bg-gray-50">
-                Next
-              </button>
+          {filteredProperties.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500 mb-4">No properties found</p>
+              <Link to="/admin/properties/new">
+                <Button>Create Your First Property</Button>
+              </Link>
             </div>
-          </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="w-12 px-4 py-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedProperties.length === filteredProperties.length && filteredProperties.length > 0}
+                          onChange={toggleSelectAll}
+                          className="w-4 h-4 rounded border-gray-300"
+                        />
+                      </th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Property</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Type</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Location</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Price</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Status</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Featured</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Created</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {filteredProperties.map((property) => (
+                      <motion.tr
+                        key={property._id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="hover:bg-gray-50"
+                      >
+                        <td className="px-4 py-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedProperties.includes(property._id)}
+                            onChange={() => toggleSelect(property._id)}
+                            className="w-4 h-4 rounded border-gray-300"
+                          />
+                        </td>
+                        <td className="px-4 py-3">
+                          <div>
+                            <p className="font-medium text-gray-900">{property.name}</p>
+                            <p className="text-sm text-gray-500">{property.builder}</p>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="px-2 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
+                            {property.propertyType}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-gray-600">
+                          {property.address?.locality}, {property.address?.city}
+                        </td>
+                        <td className="px-4 py-3 font-medium text-gray-900">
+                          {property.priceRange?.min && property.priceRange?.max
+                            ? formatPriceRange(property.priceRange.min, property.priceRange.max, property.priceRange?.minUnit, property.priceRange?.maxUnit)
+                            : 'N/A'
+                          }
+                        </td>
+                        <td className="px-4 py-3">
+                          <select
+                            value={property.status}
+                            onChange={(e) => handleStatusChange(property._id, e.target.value)}
+                            className={`px-2 py-1 rounded-full text-xs font-medium border-0 cursor-pointer ${
+                              property.status === 'published' ? 'bg-green-100 text-green-800' :
+                              property.status === 'draft' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}
+                          >
+                            {PROPERTY_STATUSES.map((s) => (
+                              <option key={s.value} value={s.value}>{s.label}</option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={() => handleToggleFeatured(property._id, property.featured)}
+                            className="p-1 hover:bg-gray-100 rounded"
+                          >
+                            {property.featured ? (
+                              <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
+                            ) : (
+                              <StarOff className="w-5 h-5 text-gray-300" />
+                            )}
+                          </button>
+                        </td>
+                        <td className="px-4 py-3 text-gray-500 text-sm">
+                          {formatDate(property.createdAt)}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <a
+                              href={`/property/${property.slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-2 text-gray-400 hover:text-blue-800 hover:bg-gray-100 rounded-lg"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </a>
+                            <Link
+                              to={`/admin/properties/${property._id}/edit`}
+                              className="p-2 text-gray-400 hover:text-blue-800 hover:bg-gray-100 rounded-lg"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Link>
+                            <button
+                              onClick={() => handleDelete(property._id)}
+                              className="p-2 text-gray-400 hover:text-red-600 hover:bg-gray-100 rounded-lg"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Footer */}
+              <div className="px-4 py-3 border-t border-gray-200 flex items-center justify-between">
+                <p className="text-sm text-gray-500">
+                  Showing {filteredProperties.length} of {properties.length} properties
+                </p>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </AdminLayout>

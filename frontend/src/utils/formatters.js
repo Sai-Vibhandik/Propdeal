@@ -12,13 +12,13 @@ export const formatPrice = (price, unit = 'lac') => {
   return `${formatted} ${suffix}`;
 };
 
-// Format price range
-export const formatPriceRange = (min, max, unit = 'lac') => {
+// Format price range with separate units
+export const formatPriceRange = (min, max, minUnit = 'lac', maxUnit = 'lac') => {
   if (!min && !max) return 'Price on Request';
   if (min && max) {
-    return `${formatPrice(min, unit)} - ${formatPrice(max, unit)}`;
+    return `₹${min} ${minUnit === 'cr' ? 'Cr' : 'Lac'} - ₹${max} ${maxUnit === 'cr' ? 'Cr' : 'Lac'}`;
   }
-  return min ? `Starting from ${formatPrice(min, unit)}` : `Up to ${formatPrice(max, unit)}`;
+  return min ? `Starting from ₹${min} ${minUnit === 'cr' ? 'Cr' : 'Lac'}` : `Up to ₹${max} ${maxUnit === 'cr' ? 'Cr' : 'Lac'}`;
 };
 
 // Format number with commas (Indian format)

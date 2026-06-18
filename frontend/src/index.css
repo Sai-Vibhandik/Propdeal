@@ -1,22 +1,38 @@
 @import "tailwindcss";
 
-/* Custom CSS Variables */
+/* Enable dark mode with class strategy (Tailwind v4) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Custom CSS Variables - Set dynamically by applyThemeToDocument */
 :root {
-  /* Colors */
-  --primary: #1e40af;
-  --primary-dark: #1e3a8a;
-  --secondary: #d4af37;
-  --accent: #059669;
-  --background: #fafafa;
-  --surface: #ffffff;
-  --text-primary: #1e293b;
-  --text-muted: #64748b;
-  --border: #e2e8f0;
+  /* Primary colors */
+  --color-primary: #1e40af;
+  --color-secondary: #d4af37;
+  --color-accent: #059669;
+
+  /* Background and text */
+  --color-background: #ffffff;
+  --color-text: #1e293b;
+  --color-text-muted: #6b7280;
+
+  /* Component colors */
+  --color-card-bg: #ffffff;
+  --color-border: #e5e7eb;
+  --color-surface: #ffffff;
 
   /* Typography */
   --font-heading: 'Inter', sans-serif;
   --font-body: 'Inter', sans-serif;
-  --font-accent: 'Playfair Display', serif;
+}
+
+/* Dark mode variables - applied via .dark class on html element */
+.dark {
+  --color-background: #111827;
+  --color-text: #f9fafb;
+  --color-text-muted: #9ca3af;
+  --color-card-bg: #1f2937;
+  --color-border: #374151;
+  --color-surface: #1f2937;
 }
 
 /* Base Styles */
@@ -26,8 +42,8 @@ html {
 
 body {
   font-family: var(--font-body);
-  color: var(--text-primary);
-  background-color: var(--background);
+  color: var(--color-text);
+  background-color: var(--color-background);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -39,7 +55,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .font-accent {
-  font-family: var(--font-accent);
+  font-family: 'Playfair Display', serif;
 }
 
 /* Custom Scrollbar */
@@ -61,20 +77,40 @@ h1, h2, h3, h4, h5, h6 {
   background: #94a3b8;
 }
 
-/* Utility Classes */
-.text-gradient {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-track {
+  background: #1f2937;
 }
 
-.bg-gradient-primary {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+.dark ::-webkit-scrollbar-thumb {
+  background: #4b5563;
 }
 
-.bg-gradient-gold {
-  background: linear-gradient(135deg, var(--secondary) 0%, #b8860b 100%);
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* Admin Sidebar Slender Scrollbar */
+.admin-sidebar-nav {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.admin-sidebar-nav::-webkit-scrollbar {
+  width: 4px;
+}
+
+.admin-sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+
+.admin-sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
 
 /* Animation Classes */
@@ -91,12 +127,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes slideUp {
@@ -126,116 +158,24 @@ h1, h2, h3, h4, h5, h6 {
   outline: none;
 }
 .focus-ring:focus {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
-/* Button Base */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.75rem 1.5rem;
-  font-weight: 500;
-  border-radius: 0.5rem;
-  transition: all 0.2s;
-}
-.btn:focus {
-  outline: none;
-}
-
-.btn-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.75rem 1.5rem;
-  font-weight: 500;
-  border-radius: 0.5rem;
-  background-color: #1e40af;
-  color: white;
-  transition: all 0.2s;
-}
-.btn-primary:hover {
-  background-color: #1e3a8a;
-}
-.btn-primary:focus {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
-}
-
-.btn-secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.75rem 1.5rem;
-  font-weight: 500;
-  border-radius: 0.5rem;
-  background-color: #f59e0b;
-  color: white;
-  transition: all 0.2s;
-}
-.btn-secondary:hover {
-  background-color: #d97706;
-}
-.btn-secondary:focus {
-  outline: 2px solid #f59e0b;
-  outline-offset: 2px;
-}
-
-.btn-outline {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.75rem 1.5rem;
-  font-weight: 500;
-  border-radius: 0.5rem;
-  border: 2px solid #1e40af;
-  color: #1e40af;
-  background: transparent;
-  transition: all 0.2s;
-}
-.btn-outline:hover {
-  background-color: #1e40af;
-  color: white;
-}
-.btn-outline:focus {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
-}
-
-/* Card Styles */
-.card {
-  background-color: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  overflow: hidden;
-}
-
-.card-hover {
-  background-color: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  overflow: hidden;
-  transition: all 0.3s;
-}
-.card-hover:hover {
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  transform: translateY(-0.25rem);
-}
-
-/* Section Styles */
+/* Section padding */
 .section {
-  padding-top: 4rem;
-  padding-bottom: 4rem;
+  padding-top: 2.5rem;
+  padding-bottom: 2.5rem;
 }
 
 @media (min-width: 768px) {
   .section {
-    padding-top: 6rem;
-    padding-bottom: 6rem;
+    padding-top: 3rem;
+    padding-bottom: 3rem;
   }
 }
 
+/* Container */
 .container {
   max-width: 80rem;
   margin-left: auto;
@@ -255,52 +195,6 @@ h1, h2, h3, h4, h5, h6 {
   .container {
     padding-left: 2rem;
     padding-right: 2rem;
-  }
-}
-
-/* Form Styles */
-.form-input {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  transition: all 0.2s;
-}
-.form-input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.form-label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
-  margin-bottom: 0.5rem;
-}
-
-.form-error {
-  font-size: 0.875rem;
-  color: #dc2626;
-  margin-top: 0.25rem;
-}
-
-/* Loading Spinner */
-.spinner {
-  animation: spin 1s linear infinite;
-  border-radius: 9999px;
-  border-width: 4px;
-  border-color: #e5e7eb;
-  border-top-color: #1e40af;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
   }
 }
 
@@ -333,4 +227,56 @@ h1, h2, h3, h4, h5, h6 {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* CTA Button - Bounce + Shine Animation */
+.cta-bounce-shine {
+  position: relative;
+  overflow: hidden;
+  animation: ctaBounce 2s ease-in-out infinite;
+}
+
+/* Shine effect */
+.cta-bounce-shine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  animation: ctaShine 3s ease-in-out infinite;
+}
+
+@keyframes ctaBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes ctaShine {
+  0%, 100% {
+    left: -100%;
+  }
+  50% {
+    left: 100%;
+  }
+}
+
+/* Hover - pause animations */
+.cta-bounce-shine:hover {
+  animation-play-state: paused;
+  transform: translateY(0);
+}
+
+.cta-bounce-shine:hover::after {
+  animation-play-state: paused;
 }

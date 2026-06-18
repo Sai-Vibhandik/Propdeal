@@ -84,7 +84,7 @@ export const reorderMedia = async (req, res) => {
 
     // items is array of { id, order }
     const updatePromises = items.map((item) =>
-      PropertyMedia.findByIdAndUpdate(item.id, { order: item.order }, { new: true })
+      PropertyMedia.findByIdAndUpdate(item.id, { order: item.order }, { returnDocument: 'after' })
     );
 
     await Promise.all(updatePromises);
@@ -112,7 +112,7 @@ export const updateMedia = async (req, res) => {
     const media = await PropertyMedia.findByIdAndUpdate(
       req.params.id,
       { title, description },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!media) {

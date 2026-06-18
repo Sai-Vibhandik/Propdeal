@@ -1,4 +1,6 @@
 // AI Prompts for different sections
+// IMPORTANT: These prompts must return PLAIN TEXT only, not JavaScript or JSON
+
 const AI_PROMPTS = {
   hero: (property) => `You are a professional real estate copywriter. Generate compelling hero section content for a property listing.
 
@@ -8,16 +10,33 @@ Property Details:
 - Location: ${property.address?.city}, ${property.address?.state}
 - Builder: ${property.builder}
 - Price Range: ${property.priceRange?.min} - ${property.priceRange?.max} ${property.priceUnit}
+- Category: ${property.category}
 
-Generate:
-1. Headline: A catchy, attention-grabbing headline (max 60 characters)
-2. Subheadline: A brief description highlighting key selling points (max 120 characters)
-3. CTA: A call-to-action text (e.g., "Get Price Details", "Book Site Visit")
+CRITICAL INSTRUCTION: Write your response as PLAIN TEXT paragraphs. Do NOT use JavaScript syntax, JSON format, square brackets [], curly braces {}, or any code. Just write normal sentences.
 
-Format your response as:
-Headline: [your headline]
-Subheadline: [your subheadline]
-CTA: [your cta text]`,
+Write your response in this EXACT format (copy the labels exactly):
+
+Headline: [Write a catchy headline here - maximum 60 characters]
+Subheadline: [Write a brief description here - maximum 120 characters]
+CTA: [Write a call-to-action text here like "Get Price Details" or "Book Site Visit"]
+Badge: [Write a badge text like "New Launch" or "Ready to Move"]
+
+Offer 1: [Write first exclusive offer text - like "No Pre-EMI till Possession"]
+Offer 2: [Write second exclusive offer text]
+Offer 3: [Write third exclusive offer text]
+Offer Validity: [Write validity date like "31st March 2026"]
+
+Here is an example of correct output:
+Headline: Luxury Living at Prestige Lakeside
+Subheadline: Experience premium apartments in Whitefield with world-class amenities and excellent connectivity
+CTA: Schedule a Visit
+Badge: New Launch
+Offer 1: No Pre-EMI till Possession
+Offer 2: Free Car Parking Worth ₹5 Lakhs
+Offer 3: Early Bird Discount: 2% Off
+Offer Validity: 31st March 2026
+
+Now write your response following the same format:`,
 
   overview: (property) => `You are a professional real estate copywriter. Generate an overview section for a property listing.
 
@@ -31,19 +50,30 @@ Property Details:
 - Price Range: ${property.priceRange?.min} - ${property.priceRange?.max} ${property.priceUnit}
 - Possession: ${property.possessionDate ? new Date(property.possessionDate).toLocaleDateString() : 'N/A'}
 
-Generate:
-1. Description: A detailed paragraph about the property (150-200 words)
-2. Key Points: 5 bullet points highlighting unique features
+CRITICAL INSTRUCTION: Write your response as PLAIN TEXT. Do NOT use JavaScript syntax, JSON format, square brackets [], curly braces {}, or any code. Just write normal sentences and bullet points with hyphens.
 
-Format your response as:
-Description: [your description]
+Write your response in this EXACT format:
+
+Description: [Write a concise paragraph about the property - 60 to 80 words maximum]
 
 Key Points:
-- [point 1]
-- [point 2]
-- [point 3]
-- [point 4]
-- [point 5]`,
+- [Write point 1 here]
+- [Write point 2 here]
+- [Write point 3 here]
+- [Write point 4 here]
+- [Write point 5 here]
+
+Here is an example of correct output:
+Description: Prestige Lakeside Habitat is a premium residential project by Prestige Group in Whitefield, Bangalore. Offering 2, 3, and 4 BHK apartments with world-class amenities and excellent connectivity to IT hubs. RERA registered with transparent documentation and ready for immediate possession.
+
+Key Points:
+- Modern amenities including clubhouse, swimming pool, and gym
+- Excellent connectivity to major IT parks and business centers
+- RERA registered project with transparent documentation
+- Thoughtfully designed spaces with premium specifications
+- Prime location with good social infrastructure
+
+Now write your response following the same format:`,
 
   highlights: (property) => `You are a professional real estate copywriter. Generate key highlights for a property listing.
 
@@ -54,19 +84,30 @@ Property Details:
 - Builder: ${property.builder}
 - Category: ${property.category}
 
-Generate 8 key highlights with titles and descriptions. Focus on:
-- Location advantages
-- Amenities
-- Builder reputation
-- Investment potential
-- Lifestyle benefits
+CRITICAL INSTRUCTION: Write your response as PLAIN TEXT with numbered items. Do NOT use JavaScript syntax, JSON format, square brackets [], curly braces {}, or any code. Just write numbered sentences.
 
-Format your response as:
-1. [Highlight Title]: [Brief description]
-2. [Highlight Title]: [Brief description]
-... (8 highlights total)`,
+IMPORTANT: Do NOT include generic highlights like "Trusted Builder", "Modern Apartments", or "Modern Design". Focus on specific property features like location advantages, amenities, possession status, infrastructure, investment potential, etc.
 
-  location: (property) => `You are a professional real estate copywriter. Generate location advantages for a property listing.
+Write your response in this EXACT format (6 highlights):
+
+1. [Highlight Title]: [Brief description of the highlight]
+2. [Highlight Title]: [Brief description of the highlight]
+3. [Highlight Title]: [Brief description of the highlight]
+4. [Highlight Title]: [Brief description of the highlight]
+5. [Highlight Title]: [Brief description of the highlight]
+6. [Highlight Title]: [Brief description of the highlight]
+
+Here is an example of correct output:
+1. Prime Location: Strategically situated with excellent connectivity to key areas
+2. Ready to Move: Immediate possession available with all amenities operational
+3. Essential Amenities: Features landscaped gardens, children's play area, and parking
+4. Social Infrastructure: Close proximity to schools, hospitals, and shopping centers
+5. Peaceful Living: Located in a serene neighborhood away from city noise
+6. Great Investment: High potential for appreciation in rapidly developing area
+
+Now write your response following the same format (6 highlights, do NOT include builder reputation or generic design mentions):`,
+
+  location: (property) => `You are a professional real estate copywriter. Generate connectivity description for a property listing.
 
 Property Details:
 - Name: ${property.name}
@@ -75,16 +116,16 @@ Property Details:
 - City: ${property.address?.city}
 - Landmark: ${property.address?.landmark || 'N/A'}
 
-Generate:
-1. Connectivity: A paragraph about connectivity (roads, metro, airport, etc.)
-2. Nearby Places: List of 10 important nearby places with distances
+CRITICAL INSTRUCTION: Write your response as PLAIN TEXT. Do NOT use JavaScript syntax, JSON format, square brackets [], curly braces {}, or any code. Just write normal sentences.
 
-Format your response as:
-Connectivity: [connectivity paragraph]
+Write your response in this EXACT format:
 
-Nearby Places:
-- [Place Name] - [Distance] - [Type: School/Hospital/Mall/IT Hub/etc.]
-... (10 places total)`,
+Connectivity: [Write a brief paragraph about connectivity including key roads, highways, metro, and transport options. Mention 2-3 key distances. Write 40-60 words ONLY.]
+
+Here is an example of correct output:
+Connectivity: The property enjoys excellent connectivity with major roads and highways nearby. The Western Express Highway is just 2 km away providing seamless access to both South Mumbai and the northern suburbs. The nearest metro station is within walking distance at 500m, while the railway station is 3 km away. Chhatrapati Shivaji International Airport is accessible within 45 minutes via the highway. Public transport is excellent with bus stops within 200m and easy availability of auto-rickshaws and cabs.
+
+Now write your connectivity paragraph:`,
 
   investment: (property) => `You are a professional real estate investment advisor. Generate investment benefits for a property listing.
 
@@ -95,12 +136,10 @@ Property Details:
 - Price Range: ${property.priceRange?.min} - ${property.priceRange?.max} ${property.priceUnit}
 - Category: ${property.category}
 
-Generate:
-1. 5 Key Investment Benefits
-2. Rental Potential Analysis
-3. Future Growth Prospects
+CRITICAL INSTRUCTION: Write your response as PLAIN TEXT. Do NOT use JavaScript syntax, JSON format, square brackets [], curly braces {}, or any code. Just write normal sentences with hyphens for bullet points.
 
-Format your response as:
+Write your response in this EXACT format:
+
 Benefits:
 - [Benefit 1]
 - [Benefit 2]
@@ -108,9 +147,23 @@ Benefits:
 - [Benefit 4]
 - [Benefit 5]
 
-Rental Potential: [paragraph about rental yields and demand]
+Rental Potential: [Write ONE short sentence - maximum 20 words about rental yield and demand]
 
-Future Growth: [paragraph about appreciation potential]`,
+Future Growth: [Write ONE short sentence - maximum 20 words about appreciation potential]
+
+Here is an example of correct output:
+Benefits:
+- High rental yield of 4-5% due to prime location near IT parks
+- Strong appreciation potential with upcoming infrastructure projects
+- Excellent social infrastructure with schools, hospitals, and malls nearby
+- Growing demand from working professionals in the area
+- Trusted builder with proven track record of timely delivery
+
+Rental Potential: 4-5% rental yield with strong demand from IT professionals working in nearby tech parks.
+
+Future Growth: Property values expected to appreciate 15-20% over the next 3-5 years due to infrastructure development.
+
+Now write your response following the same format:`,
 
   faq: (property) => `You are a professional real estate advisor. Generate FAQs for a property listing.
 
@@ -124,22 +177,36 @@ Property Details:
 - RERA Number: ${property.reraNumber || 'N/A'}
 - Possession: ${property.possessionDate ? new Date(property.possessionDate).toLocaleDateString() : 'N/A'}
 
-Generate 8-10 frequently asked questions with detailed answers covering:
-- Pricing and payment plans
-- Possession timeline
-- Amenities
-- Location and connectivity
-- Legal and documentation
-- Builder background
-- Loan and financing options
+CRITICAL INSTRUCTION: Write your response as PLAIN TEXT. Do NOT use JavaScript syntax, JSON format, square brackets [], curly braces {}, or any code. Just write questions and answers.
 
-Format your response as:
-Q1: [Question]
-A1: [Detailed Answer]
+Write your response in this EXACT format (exactly 6 FAQs):
 
-Q2: [Question]
-A2: [Detailed Answer]
-... (8-10 FAQs total)`,
+Q1: [Write the first question here]
+A1: [Write a detailed answer here]
+
+Q2: [Write the second question here]
+A2: [Write a detailed answer here]
+
+Q3: [Write the third question here]
+A3: [Write a detailed answer here]
+
+Q4: [Write the fourth question here]
+A4: [Write a detailed answer here]
+
+Q5: [Write the fifth question here]
+A5: [Write a detailed answer here]
+
+Q6: [Write the sixth question here]
+A6: [Write a detailed answer here]
+
+Here is an example of correct output:
+Q1: What is the price range for this property?
+A1: The price range for this property is 85 lakhs to 1.5 crores depending on the configuration and floor chosen.
+
+Q2: Is the project RERA registered?
+A2: Yes, the project is RERA registered. You can verify the registration number on the RERA website.
+
+Now write your response following the same format (8-10 FAQs):`,
 
   builder: (property) => `You are a professional real estate researcher. Generate builder information for a property listing.
 
@@ -148,25 +215,38 @@ Builder Details:
 - Project Name: ${property.name}
 - Location: ${property.address?.city}
 
-Generate:
-1. About the Builder (100-150 words)
-2. Years of Experience
-3. Total Projects Completed
-4. Key Facts about the builder
+CRITICAL INSTRUCTION: Write your response as PLAIN TEXT. Do NOT use JavaScript syntax, JSON format, square brackets [], curly braces {}, or any code. Just write normal sentences and hyphenated bullet points.
 
-Format your response as:
-About: [About paragraph]
+Write your response in this EXACT format:
 
-Experience: [Years]
+About: [Write a paragraph about the builder here - 100 to 150 words]
 
-Total Projects: [Number]
+Experience: [Number of years]
+
+Total Projects: [Number of projects]
 
 Key Facts:
 - [Fact 1]
 - [Fact 2]
 - [Fact 3]
 - [Fact 4]
-- [Fact 5]`,
+- [Fact 5]
+
+Here is an example of correct output:
+About: Prestige Group is one of India's leading real estate developers with over three decades of experience in the industry. The company has delivered numerous landmark projects across residential, commercial, and retail segments.
+
+Experience: 35+ years
+
+Total Projects: 250+
+
+Key Facts:
+- Known for quality construction and timely delivery
+- Presence in multiple cities across India
+- Won numerous awards for excellence in real estate
+- Strong track record of customer satisfaction
+- Pioneer in introducing international standards to Indian real estate
+
+Now write your response following the same format:`,
 
   seo: (property) => `You are an SEO expert specializing in real estate. Generate SEO content for a property listing.
 
@@ -177,17 +257,24 @@ Property Details:
 - Builder: ${property.builder}
 - Configurations: ${property.configurations?.join(', ')}
 
-Generate:
-1. Meta Title (max 60 characters)
-2. Meta Description (max 160 characters)
-3. Keywords (10-15 relevant keywords)
+CRITICAL INSTRUCTION: Write your response as PLAIN TEXT. Do NOT use JavaScript syntax, JSON format, square brackets [], curly braces {}, or any code. Just write normal sentences with comma-separated keywords.
 
-Format your response as:
-Title: [SEO optimized title]
+Write your response in this EXACT format:
 
-Description: [Meta description]
+Title: [Write an SEO optimized title here - maximum 60 characters]
 
-Keywords: [keyword1], [keyword2], [keyword3], ...`,
+Description: [Write a meta description here - maximum 160 characters]
+
+Keywords: [keyword1], [keyword2], [keyword3], [keyword4], [keyword5], [keyword6], [keyword7], [keyword8], [keyword9], [keyword10]
+
+Here is an example of correct output:
+Title: Prestige Lakeside Habitat | 2/3/4 BHK Apartments in Whitefield, Bangalore
+
+Description: Premium apartments in Whitefield by Prestige Group. Ready to move with world-class amenities. Starting 85 lakhs. Book your site visit today.
+
+Keywords: Prestige Lakeside Habitat, Flats in Whitefield, Apartments in Bangalore, Prestige Group, 2 BHK in Whitefield, 3 BHK in Whitefield, Ready to move flats, Luxury apartments Bangalore
+
+Now write your response following the same format:`,
 };
 
 export default AI_PROMPTS;

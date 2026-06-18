@@ -1,10 +1,27 @@
 import { v2 as cloudinary } from 'cloudinary';
+import dotenv from 'dotenv';
 
+// Load environment variables first (needed for ES modules)
+dotenv.config();
+
+const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+const apiKey = process.env.CLOUDINARY_API_KEY;
+const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+// Configure Cloudinary
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: cloudName,
+  api_key: apiKey,
+  api_secret: apiSecret,
+  secure: true,
 });
+
+// Log configuration status
+if (cloudName && apiKey && apiSecret) {
+  console.log('✓ Cloudinary configured:', { cloud_name: cloudName });
+} else {
+  console.warn('⚠ Cloudinary not configured - image uploads will fail');
+}
 
 export const uploadImage = async (file, folder = 'properties') => {
   try {

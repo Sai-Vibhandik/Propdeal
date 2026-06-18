@@ -4,7 +4,7 @@ const leadSchema = new mongoose.Schema({
   propertyId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Property',
-    required: true,
+    required: false, // Optional for homepage leads
     index: true,
   },
 
@@ -16,7 +16,7 @@ const leadSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: true,
+    required: false,
     lowercase: true,
     trim: true,
   },
@@ -35,7 +35,7 @@ const leadSchema = new mongoose.Schema({
   // Source Tracking
   source: {
     type: String,
-    enum: ['homepage', 'property-page', 'cta-price', 'cta-visit', 'cta-brochure', 'cta-callback', 'contact-page'],
+    enum: ['homepage', 'property-page', 'cta-price', 'cta-visit', 'cta-brochure', 'cta-callback', 'cta-amenities', 'cta-plans', 'cta-gallery', 'cta-video', 'contact-page', 'contact-section'],
     default: 'property-page',
   },
   utmSource: String,
@@ -45,7 +45,7 @@ const leadSchema = new mongoose.Schema({
   // Status
   status: {
     type: String,
-    enum: ['new', 'contacted', 'qualified', 'site-visit', 'negotiation', 'converted', 'lost'],
+    enum: ['new', 'in-progress', 'converted', 'lost'],
     default: 'new',
   },
 

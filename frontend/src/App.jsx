@@ -3,33 +3,40 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import { FilterProvider } from './context/FilterContext.jsx';
+import { LeadProvider } from './context/LeadContext.jsx';
+import { SiteContentProvider } from './context/SiteContentContext.jsx';
 import Navbar from './components/common/Navbar.jsx';
 import Footer from './components/common/Footer.jsx';
+import LeadModal from './components/public/LeadModal.jsx';
 
 // Public Pages
 import HomePage from './pages/public/HomePage.jsx';
 import PropertiesPage from './pages/public/PropertiesPage.jsx';
+import PropertyLandingPage from './pages/public/PropertyLandingPage.jsx';
+import PrivacyPolicyPage from './pages/public/PrivacyPolicyPage.jsx';
+import TermsOfServicePage from './pages/public/TermsOfServicePage.jsx';
 
 // Admin Pages
 import LoginPage from './pages/admin/LoginPage.jsx';
 import DashboardPage from './pages/admin/DashboardPage.jsx';
 import AdminPropertiesPage from './pages/admin/AdminPropertiesPage.jsx';
+import PropertyBuilderPage from './pages/admin/PropertyBuilderPage.jsx';
+import TelecallersPage from './pages/admin/TelecallersPage.jsx';
+import LeadsPage from './pages/admin/LeadsPage.jsx';
+import EnquiriesPage from './pages/admin/EnquiriesPage.jsx';
+import AnalyticsPage from './pages/admin/AnalyticsPage.jsx';
+import SettingsPage from './pages/admin/SettingsPage.jsx';
+import SiteContentPage from './pages/admin/SiteContentPage.jsx';
+
+// Telecaller Pages
+import TelecallerDashboard from './pages/telecaller/TelecallerDashboard.jsx';
 
 // Placeholder pages
-const PropertyDetailPage = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="text-center">
-      <h1 className="text-4xl font-bold text-gray-900 mb-4">Property Detail Page</h1>
-      <p className="text-gray-600">Coming soon...</p>
-    </div>
-  </div>
-);
-
 const AboutPage = () => (
   <div className="min-h-screen flex items-center justify-center">
     <div className="text-center">
       <h1 className="text-4xl font-bold text-gray-900 mb-4">About Page</h1>
-      <p className="text-gray-600">Coming soon in Phase 6...</p>
+      <p className="text-gray-600">Coming soon...</p>
     </div>
   </div>
 );
@@ -38,7 +45,7 @@ const ContactPage = () => (
   <div className="min-h-screen flex items-center justify-center">
     <div className="text-center">
       <h1 className="text-4xl font-bold text-gray-900 mb-4">Contact Page</h1>
-      <p className="text-gray-600">Coming soon in Phase 6...</p>
+      <p className="text-gray-600">Coming soon...</p>
     </div>
   </div>
 );
@@ -96,60 +103,165 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <FilterProvider>
-          <Router>
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: '#333',
-                  color: '#fff',
-                },
-                success: {
+          <LeadProvider>
+            <SiteContentProvider>
+              <Router>
+              <Toaster
+                position="top-right"
+                toastOptions={{
+                  duration: 4000,
                   style: {
-                    background: '#059669',
+                    background: '#333',
+                    color: '#fff',
                   },
-                },
-                error: {
-                  style: {
-                    background: '#dc2626',
+                  success: {
+                    style: {
+                      background: '#059669',
+                    },
                   },
-                },
-              }}
-            />
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<PublicLayout><HomePage /></PublicLayout>} />
-              <Route path="/properties" element={<PublicLayout><PropertiesPage /></PublicLayout>} />
-              <Route path="/property/:slug" element={<PublicLayout><PropertyDetailPage /></PublicLayout>} />
-              <Route path="/about" element={<PublicLayout><AboutPage /></PublicLayout>} />
-              <Route path="/contact" element={<PublicLayout><ContactPage /></PublicLayout>} />
-
-              {/* Auth Routes */}
-              <Route path="/login" element={<LoginPage />} />
-
-              {/* Admin Routes */}
-              <Route
-                path="/admin"
-                element={
-                  <ProtectedRoute>
-                    <DashboardPage />
-                  </ProtectedRoute>
-                }
+                  error: {
+                    style: {
+                      background: '#dc2626',
+                    },
+                  },
+                }}
               />
-              <Route
-                path="/admin/properties"
-                element={
-                  <ProtectedRoute>
-                    <AdminPropertiesPage />
-                  </ProtectedRoute>
-                }
-              />
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<PublicLayout><HomePage /></PublicLayout>} />
+                <Route path="/properties" element={<PublicLayout><PropertiesPage /></PublicLayout>} />
+                <Route path="/property/:slug" element={<PropertyLandingPage />} />
+                <Route path="/about" element={<PublicLayout><AboutPage /></PublicLayout>} />
+                <Route path="/contact" element={<PublicLayout><ContactPage /></PublicLayout>} />
+                <Route path="/privacy-policy" element={<PublicLayout><PrivacyPolicyPage /></PublicLayout>} />
+                <Route path="/terms-of-service" element={<PublicLayout><TermsOfServicePage /></PublicLayout>} />
 
-              {/* 404 Catch-all */}
-              <Route path="*" element={<PublicLayout><NotFoundPage /></PublicLayout>} />
-            </Routes>
-          </Router>
+                {/* Auth Routes */}
+                <Route path="/login" element={<LoginPage />} />
+
+                {/* Admin Routes */}
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute>
+                      <DashboardPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/properties"
+                  element={
+                    <ProtectedRoute>
+                      <AdminPropertiesPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/properties/new"
+                  element={
+                    <ProtectedRoute>
+                      <PropertyBuilderPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/properties/:id/edit"
+                  element={
+                    <ProtectedRoute>
+                      <PropertyBuilderPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/telecallers"
+                  element={
+                    <ProtectedRoute>
+                      <TelecallersPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/leads"
+                  element={
+                    <ProtectedRoute>
+                      <LeadsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/enquiries"
+                  element={
+                    <ProtectedRoute>
+                      <EnquiriesPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/analytics"
+                  element={
+                    <ProtectedRoute>
+                      <AnalyticsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/settings"
+                  element={
+                    <ProtectedRoute>
+                      <SettingsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/site-content"
+                  element={
+                    <ProtectedRoute>
+                      <SiteContentPage />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Telecaller Routes */}
+                <Route
+                  path="/telecaller"
+                  element={
+                    <ProtectedRoute>
+                      <TelecallerDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/telecaller/leads"
+                  element={
+                    <ProtectedRoute>
+                      <TelecallerDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/telecaller/properties"
+                  element={
+                    <ProtectedRoute>
+                      <TelecallerDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/telecaller/enquiries"
+                  element={
+                    <ProtectedRoute>
+                      <TelecallerDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* 404 Catch-all */}
+                <Route path="*" element={<PublicLayout><NotFoundPage /></PublicLayout>} />
+              </Routes>
+              <LeadModal />
+            </Router>
+            </SiteContentProvider>
+          </LeadProvider>
         </FilterProvider>
       </AuthProvider>
     </QueryClientProvider>

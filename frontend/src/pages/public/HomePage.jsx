@@ -1,108 +1,51 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Building2, MapPin, Shield, TrendingUp, Users, Star } from 'lucide-react';
+import { ArrowRight, MapPin, Building2, Loader2 } from 'lucide-react';
+import { useSiteContent } from '../../context/SiteContentContext.jsx';
+import { propertiesAPI, getFileUrl } from '../../services/api.js';
 
 // Components
 import HeroCarousel from '../../components/public/HeroCarousel.jsx';
 import SearchBar from '../../components/public/SearchBar.jsx';
 import PropertyGrid from '../../components/public/PropertyGrid.jsx';
 import FeaturedSection from '../../components/public/FeaturedSection.jsx';
+import WhyUsSection from '../../components/public/WhyUsSection.jsx';
+import TestimonialsSection from '../../components/public/TestimonialsSection.jsx';
+import FAQSection from '../../components/public/FAQSection.jsx';
+import ContactSection from '../../components/public/ContactSection.jsx';
 import AnimatedSection from '../../components/common/AnimatedSection.jsx';
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const { content, loading: contentLoading } = useSiteContent();
+  const [featuredProperties, setFeaturedProperties] = useState([]);
+  const [latestProperties, setLatestProperties] = useState([]);
+  const [propertiesLoading, setPropertiesLoading] = useState(true);
 
-  // Placeholder data - will be replaced with API data
-  const featuredProperties = [];
-  const latestProperties = [
-    {
-      _id: '1',
-      name: 'Prestige Lakeside Habitat',
-      slug: 'prestige-lakeside',
-      builder: 'Prestige Group',
-      propertyType: 'apartment',
-      category: 'ready-to-move',
-      address: { locality: 'Whitefield', city: 'Bangalore', fullAddress: 'Whitefield, Bangalore' },
-      priceRange: { min: 8500000, max: 15000000 },
-      priceUnit: 'lac',
-      configurations: ['2BHK', '3BHK', '4BHK'],
-      featured: true,
-      heroImage: 'https://www.homznspace.com/wp-content/uploads/2013/10/Prestige-Lakeside-Habitat-1.jpg',
-    },
-    {
-      _id: '2',
-      name: 'DLF The Camellias',
-      slug: 'dlf-camellias',
-      builder: 'DLF Group',
-      propertyType: 'apartment',
-      category: 'ready-to-move',
-      address: { locality: 'Sector 42', city: 'Gurgaon' },
-      priceRange: { min: 5, max: 12 },
-      priceUnit: 'cr',
-      configurations: ['3BHK', '4BHK', '5BHK'],
-      featured: true,
-      heroImage: 'https://placehold.co/800x600/0f172a/white?text=DLF+Camellias',
-    },
-    {
-      _id: '3',
-      name: 'Lodha World Towers',
-      slug: 'lodha-world-towers',
-      builder: 'Lodha Group',
-      propertyType: 'apartment',
-      category: 'under-construction',
-      address: { locality: 'Worli', city: 'Mumbai' },
-      priceRange: { min: 8, max: 25 },
-      priceUnit: 'cr',
-      configurations: ['3BHK', '4BHK', 'Penthouse'],
-      featured: true,
-      heroImage: 'https://placehold.co/800x600/1e40af/white?text=Lodha+World',
-    },
-    {
-      _id: '4',
-      name: 'Brigade Gateway',
-      slug: 'brigade-gateway',
-      builder: 'Brigade Group',
-      propertyType: 'apartment',
-      category: 'ready-to-move',
-      address: { locality: 'Rajajinagar', city: 'Bangalore' },
-      priceRange: { min: 12000000, max: 28000000 },
-      priceUnit: 'lac',
-      configurations: ['2BHK', '3BHK'],
-      featured: false,
-      heroImage: 'https://placehold.co/800x600/1e3a8a/white?text=Brigade+Gateway',
-    },
-    {
-      _id: '5',
-      name: 'Godrej Eden Estate',
-      slug: 'godrej-eden',
-      builder: 'Godrej Properties',
-      propertyType: 'villa',
-      category: 'new-launch',
-      address: { locality: 'Kanakapura Road', city: 'Bangalore' },
-      priceRange: { min: 2, max: 5 },
-      priceUnit: 'cr',
-      configurations: ['3BHK', '4BHK'],
-      featured: false,
-      heroImage: 'https://placehold.co/800x600/0f172a/white?text=Godrej+Eden',
-    },
-    {
-      _id: '6',
-      name: 'Sobha Dream Acres',
-      slug: 'sobha-dream-acres',
-      builder: 'Sobha Limited',
-      propertyType: 'apartment',
-      category: 'under-construction',
-      address: { locality: 'Panathur', city: 'Bangalore' },
-      priceRange: { min: 6500000, max: 12000000 },
-      priceUnit: 'lac',
-      configurations: ['1BHK', '2BHK', '3BHK'],
-      featured: false,
-      heroImage: 'https://placehold.co/800x600/1e40af/white?text=Sobha+Dream',
-    },
-  ];
+  useEffect(() => {
+    fetchProperties();
+  }, []);
+
+  const fetchProperties = async () => {
+    try {
+      setPropertiesLoading(true);
+
+      // Fetch featured properties
+      const featuredRes = await propertiesAPI.getFeatured();
+      setFeaturedProperties(featuredRes.data.data || []);
+
+      // Fetch all properties (latest)
+      const allRes = await propertiesAPI.getAll({ limit: 8, sort: '-createdAt' });
+      setLatestProperties(allRes.data.data || []);
+    } catch (error) {
+      console.error('Error fetching properties:', error);
+    } finally {
+      setPropertiesLoading(false);
+    }
+  };
 
   const handleSearch = (filters) => {
-    setSearchFilters(filters);
     const params = new URLSearchParams();
     if (filters.city) params.append('city', filters.city);
     if (filters.propertyType) params.append('type', filters.propertyType);
@@ -110,176 +53,175 @@ const HomePage = () => {
     navigate(`/properties?${params.toString()}`);
   };
 
-  const stats = [
-    { icon: Building2, value: '500+', label: 'Properties' },
-    { icon: MapPin, value: '50+', label: 'Cities' },
-    { icon: Users, value: '10,000+', label: 'Happy Customers' },
-    { icon: Star, value: '4.8', label: 'Average Rating' },
-  ];
+  if (contentLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-12 h-12 animate-spin text-slate-700" />
+      </div>
+    );
+  }
 
-  const whyChooseUs = [
-    {
-      icon: Shield,
-      title: 'Verified Properties',
-      description: 'All our properties are thoroughly verified for legal compliance and quality standards.',
-    },
-    {
-      icon: TrendingUp,
-      title: 'Best Investment',
-      description: 'Expert guidance to help you make informed decisions for maximum returns on investment.',
-    },
-    {
-      icon: Users,
-      title: 'Dedicated Support',
-      description: 'Our team of experts is available 24/7 to assist you throughout your property journey.',
-    },
-  ];
+  const cities = content?.cities?.filter(c => c.isActive) || [];
 
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <HeroCarousel />
+      <HeroCarousel slides={content?.heroSlides || []} />
 
-      {/* Search Bar Overlay */}
-      <div className="relative z-20 px-4 mt-16">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.6 }}
-        >
-          <SearchBar onSearch={handleSearch} variant="hero" />
-        </motion.div>
-      </div>
-
-      {/* Featured Properties */}
-      <section className="py-12 md:py-2 bg-gray-50">
-        <FeaturedSection properties={featuredProperties} />
+      {/* Search Bar Section */}
+      <section className="py-6 md:py-10 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+          >
+            <SearchBar onSearch={handleSearch} variant="default" />
+          </motion.div>
+        </div>
       </section>
 
+      {/* Why Choose Us - Trust Indicators */}
+      <WhyUsSection data={content?.whyUs} />
+
+      {/* Featured Properties */}
+      <FeaturedSection properties={featuredProperties} />
+
+      {/* Popular Cities */}
+      {cities.length > 0 && (
+        <section id="cities" className="py-12 md:py-16 bg-slate-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <AnimatedSection animation="fadeInUp">
+              <div className="mb-10">
+                <span className="text-amber-500 font-semibold text-sm uppercase tracking-wider">
+                  Explore by Location
+                </span>
+                <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mt-2">
+                  Popular Cities
+                </h2>
+                <p className="text-slate-600 mt-3 max-w-xl">
+                  Discover properties in the most sought-after cities across India.
+                </p>
+              </div>
+            </AnimatedSection>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {cities.map((city, index) => (
+                <AnimatedSection key={city._id || city.name} animation="fadeInUp" delay={index * 0.1}>
+                  <Link
+                    to={`/properties?city=${city.name}`}
+                    className="block group"
+                  >
+                    <motion.div
+                      whileHover={{ y: -4 }}
+                      transition={{ duration: 0.2 }}
+                      className="relative rounded-2xl overflow-hidden bg-white shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50 transition-all duration-500"
+                    >
+                      <div className="relative h-40 overflow-hidden">
+                        {city.image ? (
+                          <img
+                            src={getFileUrl(city.image)}
+                            alt={city.name}
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
+                            <MapPin className="w-12 h-12 text-slate-400" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                        <div className="absolute bottom-4 left-4">
+                          <h3 className="text-lg font-bold text-white">{city.name}</h3>
+                          {city.description && (
+                            <p className="text-white/80 text-sm line-clamp-1">{city.description}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="p-4">
+                        <div className="flex items-center justify-between">
+                          <p className="text-slate-600 text-sm">{city.description || `Explore properties in ${city.name}`}</p>
+                          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-slate-800 transition-colors flex-shrink-0 ml-2">
+                            <ArrowRight className="w-5 h-5 text-slate-600 group-hover:text-white transition-colors" />
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </Link>
+                </AnimatedSection>
+              ))}
+            </div>
+
+            <AnimatedSection animation="fadeInUp" delay={0.4}>
+              <div className="text-center mt-10">
+                <motion.span whileHover={{ x: 4 }} className="inline-block">
+                  <Link
+                    to="/properties"
+                    className="inline-flex items-center gap-2 text-slate-700 font-medium hover:text-slate-900 transition-colors cursor-pointer"
+                  >
+                    View All Cities
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </motion.span>
+              </div>
+            </AnimatedSection>
+          </div>
+        </section>
+      )}
+
       {/* Latest Properties Grid */}
-      <section className="py-16 md:py-12 bg-white">
+      <section id="latest" className="py-12 md:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <AnimatedSection animation="fadeInUp">
-            <div className="text-center mb-12">
-              <span className="text-amber-600 font-semibold text-sm uppercase tracking-wider">
-                Explore
+            <div className="mb-10">
+              <span className="text-amber-500 font-semibold text-sm uppercase tracking-wider">
+                Just Listed
               </span>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2">
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mt-2">
                 Latest Properties
               </h2>
-              <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
-                Discover the newest additions to our portfolio, handpicked for their exceptional value and prime locations.
+              <p className="text-slate-600 mt-3 max-w-xl">
+                Fresh listings added daily. Be the first to discover new opportunities.
               </p>
             </div>
           </AnimatedSection>
 
-          <PropertyGrid properties={latestProperties} columns={3} />
+          {propertiesLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-slate-700" />
+            </div>
+          ) : latestProperties.length > 0 ? (
+            <PropertyGrid properties={latestProperties} columns={4} />
+          ) : (
+            <div className="text-center py-12 text-slate-500">
+              <Building2 className="w-12 h-12 mx-auto mb-4 text-slate-300" />
+              <p>No properties available yet</p>
+            </div>
+          )}
 
           <AnimatedSection animation="fadeInUp" delay={0.3}>
             <div className="text-center mt-10">
-              <Link
-                to="/properties"
-                className="inline-flex items-center gap-2 px-8 py-4 border-2 border-blue-800 text-blue-800 font-semibold rounded-xl hover:bg-blue-800 hover:text-white transition-all"
-              >
-                View All Properties
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-            </div>
-          </AnimatedSection>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-r from-blue-800 to-blue-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => {
-              const Icon = stat.icon;
-              return (
-                <AnimatedSection key={stat.label} animation="fadeInUp" delay={index * 0.1}>
-                  <div className="text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-white/10 rounded-full flex items-center justify-center">
-                      <Icon className="w-8 h-8 text-amber-400" />
-                    </div>
-                    <p className="text-4xl font-bold text-white mb-1">{stat.value}</p>
-                    <p className="text-blue-200">{stat.label}</p>
-                  </div>
-                </AnimatedSection>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Why Choose Us */}
-      <section className="py-16 md:py-24 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <AnimatedSection animation="fadeInUp">
-            <div className="text-center mb-12">
-              <span className="text-amber-600 font-semibold text-sm uppercase tracking-wider">
-                Why Choose Us
-              </span>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2">
-                Your Trusted Property Partner
-              </h2>
-              <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
-                We combine technology with expertise to deliver exceptional property solutions tailored to your needs.
-              </p>
-            </div>
-          </AnimatedSection>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {whyChooseUs.map((item, index) => {
-              const Icon = item.icon;
-              return (
-                <AnimatedSection key={item.title} animation="fadeInUp" delay={index * 0.15}>
-                  <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300">
-                    <div className="w-14 h-14 bg-blue-50 rounded-xl flex items-center justify-center mb-6">
-                      <Icon className="w-7 h-7 text-blue-800" />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-3">{item.title}</h3>
-                    <p className="text-gray-600 leading-relaxed">{item.description}</p>
-                  </div>
-                </AnimatedSection>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-16 md:py-24 bg-gray-900 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-800 to-amber-500" />
-        </div>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <AnimatedSection animation="fadeInUp">
-            <div className="text-center">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                Ready to Find Your Dream Home?
-              </h2>
-              <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
-                Let our experts help you navigate the property market. Get personalized recommendations and exclusive deals.
-              </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <motion.span whileHover={{ scale: 1.02, y: -2 }} whileTap={{ scale: 0.98 }} className="inline-block">
                 <Link
                   to="/properties"
-                  className="inline-flex items-center gap-2 px-8 py-4 bg-amber-500 text-white font-semibold rounded-xl hover:bg-amber-600 transition-all shadow-lg"
+                  className="inline-flex items-center gap-2 px-8 py-4 border-2 border-slate-700 text-slate-700 font-semibold rounded-xl hover:bg-slate-700 hover:text-white transition-all cursor-pointer"
                 >
-                  Explore Properties
+                  View All Properties
                   <ArrowRight className="w-5 h-5" />
                 </Link>
-                <Link
-                  to="/contact"
-                  className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/30 text-white font-semibold rounded-xl hover:bg-white/20 transition-all"
-                >
-                  Contact Us
-                </Link>
-              </div>
+              </motion.span>
             </div>
           </AnimatedSection>
         </div>
       </section>
+
+      {/* Testimonials - Social Proof */}
+      <TestimonialsSection testimonials={content?.testimonials || []} />
+
+      {/* FAQ - Objection Handling */}
+      <FAQSection faqs={content?.faqs || []} />
+
+      {/* Contact Form - Final CTA */}
+      <ContactSection contact={content?.contact} />
     </div>
   );
 };
