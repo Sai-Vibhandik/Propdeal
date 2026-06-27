@@ -23,6 +23,7 @@ import analyticsRoutes from './routes/analytics.routes.js';
 import aiRoutes from './routes/ai.routes.js';
 import telecallerRoutes from './routes/telecaller.routes.js';
 import siteContentRoutes from './routes/siteContent.routes.js';
+import enquiryRoutes from './routes/enquiry.routes.js';
 
 // Import middleware
 import errorHandler from './middleware/errorHandler.js';
@@ -56,6 +57,7 @@ app.use('/api/admin/ai', aiRoutes);
 app.use('/api/admin/telecallers', telecallerRoutes);
 app.use('/api/telecaller', telecallerRoutes);
 app.use('/api/site-content', siteContentRoutes);
+app.use('/api/enquiries', enquiryRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

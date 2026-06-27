@@ -70,13 +70,13 @@ const HeroSection = ({ property, layout = 'full-screen', theme = {}, branding = 
             </motion.div>
           </AnimatePresence>
 
-          {/* RERA Badge with QR Code - Top Left */}
+          {/* RERA Badge with QR Code - Top Right */}
           {showReraBadge && (
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="absolute top-4 left-4 z-20"
+              className="absolute top-4 right-4 z-20"
             >
               <div className="flex items-center gap-2.5 backdrop-blur-md bg-white/80 rounded-lg px-2.5 py-1.5 shadow-sm border border-white/20">
                 {reraQrCode && (
@@ -125,7 +125,7 @@ const HeroSection = ({ property, layout = 'full-screen', theme = {}, branding = 
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={nextImage}
-                className="absolute right-18 lg:right-20 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center text-gray-700 hover:bg-white transition-all shadow-lg z-30 cursor-pointer"
+                className="absolute right-4 lg:right-20 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center text-gray-700 hover:bg-white transition-all shadow-lg z-30 cursor-pointer"
               >
                 <ChevronRight className="w-5 h-5" />
               </motion.button>
@@ -274,7 +274,7 @@ const HeroSection = ({ property, layout = 'full-screen', theme = {}, branding = 
                 <motion.button
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => openModal(property, 'cta-price')}
+                  onClick={() => openModal(property, 'cta-hero')}
                   className="cta-bounce-shine w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl cursor-pointer"
                   style={{ backgroundColor: colors.primary }}
                 >
@@ -284,7 +284,7 @@ const HeroSection = ({ property, layout = 'full-screen', theme = {}, branding = 
                 <motion.button
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => openModal(property, 'cta-visit')}
+                  onClick={() => openModal(property, 'cta-hero-visit')}
                   className={`w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 font-semibold rounded-xl transition-all cursor-pointer ${isDark ? 'hover:bg-gray-800' : 'hover:bg-gray-50'}`}
                   style={{ borderColor: colors.secondary, color: colors.secondary, backgroundColor: isDark ? 'transparent' : 'white', borderWidth: 2, borderStyle: 'solid' }}
                 >

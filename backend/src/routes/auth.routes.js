@@ -1,11 +1,13 @@
 import express from 'express';
-import { login, getMe, register, updateProfile, changePassword } from '../controllers/auth.controller.js';
+import { login, getMe, register, updateProfile, changePassword, forgotPassword, resetPassword } from '../controllers/auth.controller.js';
 import { protect, authorize } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
 // Public routes
 router.post('/login', login);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password/:token', resetPassword);
 
 // Protected routes
 router.get('/me', protect, getMe);

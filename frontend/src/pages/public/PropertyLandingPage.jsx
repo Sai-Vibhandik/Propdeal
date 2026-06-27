@@ -247,7 +247,7 @@ const PropertyLandingPage = () => {
 
   return (
     <div
-      className="min-h-screen bg-white dark:bg-gray-900"
+      className="min-h-screen bg-white dark:bg-gray-900 overflow-x-hidden"
       style={{
         '--font-heading': fontHeading,
         '--font-body': fontBody,

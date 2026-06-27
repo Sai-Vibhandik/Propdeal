@@ -11,6 +11,8 @@ import SearchBar from '../../components/public/SearchBar.jsx';
 import PropertyGrid from '../../components/public/PropertyGrid.jsx';
 import FeaturedSection from '../../components/public/FeaturedSection.jsx';
 import WhyUsSection from '../../components/public/WhyUsSection.jsx';
+import BuildersSection from '../../components/public/BuildersSection.jsx';
+import HomeLoanSection from '../../components/public/sections/HomeLoanSection.jsx';
 import TestimonialsSection from '../../components/public/TestimonialsSection.jsx';
 import FAQSection from '../../components/public/FAQSection.jsx';
 import ContactSection from '../../components/public/ContactSection.jsx';
@@ -92,14 +94,14 @@ const HomePage = () => {
         <section id="cities" className="py-12 md:py-16 bg-slate-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <AnimatedSection animation="fadeInUp">
-              <div className="mb-10">
+              <div className="text-center mb-10">
                 <span className="text-amber-500 font-semibold text-sm uppercase tracking-wider">
                   Explore by Location
                 </span>
                 <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mt-2">
                   Popular Cities
                 </h2>
-                <p className="text-slate-600 mt-3 max-w-xl">
+                <p className="text-slate-600 mt-3 max-w-xl mx-auto">
                   Discover properties in the most sought-after cities across India.
                 </p>
               </div>
@@ -110,12 +112,12 @@ const HomePage = () => {
                 <AnimatedSection key={city._id || city.name} animation="fadeInUp" delay={index * 0.1}>
                   <Link
                     to={`/properties?city=${city.name}`}
-                    className="block group"
+                    className="block group cursor-pointer"
                   >
                     <motion.div
                       whileHover={{ y: -4 }}
                       transition={{ duration: 0.2 }}
-                      className="relative rounded-2xl overflow-hidden bg-white shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50 transition-all duration-500"
+                      className="relative rounded-2xl overflow-hidden bg-white shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50 active:shadow-md transition-all duration-500"
                     >
                       <div className="relative h-40 overflow-hidden">
                         {city.image ? (
@@ -153,13 +155,13 @@ const HomePage = () => {
 
             <AnimatedSection animation="fadeInUp" delay={0.4}>
               <div className="text-center mt-10">
-                <motion.span whileHover={{ x: 4 }} className="inline-block">
+                <motion.span whileHover={{ scale: 1.02, y: -2 }} whileTap={{ scale: 0.98 }} className="inline-block">
                   <Link
                     to="/properties"
-                    className="inline-flex items-center gap-2 text-slate-700 font-medium hover:text-slate-900 transition-colors cursor-pointer"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-4 bg-slate-800 text-white font-semibold rounded-xl hover:bg-slate-700 active:bg-slate-900 transition-all shadow-lg shadow-slate-800/30 cursor-pointer"
                   >
                     View All Cities
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-5 h-5" />
                   </Link>
                 </motion.span>
               </div>
@@ -168,18 +170,21 @@ const HomePage = () => {
         </section>
       )}
 
+      {/* Builders Section */}
+      <BuildersSection />
+
       {/* Latest Properties Grid */}
       <section id="latest" className="py-12 md:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <AnimatedSection animation="fadeInUp">
-            <div className="mb-10">
+            <div className="text-center mb-10">
               <span className="text-amber-500 font-semibold text-sm uppercase tracking-wider">
                 Just Listed
               </span>
               <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mt-2">
                 Latest Properties
               </h2>
-              <p className="text-slate-600 mt-3 max-w-xl">
+              <p className="text-slate-600 mt-3 max-w-xl mx-auto">
                 Fresh listings added daily. Be the first to discover new opportunities.
               </p>
             </div>
@@ -203,7 +208,7 @@ const HomePage = () => {
               <motion.span whileHover={{ scale: 1.02, y: -2 }} whileTap={{ scale: 0.98 }} className="inline-block">
                 <Link
                   to="/properties"
-                  className="inline-flex items-center gap-2 px-8 py-4 border-2 border-slate-700 text-slate-700 font-semibold rounded-xl hover:bg-slate-700 hover:text-white transition-all cursor-pointer"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-4 bg-slate-800 text-white font-semibold rounded-xl hover:bg-slate-700 active:bg-slate-900 transition-all shadow-lg shadow-slate-800/30 cursor-pointer"
                 >
                   View All Properties
                   <ArrowRight className="w-5 h-5" />
@@ -213,6 +218,9 @@ const HomePage = () => {
           </AnimatedSection>
         </div>
       </section>
+
+      {/* Home Loan Section */}
+      <HomeLoanSection />
 
       {/* Testimonials - Social Proof */}
       <TestimonialsSection testimonials={content?.testimonials || []} />

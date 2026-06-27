@@ -189,7 +189,7 @@ const PlansSection = ({ property, theme = {}, bgVariant = 'white' }) => {
         >
           <p className="text-gray-600 dark:text-gray-300 mb-4">Want detailed floor plans and layout options?</p>
           <button
-            onClick={() => openModal(property, 'cta-price')}
+            onClick={() => openModal(property, 'cta-plans')}
             className="cta-bounce-shine inline-flex items-center gap-2 px-8 py-4 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
             style={{ backgroundColor: colors.primary }}
           >

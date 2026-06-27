@@ -24,11 +24,48 @@ const SettingsPage = () => {
     confirmPassword: '',
   });
 
+  // Error states
+  const [accountErrors, setAccountErrors] = useState({});
+  const [passwordErrors, setPasswordErrors] = useState({});
+
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
     confirm: false,
   });
+
+  // Password validation
+  const validatePassword = (password) => {
+    const errors = [];
+    if (password.length < 8) {
+      errors.push('At least 8 characters');
+    }
+    if (!/[A-Z]/.test(password)) {
+      errors.push('At least one uppercase letter');
+    }
+    if (!/[a-z]/.test(password)) {
+      errors.push('At least one lowercase letter');
+    }
+    if (!/[0-9]/.test(password)) {
+      errors.push('At least one digit');
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      errors.push('At least one special character');
+    }
+    return errors;
+  };
+
+  const getPasswordRequirements = (password) => {
+    return [
+      { label: '8+ characters', valid: password.length >= 8 },
+      { label: 'Uppercase letter', valid: /[A-Z]/.test(password) },
+      { label: 'Lowercase letter', valid: /[a-z]/.test(password) },
+      { label: 'Number', valid: /[0-9]/.test(password) },
+      { label: 'Special character', valid: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) },
+    ];
+  };
+
+  const isNewPasswordValid = passwordForm.newPassword.length > 0 && validatePassword(passwordForm.newPassword).length === 0;
 
   const tabs = [
     { id: 'account', label: 'Account', icon: User },
@@ -59,6 +96,29 @@ const SettingsPage = () => {
 
   const handleAccountSubmit = async (e) => {
     e.preventDefault();
+
+    // Clear previous errors
+    setAccountErrors({});
+
+    // Validate
+    const errors = {};
+    if (!accountForm.name?.trim()) {
+      errors.name = 'Name is required';
+    }
+    if (!accountForm.email?.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(accountForm.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+    if (accountForm.phone && !/^[\d\s\-+()]{10,}$/.test(accountForm.phone)) {
+      errors.phone = 'Please enter a valid phone number';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setAccountErrors(errors);
+      return;
+    }
+
     try {
       setSaving(true);
       await authAPI.updateProfile({
@@ -67,9 +127,12 @@ const SettingsPage = () => {
         phone: accountForm.phone,
       });
       toast.success('Profile updated successfully');
+      setAccountErrors({});
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast.error(error.response?.data?.message || 'Failed to update profile');
+      let message = error.response?.data?.message || 'Failed to update profile';
+      message = message.replace(/<[^>]*>/g, '');
+      toast.error(message);
     } finally {
       setSaving(false);
     }
@@ -78,13 +141,30 @@ const SettingsPage = () => {
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
 
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
+    // Clear previous errors
+    setPasswordErrors({});
+
+    // Validate
+    const errors = {};
+    if (!passwordForm.currentPassword) {
+      errors.currentPassword = 'Current password is required';
+    }
+    if (!passwordForm.newPassword) {
+      errors.newPassword = 'New password is required';
+    } else {
+      const passwordValidationErrors = validatePassword(passwordForm.newPassword);
+      if (passwordValidationErrors.length > 0) {
+        errors.newPassword = passwordValidationErrors.join(', ');
+      }
+    }
+    if (!passwordForm.confirmPassword) {
+      errors.confirmPassword = 'Please confirm your password';
+    } else if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
     }
 
-    if (passwordForm.newPassword.length < 6) {
-      toast.error('Password must be at least 6 characters');
+    if (Object.keys(errors).length > 0) {
+      setPasswordErrors(errors);
       return;
     }
 
@@ -100,9 +180,12 @@ const SettingsPage = () => {
         newPassword: '',
         confirmPassword: '',
       });
+      setPasswordErrors({});
     } catch (error) {
       console.error('Error changing password:', error);
-      toast.error(error.response?.data?.message || 'Failed to change password');
+      let message = error.response?.data?.message || 'Failed to change password';
+      message = message.replace(/<[^>]*>/g, '');
+      toast.error(message);
     } finally {
       setSaving(false);
     }
@@ -185,34 +268,65 @@ const SettingsPage = () => {
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h3>
                       <div className="grid md:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Full Name<sup className="text-red-500">*</sup>
+                          </label>
                           <input
                             type="text"
                             value={accountForm.name}
-                            onChange={(e) => setAccountForm({ ...accountForm, name: e.target.value })}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            onChange={(e) => {
+                              setAccountForm({ ...accountForm, name: e.target.value });
+                              if (accountErrors.name) {
+                                setAccountErrors({ ...accountErrors, name: '' });
+                              }
+                            }}
+                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${accountErrors.name ? 'border-red-500' : 'border-gray-300'}`}
                             placeholder="Enter your name"
+                            maxLength={100}
                           />
+                          {accountErrors.name && (
+                            <p className="text-sm text-red-500 mt-1">{accountErrors.name}</p>
+                          )}
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Email ID<sup className="text-red-500">*</sup>
+                          </label>
                           <input
                             type="email"
                             value={accountForm.email}
-                            onChange={(e) => setAccountForm({ ...accountForm, email: e.target.value })}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            onChange={(e) => {
+                              setAccountForm({ ...accountForm, email: e.target.value });
+                              if (accountErrors.email) {
+                                setAccountErrors({ ...accountErrors, email: '' });
+                              }
+                            }}
+                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${accountErrors.email ? 'border-red-500' : 'border-gray-300'}`}
                             placeholder="Enter your email"
+                            maxLength={100}
                           />
+                          {accountErrors.email && (
+                            <p className="text-sm text-red-500 mt-1">{accountErrors.email}</p>
+                          )}
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
                           <input
                             type="tel"
                             value={accountForm.phone || ''}
-                            onChange={(e) => setAccountForm({ ...accountForm, phone: e.target.value })}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            onChange={(e) => {
+                              setAccountForm({ ...accountForm, phone: e.target.value });
+                              if (accountErrors.phone) {
+                                setAccountErrors({ ...accountErrors, phone: '' });
+                              }
+                            }}
+                            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${accountErrors.phone ? 'border-red-500' : 'border-gray-300'}`}
                             placeholder="Enter phone number"
+                            maxLength={20}
                           />
+                          {accountErrors.phone && (
+                            <p className="text-sm text-red-500 mt-1">{accountErrors.phone}</p>
+                          )}
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
@@ -254,15 +368,22 @@ const SettingsPage = () => {
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">Change Password</h3>
                       <div className="space-y-4 max-w-md">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Current Password<sup className="text-red-500">*</sup>
+                          </label>
                           <div className="relative">
                             <input
                               type={showPasswords.current ? 'text' : 'password'}
                               value={passwordForm.currentPassword}
-                              onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
-                              className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              onChange={(e) => {
+                                setPasswordForm({ ...passwordForm, currentPassword: e.target.value });
+                                if (passwordErrors.currentPassword) {
+                                  setPasswordErrors({ ...passwordErrors, currentPassword: '' });
+                                }
+                              }}
+                              className={`w-full px-4 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${passwordErrors.currentPassword ? 'border-red-500' : 'border-gray-300'}`}
                               placeholder="Enter current password"
-                              required
+                              maxLength={100}
                             />
                             <button
                               type="button"
@@ -272,18 +393,27 @@ const SettingsPage = () => {
                               {showPasswords.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
                           </div>
+                          {passwordErrors.currentPassword && (
+                            <p className="text-sm text-red-500 mt-1">{passwordErrors.currentPassword}</p>
+                          )}
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            New Password<sup className="text-red-500">*</sup>
+                          </label>
                           <div className="relative">
                             <input
                               type={showPasswords.new ? 'text' : 'password'}
                               value={passwordForm.newPassword}
-                              onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                              className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              onChange={(e) => {
+                                setPasswordForm({ ...passwordForm, newPassword: e.target.value });
+                                if (passwordErrors.newPassword) {
+                                  setPasswordErrors({ ...passwordErrors, newPassword: '' });
+                                }
+                              }}
+                              className={`w-full px-4 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${passwordErrors.newPassword ? 'border-red-500' : 'border-gray-300'}`}
                               placeholder="Enter new password"
-                              required
-                              minLength={6}
+                              maxLength={100}
                             />
                             <button
                               type="button"
@@ -293,17 +423,48 @@ const SettingsPage = () => {
                               {showPasswords.new ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
                           </div>
+                          {passwordErrors.newPassword && (
+                            <p className="text-sm text-red-500 mt-1">{passwordErrors.newPassword}</p>
+                          )}
+
+                          {/* Password Requirements */}
+                          {passwordForm.newPassword && (
+                            <div className="mt-2 space-y-1">
+                              <p className="text-xs text-gray-500 font-medium">Password must contain:</p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {getPasswordRequirements(passwordForm.newPassword).map((req, idx) => (
+                                  <span
+                                    key={idx}
+                                    className={`text-xs px-2 py-0.5 rounded-full ${
+                                      req.valid
+                                        ? 'bg-green-100 text-green-700'
+                                        : 'bg-gray-100 text-gray-500'
+                                    }`}
+                                  >
+                                    {req.valid ? '✓' : '○'} {req.label}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Confirm New Password<sup className="text-red-500">*</sup>
+                          </label>
                           <div className="relative">
                             <input
                               type={showPasswords.confirm ? 'text' : 'password'}
                               value={passwordForm.confirmPassword}
-                              onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                              className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              onChange={(e) => {
+                                setPasswordForm({ ...passwordForm, confirmPassword: e.target.value });
+                                if (passwordErrors.confirmPassword) {
+                                  setPasswordErrors({ ...passwordErrors, confirmPassword: '' });
+                                }
+                              }}
+                              className={`w-full px-4 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${passwordErrors.confirmPassword ? 'border-red-500' : 'border-gray-300'}`}
                               placeholder="Confirm new password"
-                              required
+                              maxLength={100}
                             />
                             <button
                               type="button"
@@ -313,7 +474,10 @@ const SettingsPage = () => {
                               {showPasswords.confirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
                           </div>
-                          {passwordForm.confirmPassword && passwordForm.newPassword && (
+                          {passwordErrors.confirmPassword && (
+                            <p className="text-sm text-red-500 mt-1">{passwordErrors.confirmPassword}</p>
+                          )}
+                          {passwordForm.confirmPassword && passwordForm.newPassword && !passwordErrors.confirmPassword && (
                             <p className={`text-xs mt-1 ${passwordForm.newPassword === passwordForm.confirmPassword ? 'text-green-600' : 'text-red-600'}`}>
                               {passwordForm.newPassword === passwordForm.confirmPassword ? (
                                 <span className="flex items-center gap-1"><Check className="w-3 h-3" /> Passwords match</span>
@@ -325,7 +489,7 @@ const SettingsPage = () => {
                         </div>
                         <button
                           type="submit"
-                          disabled={saving || !passwordForm.currentPassword || !passwordForm.newPassword || passwordForm.newPassword !== passwordForm.confirmPassword}
+                          disabled={saving || !isNewPasswordValid || passwordForm.newPassword !== passwordForm.confirmPassword}
                           className="px-4 py-2 bg-blue-800 text-white rounded-lg hover:bg-blue-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                         >
                           {saving ? (

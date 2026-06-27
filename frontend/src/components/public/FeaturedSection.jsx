@@ -127,51 +127,63 @@ const FeaturedSection = ({ properties = [] }) => {
     goToSlide((currentIndex - 1 + displayProperties.length) % displayProperties.length);
   }, [currentIndex, displayProperties.length, goToSlide]);
 
+  // Handle swipe/drag for mobile
+  const handleDragEnd = useCallback((event, info) => {
+    const threshold = 50; // Minimum drag distance to trigger navigation
+
+    if (info.offset.x < -threshold) {
+      // Swiped left - go next
+      nextSlide();
+    } else if (info.offset.x > threshold) {
+      // Swiped right - go previous
+      prevSlide();
+    }
+  }, [nextSlide, prevSlide]);
+
   return (
     <section id="featured" className="py-12 md:py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <span className="text-amber-500 font-semibold text-sm uppercase tracking-wider">
-              Editor's Pick
-            </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mt-2">
-              Featured Property
-            </h2>
-            <p className="text-slate-600 mt-3 max-w-lg">
-              Handpicked properties offering the best in luxury, location, and lifestyle.
-            </p>
-          </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-10"
+        >
+          <span className="text-amber-500 font-semibold text-sm uppercase tracking-wider">
+            Editor's Pick
+          </span>
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mt-2">
+            Featured Property
+          </h2>
+          <p className="text-slate-600 mt-3 max-w-lg mx-auto">
+            Handpicked properties offering the best in luxury, location, and lifestyle.
+          </p>
+        </motion.div>
 
-          {/* Navigation */}
-          <div className="flex gap-3 mt-6 md:mt-0">
-            <motion.button
-              onClick={prevSlide}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="w-12 h-12 rounded-full bg-white shadow-lg shadow-slate-200/50 flex items-center justify-center text-slate-700 hover:bg-slate-800 hover:text-white transition-all cursor-pointer"
-              aria-label="Previous property"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </motion.button>
-            <motion.button
-              onClick={nextSlide}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="w-12 h-12 rounded-full bg-white shadow-lg shadow-slate-200/50 flex items-center justify-center text-slate-700 hover:bg-slate-800 hover:text-white transition-all cursor-pointer"
-              aria-label="Next property"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </motion.button>
-          </div>
+        {/* Navigation - Desktop only */}
+        <div className="hidden md:flex justify-end gap-3 mb-6">
+          <motion.button
+            onClick={prevSlide}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="w-12 h-12 rounded-full bg-white shadow-lg shadow-slate-200/50 flex items-center justify-center text-slate-700 hover:bg-slate-800 active:bg-slate-900 hover:text-white transition-all cursor-pointer"
+            aria-label="Previous property"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </motion.button>
+          <motion.button
+            onClick={nextSlide}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="w-12 h-12 rounded-full bg-white shadow-lg shadow-slate-200/50 flex items-center justify-center text-slate-700 hover:bg-slate-800 active:bg-slate-900 hover:text-white transition-all cursor-pointer"
+            aria-label="Next property"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </motion.button>
         </div>
 
-        {/* Featured Property Card */}
+        {/* Featured Property Card - Swipeable on mobile */}
         <AnimatePresence mode="wait">
           <motion.div
             key={currentIndex}
@@ -179,7 +191,13 @@ const FeaturedSection = ({ properties = [] }) => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
             transition={{ duration: 0.4 }}
-            className="grid lg:grid-cols-5 gap-8"
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.2}
+            dragMomentum={false}
+            dragPropagation={false}
+            onDragEnd={handleDragEnd}
+            className="grid lg:grid-cols-5 gap-8 cursor-grab active:cursor-grabbing md:cursor-default"
           >
             {/* Image Section - 60% */}
             <div className="lg:col-span-3">
@@ -233,7 +251,7 @@ const FeaturedSection = ({ properties = [] }) => {
                 <motion.span whileHover={{ scale: 1.02, y: -2 }} whileTap={{ scale: 0.98 }} className="block">
                   <Link
                     to={`/property/${currentProperty.slug}`}
-                    className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-slate-800 text-white font-semibold rounded-xl hover:bg-slate-700 transition-all shadow-lg shadow-slate-800/30 cursor-pointer"
+                    className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-slate-800 text-white font-semibold rounded-xl hover:bg-slate-700 active:bg-slate-900 transition-all shadow-lg shadow-slate-800/30 cursor-pointer"
                   >
                     View Full Details
                     <ArrowRight className="w-5 h-5" />
@@ -255,7 +273,7 @@ const FeaturedSection = ({ properties = [] }) => {
               className={`transition-all duration-300 cursor-pointer ${
                 index === currentIndex
                   ? 'w-8 h-2 bg-slate-700 rounded-full'
-                  : 'w-2 h-2 bg-slate-300 rounded-full hover:bg-slate-400'
+                  : 'w-2 h-2 bg-slate-300 rounded-full hover:bg-slate-400 active:bg-slate-500'
               }`}
               aria-label={`Go to property ${index + 1}`}
             />

@@ -7,7 +7,7 @@ const StickyContactSection = ({ property, theme = {} }) => {
   const { openModal } = useLead();
   const { colors, isDark } = getThemeStyles(theme);
 
-  const handleGetDetails = () => openModal(property, 'cta-price');
+  const handleGetDetails = () => openModal(property, 'cta-sticky');
 
   return (
     <>

@@ -26,7 +26,23 @@ const RERASection = ({ property, theme = {}, bgVariant = 'gray' }) => {
   return (
     <section className={`py-6 ${sectionBgClass}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* RERA Info - Left Aligned */}
+        {/* QR Code - First */}
+        {reraQrCode && (
+          <div className="flex justify-center mb-6">
+            <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-900' : 'bg-white border border-gray-300 shadow-sm'}`}>
+              <img
+                src={reraQrCode}
+                alt="RERA QR Code"
+                className="w-32 h-32 object-contain"
+              />
+              <p className={`text-xs text-center mt-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                Scan for RERA details
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* RERA Info - Second */}
         <div className="mb-4 space-y-2">
           {/* Line 1: RERA Registration Info */}
           <div className="flex items-center gap-2">
@@ -69,28 +85,12 @@ const RERASection = ({ property, theme = {}, bgVariant = 'gray' }) => {
           </div>
         </div>
 
-        {/* Disclaimer - Left Aligned */}
-        <div className={`pt-4 mb-6 ${isDark ? 'border-t border-gray-700' : 'border-t border-gray-300'}`}>
+        {/* Disclaimer - Third */}
+        <div className={`pt-4 ${isDark ? 'border-t border-gray-700' : 'border-t border-gray-300'}`}>
           <p className={`text-xs leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
             <span className="font-medium">Disclaimer:</span> We're an authorized marketing channel partner{advertiserName && ` (${advertiserName})`}. The provided content, images & video are sourced from respective owners and are provided only for information purposes, it does not constitute an offer to buy any service. The price plans are subject to change without prior notice, and the properties mentioned are subject to availability. You can receive a call, SMS, or emails on contact details registered with us.
           </p>
         </div>
-
-        {/* QR Code - Centered Below Disclaimer */}
-        {reraQrCode && (
-          <div className="flex justify-center">
-            <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-900' : 'bg-white border border-gray-300 shadow-sm'}`}>
-              <img
-                src={reraQrCode}
-                alt="RERA QR Code"
-                className="w-32 h-32 object-contain"
-              />
-              <p className={`text-xs text-center mt-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                Scan for RERA details
-              </p>
-            </div>
-          </div>
-        )}
       </div>
     </section>
   );

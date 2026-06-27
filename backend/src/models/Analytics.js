@@ -23,13 +23,11 @@ const analyticsSchema = new mongoose.Schema({
   },
   avgTimeOnPage: Number,
 
-  // CTA Tracking
+  // CTA Tracking - Using Map to allow dynamic CTA types
   ctaClicks: {
-    getPriceDetails: { type: Number, default: 0 },
-    bookSiteVisit: { type: Number, default: 0 },
-    downloadBrochure: { type: Number, default: 0 },
-    requestCallback: { type: Number, default: 0 },
-    contactUs: { type: Number, default: 0 },
+    type: Map,
+    of: Number,
+    default: {},
   },
 
   // Lead Tracking

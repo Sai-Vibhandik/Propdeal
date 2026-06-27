@@ -4,10 +4,13 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import { FilterProvider } from './context/FilterContext.jsx';
 import { LeadProvider } from './context/LeadContext.jsx';
+import { EnquiryProvider } from './context/EnquiryContext.jsx';
 import { SiteContentProvider } from './context/SiteContentContext.jsx';
 import Navbar from './components/common/Navbar.jsx';
 import Footer from './components/common/Footer.jsx';
+import ScrollToTop from './components/common/ScrollToTop.jsx';
 import LeadModal from './components/public/LeadModal.jsx';
+import EnquiryModal from './components/public/EnquiryModal.jsx';
 
 // Public Pages
 import HomePage from './pages/public/HomePage.jsx';
@@ -15,6 +18,7 @@ import PropertiesPage from './pages/public/PropertiesPage.jsx';
 import PropertyLandingPage from './pages/public/PropertyLandingPage.jsx';
 import PrivacyPolicyPage from './pages/public/PrivacyPolicyPage.jsx';
 import TermsOfServicePage from './pages/public/TermsOfServicePage.jsx';
+import DevelopersPage from './pages/public/DevelopersPage.jsx';
 
 // Admin Pages
 import LoginPage from './pages/admin/LoginPage.jsx';
@@ -27,6 +31,9 @@ import EnquiriesPage from './pages/admin/EnquiriesPage.jsx';
 import AnalyticsPage from './pages/admin/AnalyticsPage.jsx';
 import SettingsPage from './pages/admin/SettingsPage.jsx';
 import SiteContentPage from './pages/admin/SiteContentPage.jsx';
+
+// Reset Password Page
+import ResetPasswordPage from './pages/ResetPasswordPage.jsx';
 
 // Telecaller Pages
 import TelecallerDashboard from './pages/telecaller/TelecallerDashboard.jsx';
@@ -104,8 +111,10 @@ function App() {
       <AuthProvider>
         <FilterProvider>
           <LeadProvider>
-            <SiteContentProvider>
+            <EnquiryProvider>
+              <SiteContentProvider>
               <Router>
+              <ScrollToTop />
               <Toaster
                 position="top-right"
                 toastOptions={{
@@ -128,7 +137,8 @@ function App() {
               />
               <Routes>
                 {/* Public Routes */}
-                <Route path="/" element={<PublicLayout><HomePage /></PublicLayout>} />
+                <Route path="/" element={<><Navbar /><DevelopersPage /></>} />
+                <Route path="/discover" element={<PublicLayout><HomePage /></PublicLayout>} />
                 <Route path="/properties" element={<PublicLayout><PropertiesPage /></PublicLayout>} />
                 <Route path="/property/:slug" element={<PropertyLandingPage />} />
                 <Route path="/about" element={<PublicLayout><AboutPage /></PublicLayout>} />
@@ -138,6 +148,7 @@ function App() {
 
                 {/* Auth Routes */}
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
                 {/* Admin Routes */}
                 <Route
@@ -259,8 +270,10 @@ function App() {
                 <Route path="*" element={<PublicLayout><NotFoundPage /></PublicLayout>} />
               </Routes>
               <LeadModal />
+              <EnquiryModal />
             </Router>
             </SiteContentProvider>
+            </EnquiryProvider>
           </LeadProvider>
         </FilterProvider>
       </AuthProvider>

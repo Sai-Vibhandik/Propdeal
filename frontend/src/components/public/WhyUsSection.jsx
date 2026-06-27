@@ -148,7 +148,7 @@ const WhyUsSection = ({ data }) => {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ y: -4 }}
-                className="bg-white p-6 rounded-2xl shadow-md shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50 transition-all duration-300 cursor-default"
+                className="bg-white p-6 rounded-2xl shadow-md shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50 active:shadow-md active:scale-[0.98] transition-all duration-300 cursor-default"
               >
                 <motion.div
                   whileHover={{ scale: 1.1, rotate: 5 }}

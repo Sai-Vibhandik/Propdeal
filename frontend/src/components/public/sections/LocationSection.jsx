@@ -28,12 +28,58 @@ const LocationSection = ({ property, layout = 'map-list', theme = {}, bgVariant 
   const hasCoordinates = property.coordinates?.lat && property.coordinates?.lng;
   const fullAddress = property.address?.fullAddress || `${property.address?.locality}, ${property.address?.city}, ${property.address?.state}`;
 
+  // Extract embed URL from iframe HTML or use as-is if it's already a URL
+  const extractEmbedUrl = (input) => {
+    if (!input) return null;
+    // If input contains iframe tag, extract src attribute
+    const srcMatch = input.match(/src=["']([^"']+)["']/i);
+    if (srcMatch) {
+      return srcMatch[1];
+    }
+    // If it's already a URL, return as-is
+    if (input.startsWith('http')) {
+      return input;
+    }
+    return null;
+  };
+
+  // Generate Google Maps search URL from embed URL
+  // Tries multiple methods to get accurate location
+  const getMapSearchUrl = (embedUrl) => {
+    if (!embedUrl) return null;
+
+    // Method 1: Try to extract place name from URL (format: !2sPlaceName or !sPlaceName)
+    const placeMatch = embedUrl.match(/!2s([^!]+(?:%2C[^!]+)?)/) || embedUrl.match(/!s([^!]+(?:%2C[^!]+)?)/);
+    if (placeMatch) {
+      const placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
+      return `https://www.google.com/maps/search/${encodeURIComponent(placeName)}`;
+    }
+
+    // Method 2: Try to extract coordinates (!2d{lng}!3d{lat})
+    const coordMatch = embedUrl.match(/!2d([\d.-]+)!3d([\d.-]+)/);
+    if (coordMatch) {
+      const lat = parseFloat(coordMatch[2]);
+      const lng = parseFloat(coordMatch[1]);
+      return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+    }
+
+    // Method 3: Fallback to directions URL with address
+    return null;
+  };
+
   let embedUrl = null;
   let mapSearchUrl = null;
 
   if (googleMapUrl) {
-    embedUrl = googleMapUrl;
-    mapSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
+    embedUrl = extractEmbedUrl(googleMapUrl);
+    // Try to get map search URL from embed URL
+    const extractedMapUrl = getMapSearchUrl(embedUrl);
+    if (extractedMapUrl) {
+      mapSearchUrl = extractedMapUrl;
+    } else {
+      // Fallback to address search
+      mapSearchUrl = `https://www.google.com/maps/search/${encodeURIComponent(fullAddress)}`;
+    }
   } else if (hasCoordinates) {
     embedUrl = `https://maps.google.com/maps?q=${property.coordinates.lat},${property.coordinates.lng}&z=15&output=embed`;
     mapSearchUrl = `https://www.google.com/maps/search/?api=1&query=${property.coordinates.lat},${property.coordinates.lng}`;
@@ -53,33 +99,15 @@ const LocationSection = ({ property, layout = 'map-list', theme = {}, bgVariant 
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="rounded-2xl overflow-hidden shadow-lg mb-10 h-[350px] md:h-[400px]">
           <div className="relative w-full h-full">
             {embedUrl ? (
-              <>
-                <iframe
-                  src={embedUrl}
-                  className="absolute inset-0 w-full h-full"
-                  style={{ border: 0 }}
-                  allowFullScreen=""
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  title="Property Location Map"
-                />
-                <div className={`absolute top-4 left-4 px-4 py-3 rounded-xl shadow-md z-10 ${cardBgClass} ${cardBorderClass}`}>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Property Location</p>
-                  <p className="font-semibold text-gray-900 dark:text-white">{property.address?.locality}</p>
-                </div>
-                <div className="absolute bottom-4 right-4 z-10">
-                  <motion.a
-                    whileHover={{ scale: 1.02, y: -2 }}
-                    whileTap={{ scale: 0.98 }}
-                    href={mapSearchUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl shadow-md text-sm font-medium hover:shadow-lg transition-all cursor-pointer ${cardBgClass} ${cardBorderClass} text-gray-700 dark:text-gray-200`}
-                  >
-                    <ExternalLink className="w-4 h-4" /> Open in Maps
-                  </motion.a>
-                </div>
-              </>
+              <iframe
+                src={embedUrl}
+                className="absolute inset-0 w-full h-full"
+                style={{ border: 0 }}
+                allowFullScreen=""
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Property Location Map"
+              />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-700">
                 <div className="text-center px-4">
@@ -152,8 +180,7 @@ const LocationSection = ({ property, layout = 'map-list', theme = {}, bgVariant 
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h4 className="font-semibold text-gray-900 dark:text-white mb-1">Complete Address</h4>
-              <p className="text-gray-600 dark:text-gray-300">{fullAddress}</p>
-              {property.reraNumber && <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">RERA: {property.reraNumber}</p>}
+              <p className="text-gray-600 dark:text-gray-300">{fullAddress}{property.address?.pincode ? ` - ${property.address.pincode}` : ''}</p>
             </div>
             <motion.a
               whileHover={{ scale: 1.02, y: -2 }}
@@ -161,7 +188,7 @@ const LocationSection = ({ property, layout = 'map-list', theme = {}, bgVariant 
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-white hover:opacity-90 transition-opacity cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium text-white hover:opacity-90 transition-opacity cursor-pointer"
               style={{ backgroundColor: colors.primary }}
             >
               <Navigation className="w-4 h-4" /> Get Directions

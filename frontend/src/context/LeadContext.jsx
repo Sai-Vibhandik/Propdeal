@@ -17,10 +17,30 @@ export const LeadProvider = ({ children }) => {
     if (propertyData?._id) {
       // Map source type to CTA names expected by backend
       const ctaMap = {
-        'cta-price': 'getPriceDetails',
-        'cta-visit': 'bookSiteVisit',
-        'cta-brochure': 'downloadBrochure',
+        // Get Details buttons
+        'cta-hero': 'heroEnquiry',
+        'cta-highlights': 'highlightsEnquiry',
+        'cta-overview': 'overviewEnquiry',
+        'cta-investment': 'investmentEnquiry',
+        'cta-navbar': 'navbarEnquiry',
+        'cta-sticky': 'stickyEnquiry',
+        // Book Site Visit buttons
+        'cta-hero-visit': 'heroSiteVisit',
+        'cta-gallery-visit': 'gallerySiteVisit',
+        'cta-footer-visit': 'footerSiteVisit',
+        'cta-video-visit': 'videoSiteVisit',
+        'cta-visit': 'siteVisit',
+        // Get Price Details buttons
+        'cta-pricing-table': 'pricingTableEnquiry',
+        'cta-pricing-sheet': 'pricingSheetEnquiry',
+        'cta-pricing-card': 'pricingCardEnquiry',
+        'cta-price': 'priceDetails',
+        // Other buttons
+        'cta-plans': 'getFloorPlans',
         'cta-callback': 'requestCallback',
+        'cta-faq': 'faqScheduleCall',
+        'cta-amenities': 'amenitiesInfo',
+        'cta-homeloan': 'homeLoanAssistance',
         'contact-section': 'contactUs',
       };
 

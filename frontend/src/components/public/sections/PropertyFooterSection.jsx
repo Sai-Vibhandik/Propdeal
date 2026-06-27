@@ -18,7 +18,7 @@ const PropertyFooterSection = ({ property, theme = {}, bgVariant = 'gray' }) => 
   const logo = branding.logo ? getFileUrl(branding.logo) : null;
 
   return (
-    <footer className={`py-8 ${sectionBgClass}`}>
+    <footer className={`py-8 pb-28 md:pb-8 ${sectionBgClass}`}>
       {/* Main Footer */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -65,7 +65,7 @@ const PropertyFooterSection = ({ property, theme = {}, bgVariant = 'gray' }) => 
                 <li key={link}>
                   <a
                     href={`#${link.toLowerCase()}`}
-                    className={`transition-colors ${
+                    className={`transition-colors cursor-pointer ${
                       isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
@@ -84,10 +84,10 @@ const PropertyFooterSection = ({ property, theme = {}, bgVariant = 'gray' }) => 
             <ul className="space-y-3">
               {branding.phoneNumber && (
                 <li className="flex items-center gap-3">
-                  <Phone className="w-5 h-5" style={{ color: colors.secondary }} />
+                  <Phone className="w-5 h-5 flex-shrink-0" style={{ color: colors.secondary }} />
                   <a
-                    href={`tel:${branding.phoneNumber}`}
-                    className={`transition-colors ${
+                    href={`tel:${branding.phoneNumber.replace(/\s/g, '')}`}
+                    className={`transition-colors cursor-pointer ${
                       isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
@@ -97,22 +97,28 @@ const PropertyFooterSection = ({ property, theme = {}, bgVariant = 'gray' }) => 
               )}
               {branding.email && (
                 <li className="flex items-center gap-3">
-                  <Mail className="w-5 h-5" style={{ color: colors.secondary }} />
-                  <a
-                    href={`mailto:${branding.email}`}
-                    className={`transition-colors ${
+                  <Mail className="w-5 h-5 flex-shrink-0" style={{ color: colors.secondary }} />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const subject = `Inquiry about ${projectName}`;
+                      const body = 'Hi, I would like to know more about this property.';
+                      window.open(`https://mail.google.com/mail/?view=cm&to=${branding.email}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
+                    }}
+                    className={`transition-colors cursor-pointer break-all ${
                       isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
                     {branding.email}
-                  </a>
+                  </button>
                 </li>
               )}
               <li className="flex items-center gap-3">
-                <Globe className="w-5 h-5" style={{ color: colors.secondary }} />
+                <Globe className="w-5 h-5 flex-shrink-0" style={{ color: colors.secondary }} />
                 <button
-                  onClick={() => openModal(property, 'cta-visit')}
-                  className={`transition-colors ${
+                  type="button"
+                  onClick={() => openModal(property, 'cta-footer-visit')}
+                  className={`transition-colors cursor-pointer ${
                     isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >

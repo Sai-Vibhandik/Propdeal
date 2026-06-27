@@ -8,6 +8,7 @@ import {
   assignLead,
   setFollowUp,
   exportLeads,
+  deleteLead,
 } from '../controllers/lead.controller.js';
 import { protect } from '../middleware/auth.middleware.js';
 
@@ -24,5 +25,6 @@ router.put('/admin/:id/status', protect, updateLeadStatus);
 router.post('/admin/:id/notes', protect, addLeadNote);
 router.put('/admin/:id/assign', protect, assignLead);
 router.put('/admin/:id/followup', protect, setFollowUp);
+router.delete('/admin/:id', protect, deleteLead);
 
 export default router;

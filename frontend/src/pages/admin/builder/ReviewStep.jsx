@@ -162,7 +162,7 @@ const ReviewStep = ({ propertyData, onSaveDraft, onPublish }) => {
               <div>
                 <p className="text-sm text-gray-500">Configurations</p>
                 <p className="font-medium text-gray-900">
-                  {propertyData.configurations?.join(', ') || 'Not set'}
+                  {(propertyData.pricingPlans || []).map(p => p.configuration).filter(Boolean).join(', ') || 'Not set'}
                 </p>
               </div>
             </div>
@@ -224,7 +224,7 @@ const ReviewStep = ({ propertyData, onSaveDraft, onPublish }) => {
           {/* Media */}
           <div className="p-6">
             <h4 className="font-medium text-gray-900 mb-4">Media</h4>
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid md:grid-cols-4 gap-4">
               <div>
                 <p className="text-sm text-gray-500">Hero Images</p>
                 <p className="font-medium text-gray-900">
@@ -240,9 +240,41 @@ const ReviewStep = ({ propertyData, onSaveDraft, onPublish }) => {
               <div>
                 <p className="text-sm text-gray-500">Floor Plans</p>
                 <p className="font-medium text-gray-900">
-                  {propertyData.floorPlans?.length || 0} floor plans
+                  {propertyData.plans?.floorPlans?.length || 0} floor plans
                 </p>
               </div>
+              <div>
+                <p className="text-sm text-gray-500">Master Plan</p>
+                <p className="font-medium text-gray-900">
+                  {propertyData.plans?.masterPlan?.url ? 'Uploaded' : 'Not uploaded'}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Video Tour</p>
+                <p className="font-medium text-gray-900">
+                  {propertyData.videoTour ? 'Added' : 'Not added'}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Brochure</p>
+                <p className="font-medium text-gray-900">
+                  {propertyData.brochure?.url ? 'Uploaded' : 'Not uploaded'}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Amenities</p>
+                <p className="font-medium text-gray-900">
+                  {(propertyData.amenities || []).filter(a => a.image).length} with images
+                </p>
+              </div>
+              {propertyData.propertyType === 'residential-plot' || propertyData.propertyType === 'commercial-plot' || propertyData.propertyType === 'agricultural-land' ? (
+                <div>
+                  <p className="text-sm text-gray-500">Dimension Plans</p>
+                  <p className="font-medium text-gray-900">
+                    {propertyData.plans?.dimensionPlans?.length || 0} plans
+                  </p>
+                </div>
+              ) : null}
             </div>
           </div>
 
@@ -250,7 +282,7 @@ const ReviewStep = ({ propertyData, onSaveDraft, onPublish }) => {
           <div className="p-6">
             <h4 className="font-medium text-gray-900 mb-4">AI Generated Content</h4>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {['hero', 'overview', 'highlights', 'amenities', 'location', 'investment', 'faq', 'seo'].map(
+              {['hero', 'overview', 'highlights', 'location', 'investment', 'faq', 'seo'].map(
                 (section) => {
                   const hasContent =
                     propertyData.generatedContent?.[section] &&

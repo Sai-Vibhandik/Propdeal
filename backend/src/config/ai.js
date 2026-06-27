@@ -69,42 +69,83 @@ export const generateContent = async (prompt, options = {}) => {
 };
 
 /**
- * Ollama (Local LLM)
+ * Ollama (Local LLM or Cloud API)
  */
 const generateWithOllama = async (provider, prompt, options) => {
+  const isCloud = !!provider.apiKey;
+
+  console.log(`[AI] Ollama ${isCloud ? 'Cloud' : 'Local'} - Model: ${provider.model}`);
+
   try {
-    // Build headers - include Authorization if API key is provided
-    const headers = {
-      'Content-Type': 'application/json',
-    };
-
-    if (provider.apiKey) {
-      headers['Authorization'] = `Bearer ${provider.apiKey}`;
-    }
-
-    const response = await fetch(`${provider.url}/api/generate`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        model: provider.model,
-        prompt,
-        stream: false,
-        // System prompt to enforce plain text output
-        system: 'CRITICAL: You MUST return ONLY plain text formatted as specified in the user prompt. NEVER return JavaScript code, JSON objects, or JavaScript arrays. Do NOT use square brackets [], curly braces {}, or JavaScript syntax. Always use the EXACT plain text format shown in the examples.',
-        options: {
-          temperature: options.temperature || 0.7,
-          top_p: options.topP || 0.9,
-          num_predict: options.maxTokens || 2000,
+    if (isCloud) {
+      // Ollama Cloud API (OpenAI-compatible)
+      const response = await fetch(`${provider.url}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${provider.apiKey}`,
         },
-      }),
-    });
+        body: JSON.stringify({
+          model: provider.model,
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a professional real estate content writer. Generate high-quality, engaging content for property listings. Return responses in the exact format requested by the user.',
+            },
+            {
+              role: 'user',
+              content: prompt,
+            },
+          ],
+          stream: false,
+        }),
+      });
 
-    if (!response.ok) {
-      throw new Error(`Ollama request failed: ${response.statusText}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[AI] Ollama Cloud error: ${response.status} - ${errorText}`);
+
+        if (response.status === 429) {
+          throw new Error('AI service usage limit reached. Please try again later.');
+        } else if (response.status === 401 || response.status === 403) {
+          throw new Error('AI service authentication failed. Please check your API key.');
+        } else if (response.status >= 500) {
+          throw new Error('AI service is temporarily unavailable. Please try again later.');
+        } else {
+          throw new Error(`Ollama Cloud error: ${response.status}`);
+        }
+      }
+
+      const data = await response.json();
+      console.log(`[AI] Ollama Cloud response received`);
+      return data.message?.content || data.response || '';
+    } else {
+      // Local Ollama (no API key)
+      const response = await fetch(`${provider.url}/api/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: provider.model,
+          prompt,
+          stream: false,
+          system: 'CRITICAL: You MUST return ONLY plain text formatted as specified in the user prompt. NEVER return JavaScript code, JSON objects, or JavaScript arrays. Do NOT use square brackets [], curly braces {}, or JavaScript syntax. Always use the EXACT plain text format shown in the examples.',
+          options: {
+            temperature: options.temperature || 0.7,
+            top_p: options.topP || 0.9,
+            num_predict: options.maxTokens || 2000,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Ollama request failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data.response;
     }
-
-    const data = await response.json();
-    return data.response;
   } catch (error) {
     console.error('Ollama generation error:', error);
     throw new Error(`Ollama generation failed: ${error.message}`);
@@ -259,31 +300,20 @@ export const checkAIStatus = async () => {
     };
   }
 
-  // For API-based providers, just check if key is configured
-  if (provider.apiKey !== undefined && !provider.apiKey) {
-    return {
-      available: false,
-      provider: provider.name,
-      model: provider.model,
-      error: `API key not configured. Set ${CURRENT_PROVIDER.toUpperCase()}_API_KEY in .env`,
-    };
-  }
-
-  // For Ollama, check if server is running
-  if (CURRENT_PROVIDER === 'ollama') {
+  // For Ollama with API key (cloud mode), check if reachable
+  if (CURRENT_PROVIDER === 'ollama' && provider.apiKey) {
     try {
-      // Build headers - include Authorization if API key is provided
-      const headers = {};
-      if (provider.apiKey) {
-        headers['Authorization'] = `Bearer ${provider.apiKey}`;
-      }
-
-      const response = await fetch(`${provider.url}/api/tags`, { headers });
+      const response = await fetch(`${provider.url}/api/tags`, {
+        headers: {
+          'Authorization': `Bearer ${provider.apiKey}`,
+        },
+      });
       if (!response.ok) {
         return {
           available: false,
           provider: provider.name,
-          error: provider.apiKey ? 'Ollama API authentication failed' : 'Ollama server not running',
+          model: provider.model,
+          error: 'Ollama Cloud API authentication failed',
         };
       }
       const data = await response.json();
@@ -297,12 +327,48 @@ export const checkAIStatus = async () => {
       return {
         available: false,
         provider: provider.name,
-        error: provider.apiKey ? 'Ollama API not reachable' : 'Ollama server not reachable',
+        error: 'Ollama Cloud API not reachable',
+      };
+    }
+  }
+
+  // For Ollama local (no API key), check if server is running
+  if (CURRENT_PROVIDER === 'ollama' && !provider.apiKey) {
+    try {
+      const response = await fetch(`${provider.url}/api/tags`);
+      if (!response.ok) {
+        return {
+          available: false,
+          provider: provider.name,
+          error: 'Ollama server not running',
+        };
+      }
+      const data = await response.json();
+      return {
+        available: true,
+        provider: provider.name,
+        model: provider.model,
+        models: data.models || [],
+      };
+    } catch (error) {
+      return {
+        available: false,
+        provider: provider.name,
+        error: 'Ollama server not reachable',
       };
     }
   }
 
   // For other providers with API keys, assume available
+  if (provider.apiKey !== undefined && !provider.apiKey) {
+    return {
+      available: false,
+      provider: provider.name,
+      model: provider.model,
+      error: `API key not configured. Set ${CURRENT_PROVIDER.toUpperCase()}_API_KEY in .env`,
+    };
+  }
+
   return {
     available: true,
     provider: provider.name,

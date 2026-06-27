@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Palette, Type, Image, Upload, X, Layers, Sun, Moon, Eye } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Palette, Type, Image, Upload, X, Layers, Sun, Moon, Eye, Trash2 } from 'lucide-react';
 import { mediaAPI, getFileUrl } from '../../../services/api.js';
 import { getThemeStyles, suggestDarkMode } from '../../../utils/theme.js';
 
@@ -84,12 +84,6 @@ const FONT_STYLES = [
   { id: 'luxury', name: 'Luxury', font: 'Playfair Display, serif', description: 'Premium and sophisticated' },
 ];
 
-const LOGO_POSITIONS = [
-  { id: 'left', name: 'Left' },
-  { id: 'center', name: 'Center' },
-  { id: 'right', name: 'Right' },
-];
-
 const SECTION_BACKGROUNDS = [
   { key: 'overview', label: 'Overview', description: 'About the property' },
   { key: 'highlights', label: 'Highlights', description: 'Key features' },
@@ -102,9 +96,19 @@ const LAYOUT_OPTIONS = [
   { value: 'split-right', label: 'Split Right', description: 'Content on left, image on right half', icon: '➡️' },
 ];
 
+// Field character limits
+const FIELD_LIMITS = {
+  companyName: { max: 100 },
+  tagline: { max: 100 },
+  phoneNumber: { max: 20 },
+  email: { max: 100 },
+  customCtaText: { max: 30 },
+};
+
 const ThemeStep = ({ propertyData, updatePropertyData }) => {
   const [uploading, setUploading] = useState(false);
   const [activeTab, setActiveTab] = useState('theme');
+  const [errors, setErrors] = useState({});
 
   const theme = propertyData.theme || {};
   const branding = propertyData.branding || {};
@@ -128,6 +132,10 @@ const ThemeStep = ({ propertyData, updatePropertyData }) => {
 
   const handleBrandingChange = (field, value) => {
     updatePropertyData('branding', { ...branding, [field]: value });
+    // Clear error when user types
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
   };
 
   const handleLogoUpload = async (e) => {
@@ -226,6 +234,49 @@ const ThemeStep = ({ propertyData, updatePropertyData }) => {
     updatePropertyData('theme', newTheme);
   };
 
+  // Expose validation function for parent component
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.themeStepValidation = () => {
+        const newErrors = {};
+
+        // Company Name - required
+        if (!branding.companyName?.trim()) {
+          newErrors.companyName = 'Company/Builder Name is required';
+        } else if (branding.companyName.length > FIELD_LIMITS.companyName.max) {
+          newErrors.companyName = `Maximum ${FIELD_LIMITS.companyName.max} characters allowed`;
+        }
+
+        // Contact Number - required and valid format
+        if (!branding.phoneNumber?.trim()) {
+          newErrors.phoneNumber = 'Contact Number is required';
+        } else {
+          // Remove all non-digit characters to count digits
+          const digitsOnly = branding.phoneNumber.replace(/\D/g, '');
+          if (digitsOnly.length < 10) {
+            newErrors.phoneNumber = 'Contact Number must have at least 10 digits';
+          } else if (digitsOnly.length > 15) {
+            newErrors.phoneNumber = 'Contact Number cannot have more than 15 digits';
+          } else if (!/^[0-9+\-\s]+$/.test(branding.phoneNumber)) {
+            newErrors.phoneNumber = 'Contact Number must contain only digits, +, - or spaces';
+          }
+        }
+
+        // Email - required and valid format
+        if (!branding.email?.trim()) {
+          newErrors.email = 'Email is required';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(branding.email)) {
+          newErrors.email = 'Please enter a valid email address';
+        } else if (branding.email.length > FIELD_LIMITS.email.max) {
+          newErrors.email = `Maximum ${FIELD_LIMITS.email.max} characters allowed`;
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+      };
+    }
+  }, [branding]);
+
   return (
     <div className="space-y-8">
       {/* Section Header */}
@@ -238,7 +289,7 @@ const ThemeStep = ({ propertyData, updatePropertyData }) => {
       <div className="flex flex-wrap border-b border-gray-200">
         <button
           onClick={() => setActiveTab('theme')}
-          className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+          className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
             activeTab === 'theme'
               ? 'border-blue-800 text-blue-800'
               : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -249,7 +300,7 @@ const ThemeStep = ({ propertyData, updatePropertyData }) => {
         </button>
         <button
           onClick={() => setActiveTab('branding')}
-          className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+          className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
             activeTab === 'branding'
               ? 'border-blue-800 text-blue-800'
               : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -260,7 +311,7 @@ const ThemeStep = ({ propertyData, updatePropertyData }) => {
         </button>
         <button
           onClick={() => setActiveTab('layout')}
-          className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+          className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
             activeTab === 'layout'
               ? 'border-blue-800 text-blue-800'
               : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -271,7 +322,7 @@ const ThemeStep = ({ propertyData, updatePropertyData }) => {
         </button>
         <button
           onClick={() => setActiveTab('backgrounds')}
-          className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+          className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
             activeTab === 'backgrounds'
               ? 'border-blue-800 text-blue-800'
               : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -295,7 +346,7 @@ const ThemeStep = ({ propertyData, updatePropertyData }) => {
                 <button
                   key={preset.id}
                   onClick={() => handlePresetSelect(preset)}
-                  className={`relative rounded-xl overflow-hidden border-2 transition-all ${
+                  className={`relative rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
                     theme.preset === preset.id
                       ? 'border-blue-800 ring-2 ring-blue-800 ring-offset-2'
                       : 'border-gray-200 hover:border-gray-300'
@@ -332,7 +383,7 @@ const ThemeStep = ({ propertyData, updatePropertyData }) => {
               {theme.preset !== 'custom' && (
                 <button
                   onClick={() => handleThemeChange('preset', 'custom')}
-                  className="text-sm text-blue-600 hover:text-blue-800"
+                  className="text-sm text-blue-600 hover:text-blue-800 cursor-pointer"
                 >
                   Use custom colors
                 </button>
@@ -417,7 +468,7 @@ const ThemeStep = ({ propertyData, updatePropertyData }) => {
             <div className="grid grid-cols-2 gap-4">
               <button
                 onClick={() => handleThemeChange('darkMode', false)}
-                className={`p-4 rounded-xl border-2 text-left transition-all ${
+                className={`p-4 rounded-xl border-2 text-left transition-all cursor-pointer ${
                   !theme.darkMode
                     ? 'border-blue-800 bg-blue-50'
                     : 'border-gray-200 hover:border-gray-300'
@@ -436,7 +487,7 @@ const ThemeStep = ({ propertyData, updatePropertyData }) => {
 
               <button
                 onClick={() => handleThemeChange('darkMode', true)}
-                className={`p-4 rounded-xl border-2 text-left transition-all ${
+                className={`p-4 rounded-xl border-2 text-left transition-all cursor-pointer ${
                   theme.darkMode
                     ? 'border-blue-800 bg-blue-50'
                     : 'border-gray-200 hover:border-gray-300'
@@ -566,18 +617,33 @@ const ThemeStep = ({ propertyData, updatePropertyData }) => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Project/Company Logo</label>
                 {branding.logo ? (
-                  <div className="relative group">
-                    <img
-                      src={getFileUrl(branding.logo)}
-                      alt="Logo"
-                      className="h-20 object-contain bg-gray-50 rounded-lg p-2"
-                    />
-                    <button
-                      onClick={() => handleBrandingChange('logo', '')}
-                      className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+                  <div className="space-y-3">
+                    <div className="relative group inline-block">
+                      <img
+                        src={getFileUrl(branding.logo)}
+                        alt="Logo"
+                        className="h-20 object-contain bg-gray-50 rounded-lg p-2 border"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <label className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-800 text-white rounded-lg cursor-pointer hover:bg-blue-900 transition-colors">
+                        <Upload className="w-4 h-4" />
+                        <span className="text-sm font-medium">Change</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleLogoUpload}
+                          disabled={uploading}
+                        />
+                      </label>
+                      <button
+                        onClick={() => handleBrandingChange('logo', '')}
+                        className="flex items-center justify-center gap-2 px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <label className="block border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition-colors">
@@ -600,43 +666,38 @@ const ThemeStep = ({ propertyData, updatePropertyData }) => {
                 )}
               </div>
 
-              {/* Logo Position */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Logo Position</label>
-                <div className="flex gap-2">
-                  {LOGO_POSITIONS.map((pos) => (
-                    <button
-                      key={pos.id}
-                      onClick={() => handleBrandingChange('logoPosition', pos.id)}
-                      className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                        branding.logoPosition === pos.id
-                          ? 'bg-blue-800 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      {pos.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Favicon Upload */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Favicon</label>
                 <p className="text-xs text-gray-500 mb-2">Icon displayed in browser tab (32x32 or 16x16 pixels recommended)</p>
                 {branding.favicon ? (
-                  <div className="relative group inline-block">
-                    <img
-                      src={getFileUrl(branding.favicon)}
-                      alt="Favicon"
-                      className="w-16 h-16 object-contain bg-gray-50 rounded-lg p-2 border"
-                    />
-                    <button
-                      onClick={() => handleBrandingChange('favicon', '')}
-                      className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
+                  <div className="space-y-3">
+                    <div className="relative group inline-block">
+                      <img
+                        src={getFileUrl(branding.favicon)}
+                        alt="Favicon"
+                        className="w-16 h-16 object-contain bg-gray-50 rounded-lg p-2 border"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <label className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-800 text-white rounded-lg cursor-pointer hover:bg-blue-900 transition-colors">
+                        <Upload className="w-4 h-4" />
+                        <span className="text-sm font-medium">Change</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleFaviconUpload}
+                          disabled={uploading}
+                        />
+                      </label>
+                      <button
+                        onClick={() => handleBrandingChange('favicon', '')}
+                        className="flex items-center justify-center gap-2 px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <label className="block border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition-colors">
@@ -667,14 +728,19 @@ const ThemeStep = ({ propertyData, updatePropertyData }) => {
 
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Company/Builder Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Company/Builder Name<sup className="text-red-500">*</sup>
+                </label>
                 <input
                   type="text"
                   value={branding.companyName || ''}
                   onChange={(e) => handleBrandingChange('companyName', e.target.value)}
                   placeholder="e.g., ABC Builders Pvt Ltd"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  maxLength={FIELD_LIMITS.companyName.max}
+                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.companyName ? 'border-red-500' : 'border-gray-200'}`}
                 />
+                {errors.companyName && <p className="text-xs text-red-500 mt-1">{errors.companyName}</p>}
+                <p className="text-xs text-gray-400 mt-1">{(branding.companyName || '').length}/{FIELD_LIMITS.companyName.max}</p>
               </div>
 
               <div>
@@ -684,30 +750,42 @@ const ThemeStep = ({ propertyData, updatePropertyData }) => {
                   value={branding.tagline || ''}
                   onChange={(e) => handleBrandingChange('tagline', e.target.value)}
                   placeholder="e.g., Building Dreams Since 1990"
+                  maxLength={FIELD_LIMITS.tagline.max}
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+                <p className="text-xs text-gray-400 mt-1">{(branding.tagline || '').length}/{FIELD_LIMITS.tagline.max}</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Contact Number<sup className="text-red-500">*</sup>
+                </label>
                 <input
                   type="text"
                   value={branding.phoneNumber || ''}
                   onChange={(e) => handleBrandingChange('phoneNumber', e.target.value)}
                   placeholder="e.g., +91 9876543210"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  maxLength={FIELD_LIMITS.phoneNumber.max}
+                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.phoneNumber ? 'border-red-500' : 'border-gray-200'}`}
                 />
+                {errors.phoneNumber && <p className="text-xs text-red-500 mt-1">{errors.phoneNumber}</p>}
+                <p className="text-xs text-gray-400 mt-1">{(branding.phoneNumber || '').length}/{FIELD_LIMITS.phoneNumber.max}</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email<sup className="text-red-500">*</sup>
+                </label>
                 <input
-                  type="email"
+                  type="text"
                   value={branding.email || ''}
                   onChange={(e) => handleBrandingChange('email', e.target.value)}
                   placeholder="e.g., info@example.com"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  maxLength={FIELD_LIMITS.email.max}
+                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.email ? 'border-red-500' : 'border-gray-200'}`}
                 />
+                {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
+                <p className="text-xs text-gray-400 mt-1">{(branding.email || '').length}/{FIELD_LIMITS.email.max}</p>
               </div>
 
               <div className="md:col-span-2">
@@ -717,39 +795,14 @@ const ThemeStep = ({ propertyData, updatePropertyData }) => {
                   value={branding.customCtaText || ''}
                   onChange={(e) => handleBrandingChange('customCtaText', e.target.value)}
                   placeholder="e.g., Schedule a Site Visit"
+                  maxLength={FIELD_LIMITS.customCtaText.max}
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-                <p className="text-xs text-gray-500 mt-1">Leave empty to use default</p>
+                <p className="text-xs text-gray-500 mt-1">Leave empty to use default. {(branding.customCtaText || '').length}/{FIELD_LIMITS.customCtaText.max}</p>
               </div>
             </div>
           </div>
 
-          {/* Display Options */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Display Options</h3>
-
-            <div className="space-y-4">
-              <label className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={branding.showBuilderLogo !== false}
-                  onChange={(e) => handleBrandingChange('showBuilderLogo', e.target.checked)}
-                  className="w-5 h-5 text-blue-800 rounded border-gray-300 focus:ring-blue-500"
-                />
-                <span className="text-gray-700">Show builder logo in footer</span>
-              </label>
-
-              <label className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={branding.showReraBadge !== false}
-                  onChange={(e) => handleBrandingChange('showReraBadge', e.target.checked)}
-                  className="w-5 h-5 text-blue-800 rounded border-gray-300 focus:ring-blue-500"
-                />
-                <span className="text-gray-700">Show RERA badge on page</span>
-              </label>
-            </div>
-          </div>
         </div>
       )}
 
@@ -767,7 +820,7 @@ const ThemeStep = ({ propertyData, updatePropertyData }) => {
                 <button
                   key={font.id}
                   onClick={() => handleThemeChange('fontStyle', font.id)}
-                  className={`p-4 rounded-xl border-2 text-left transition-all ${
+                  className={`p-4 rounded-xl border-2 text-left transition-all cursor-pointer ${
                     theme.fontStyle === font.id
                       ? 'border-blue-800 bg-blue-50'
                       : 'border-gray-200 hover:border-gray-300'
@@ -828,7 +881,7 @@ const ThemeStep = ({ propertyData, updatePropertyData }) => {
                     {bgImage && (
                       <button
                         onClick={() => removeBackground(section.key)}
-                        className="text-red-500 hover:text-red-600 text-sm flex items-center gap-1"
+                        className="text-red-500 hover:text-red-600 text-sm flex items-center gap-1 cursor-pointer"
                       >
                         <X className="w-4 h-4" />
                         Remove Image
@@ -895,7 +948,7 @@ const ThemeStep = ({ propertyData, updatePropertyData }) => {
                             key={option.value}
                             onClick={() => handleLayoutChange(section.key, option.value)}
                             disabled={!bgImage}
-                            className={`px-4 py-3 rounded-lg text-left transition-all ${
+                            className={`px-4 py-3 rounded-lg text-left transition-all cursor-pointer ${
                               sectionData.layout === option.value
                                 ? 'bg-blue-800 text-white'
                                 : bgImage

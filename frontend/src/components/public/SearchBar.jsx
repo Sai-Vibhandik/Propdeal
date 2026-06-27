@@ -75,7 +75,7 @@ const SearchBar = ({ onSearch, initialValues = {}, variant = 'default' }) => {
               setShowTypeDropdown(false);
               setShowConfigDropdown(false);
             }}
-            className="w-full flex items-center gap-3 px-4 py-3.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors text-left"
+            className="w-full flex items-center gap-3 px-4 py-3.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors text-left cursor-pointer"
           >
             <MapPin className="w-5 h-5 text-slate-700 flex-shrink-0" />
             <div className="flex-1 min-w-0">
@@ -104,7 +104,7 @@ const SearchBar = ({ onSearch, initialValues = {}, variant = 'default' }) => {
                       handleChange('city', city);
                       setShowCityDropdown(false);
                     }}
-                    className={`w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors ${
+                    className={`w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors cursor-pointer ${
                       formData.city === city ? 'bg-slate-100 text-slate-800 font-medium' : 'text-slate-700'
                     }`}
                   >
@@ -125,7 +125,7 @@ const SearchBar = ({ onSearch, initialValues = {}, variant = 'default' }) => {
               setShowCityDropdown(false);
               setShowConfigDropdown(false);
             }}
-            className="w-full flex items-center gap-3 px-4 py-3.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors text-left"
+            className="w-full flex items-center gap-3 px-4 py-3.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors text-left cursor-pointer"
           >
             <div className="w-5 h-5 flex-shrink-0">
               <svg className="w-5 h-5 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -156,7 +156,7 @@ const SearchBar = ({ onSearch, initialValues = {}, variant = 'default' }) => {
                     handleChange('propertyType', '');
                     setShowTypeDropdown(false);
                   }}
-                  className={`w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors ${
+                  className={`w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors cursor-pointer ${
                     !formData.propertyType ? 'bg-slate-100 text-slate-800 font-medium' : 'text-slate-700'
                   }`}
                 >
@@ -179,7 +179,7 @@ const SearchBar = ({ onSearch, initialValues = {}, variant = 'default' }) => {
                             handleChange('propertyType', typeValue);
                             setShowTypeDropdown(false);
                           }}
-                          className={`w-full px-4 py-2.5 text-left hover:bg-slate-50 transition-colors ${
+                          className={`w-full px-4 py-2.5 text-left hover:bg-slate-50 transition-colors cursor-pointer ${
                             formData.propertyType === typeValue ? 'bg-slate-100 text-slate-800 font-medium' : 'text-slate-700'
                           }`}
                         >
@@ -203,7 +203,7 @@ const SearchBar = ({ onSearch, initialValues = {}, variant = 'default' }) => {
               setShowCityDropdown(false);
               setShowTypeDropdown(false);
             }}
-            className="w-full flex items-center gap-3 px-4 py-3.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors text-left"
+            className="w-full flex items-center gap-3 px-4 py-3.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors text-left cursor-pointer"
           >
             <div className="w-5 h-5 flex-shrink-0">
               <svg className="w-5 h-5 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -234,7 +234,7 @@ const SearchBar = ({ onSearch, initialValues = {}, variant = 'default' }) => {
                     handleChange('configuration', '');
                     setShowConfigDropdown(false);
                   }}
-                  className={`w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors ${
+                  className={`w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors cursor-pointer ${
                     !formData.configuration ? 'bg-slate-100 text-slate-800 font-medium' : 'text-slate-700'
                   }`}
                 >
@@ -248,7 +248,7 @@ const SearchBar = ({ onSearch, initialValues = {}, variant = 'default' }) => {
                       handleChange('configuration', config);
                       setShowConfigDropdown(false);
                     }}
-                    className={`w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors ${
+                    className={`w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors cursor-pointer ${
                       formData.configuration === config ? 'bg-slate-100 text-slate-800 font-medium' : 'text-slate-700'
                     }`}
                   >
@@ -266,7 +266,7 @@ const SearchBar = ({ onSearch, initialValues = {}, variant = 'default' }) => {
           onClick={handleSearch}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="flex items-center justify-center gap-2 px-8 py-3.5 bg-slate-800 text-white font-semibold rounded-xl hover:bg-slate-700 transition-all shadow-lg shadow-slate-800/30 cursor-pointer"
+          className="flex items-center justify-center gap-2 px-8 py-3.5 bg-slate-800 text-white font-semibold rounded-xl hover:bg-slate-700 active:bg-slate-900 transition-all shadow-lg shadow-slate-800/30 cursor-pointer"
         >
           <Search className="w-5 h-5" />
           <span>Search</span>
@@ -285,7 +285,7 @@ const SearchBar = ({ onSearch, initialValues = {}, variant = 'default' }) => {
           {formData.city && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-800 text-sm font-medium rounded-full">
               {formData.city}
-              <button onClick={() => handleClear('city')} className="hover:text-slate-600">
+              <button onClick={() => handleClear('city')} className="hover:text-slate-600 cursor-pointer">
                 <X className="w-3.5 h-3.5" />
               </button>
             </span>
@@ -293,7 +293,7 @@ const SearchBar = ({ onSearch, initialValues = {}, variant = 'default' }) => {
           {formData.propertyType && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-800 text-sm font-medium rounded-full">
               {selectedType?.label}
-              <button onClick={() => handleClear('propertyType')} className="hover:text-slate-600">
+              <button onClick={() => handleClear('propertyType')} className="hover:text-slate-600 cursor-pointer">
                 <X className="w-3.5 h-3.5" />
               </button>
             </span>
@@ -301,14 +301,14 @@ const SearchBar = ({ onSearch, initialValues = {}, variant = 'default' }) => {
           {formData.configuration && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-800 text-sm font-medium rounded-full">
               {formData.configuration}
-              <button onClick={() => handleClear('configuration')} className="hover:text-slate-600">
+              <button onClick={() => handleClear('configuration')} className="hover:text-slate-600 cursor-pointer">
                 <X className="w-3.5 h-3.5" />
               </button>
             </span>
           )}
           <button
             onClick={() => setFormData({ city: '', propertyType: '', configuration: '', search: '' })}
-            className="text-sm text-slate-500 hover:text-slate-700 underline ml-2"
+            className="text-sm text-slate-500 hover:text-slate-700 underline ml-2 cursor-pointer"
           >
             Clear all
           </button>

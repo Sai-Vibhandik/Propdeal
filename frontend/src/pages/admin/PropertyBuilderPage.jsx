@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, ArrowRight, Check, Building2, Layers,
-  Image, Sparkles, Eye, Save, Send, Palette, Loader2, DollarSign
+  Image, Sparkles, Eye, Save, Send, Palette, Loader2, DollarSign, Trash2, X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { propertiesAPI } from '../../services/api.js';
@@ -146,7 +146,7 @@ const getDefaultPropertyData = () => ({
     pricing: { enabled: true, order: 5, layout: 'cards' },
     plans: { enabled: true, order: 6, layout: 'grid' },
     location: { enabled: true, order: 7, layout: 'map-list' },
-    gallery: { enabled: true, order: 8, layout: 'grid' },
+    gallery: { enabled: true, order: 8, layout: 'carousel' },
     videoTour: { enabled: false, order: 9, layout: 'full-width' },
     builderInfo: { enabled: true, order: 10, layout: 'standard' },
     investment: { enabled: true, order: 11, layout: 'cards' },
@@ -222,9 +222,9 @@ const PropertyBuilderPage = () => {
   const [lastSaved, setLastSaved] = useState(null);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [draftRestored, setDraftRestored] = useState(false);
-
-  // Use ref to prevent duplicate toasts in React Strict Mode
-  const toastShownRef = useRef(false);
+  const [showDraftModal, setShowDraftModal] = useState(false);
+  const [pendingDraft, setPendingDraft] = useState(null);
+  const [showClearModal, setShowClearModal] = useState(false);
 
   // Check if this is a fresh start (new property without editing)
   const isFreshStart = searchParams.get('fresh') === 'true';
@@ -256,14 +256,10 @@ const PropertyBuilderPage = () => {
     if (isNewProp && !isFreshStart) {
       const draft = loadDraftFromStorage(null);
       if (draft && draft.data) {
-        console.log('[PropertyBuilder] Found draft, restoring...');
-        // We'll restore the step in a separate effect
-        return {
-          ...defaultData,
-          ...draft.data,
-          propertyCategory: draft.data.propertyCategory?.toLowerCase() || 'residential',
-          _restoredStep: draft.step || 1,
-        };
+        console.log('[PropertyBuilder] Found draft, will show modal...');
+        // Store draft for modal and return default data initially
+        // The modal will handle whether to restore or discard
+        return defaultData;
       }
     }
 
@@ -280,22 +276,92 @@ const PropertyBuilderPage = () => {
     console.log('[Debug] loadingProperty changed to:', loadingProperty, 'id:', id);
   }, [loadingProperty, id]);
 
-  // Restore step from draft after initial render
+  // Check for saved draft on initial load and show modal
   useEffect(() => {
-    if (propertyData._restoredStep && !draftRestored) {
-      console.log('[StepRestore] Restoring step:', propertyData._restoredStep);
-      setCurrentStep(propertyData._restoredStep);
-      setDraftRestored(true);
-
-      // Show toast (only once using ref)
-      const timestamp = localStorage.getItem(`${getDraftKey(null)}_timestamp`);
-      if (timestamp && !toastShownRef.current) {
-        toastShownRef.current = true;
-        setLastSaved(new Date(timestamp));
-        toast.success('Draft restored from previous session');
+    if (isNewProp && !isFreshStart && !draftRestored) {
+      const draft = loadDraftFromStorage(null);
+      if (draft && draft.data) {
+        console.log('[DraftModal] Found saved draft, showing modal...');
+        setPendingDraft(draft);
+        setShowDraftModal(true);
       }
     }
-  }, [propertyData._restoredStep, draftRestored]);
+  }, [isNewProp, isFreshStart, draftRestored]);
+
+  // Handler to continue with the saved draft
+  const handleContinueDraft = () => {
+    if (pendingDraft) {
+      console.log('[DraftModal] User chose to continue with draft');
+      const draftId = pendingDraft.isEdit ? id : null;
+      const normalizedDraft = {
+        ...getDefaultPropertyData(),
+        ...pendingDraft.data,
+        propertyCategory: pendingDraft.data.propertyCategory?.toLowerCase() || 'residential',
+      };
+      setPropertyData(normalizedDraft);
+      setCurrentStep(pendingDraft.step || 1);
+      const timestamp = localStorage.getItem(`${getDraftKey(draftId)}_timestamp`);
+      if (timestamp) {
+        setLastSaved(new Date(timestamp));
+      }
+      toast.success('Draft restored');
+    }
+    setShowDraftModal(false);
+    setPendingDraft(null);
+    setDraftRestored(true);
+  };
+
+  // Handler to discard draft and use fresh/original data
+  const handleDiscardDraft = () => {
+    console.log('[DraftModal] User chose to discard draft');
+    const draftId = pendingDraft?.isEdit ? id : null;
+    clearDraftFromStorage(draftId);
+
+    if (pendingDraft?.isEdit && pendingDraft?.existingProperty) {
+      // For editing, load the original property data from API
+      const normalizedProperty = {
+        ...getDefaultPropertyData(),
+        ...pendingDraft.existingProperty,
+        propertyCategory: pendingDraft.existingProperty.propertyCategory?.toLowerCase() || 'residential',
+      };
+      setPropertyData(normalizedProperty);
+    } else {
+      // For new property, reset to default
+      setPropertyData(getDefaultPropertyData());
+      setCurrentStep(1);
+    }
+
+    setShowDraftModal(false);
+    setPendingDraft(null);
+    setDraftRestored(true);
+    setLastSaved(null);
+    toast.success('Starting fresh');
+  };
+
+  // Handler to start fresh (clear draft)
+  const handleStartFresh = () => {
+    console.log('[DraftModal] User chose to start fresh');
+    clearDraftFromStorage(null);
+    setShowDraftModal(false);
+    setPendingDraft(null);
+    setDraftRestored(true);
+    toast.success('Starting with fresh form');
+  };
+
+  // Handler to clear draft manually from header
+  const handleClearDraft = () => {
+    setShowClearModal(true);
+  };
+
+  // Handler to confirm clear draft
+  const handleConfirmClear = () => {
+    clearDraftFromStorage(id);
+    setPropertyData(getDefaultPropertyData());
+    setCurrentStep(1);
+    setLastSaved(null);
+    setShowClearModal(false);
+    toast.success('Draft cleared');
+  };
 
   // Load existing property data when editing
   useEffect(() => {
@@ -311,21 +377,10 @@ const PropertyBuilderPage = () => {
       // Editing existing property - check for local draft first
       const draft = loadDraftFromStorage(id);
       if (draft && draft.data) {
-        console.log('[LoadEffect] Using local draft');
-        // Use local draft if available
-        const normalizedDraft = {
-          ...getDefaultPropertyData(),
-          ...draft.data,
-          propertyCategory: draft.data.propertyCategory?.toLowerCase() || 'residential',
-        };
-        setPropertyData(normalizedDraft);
-        setCurrentStep(draft.step || 1);
-        const timestamp = localStorage.getItem(`${getDraftKey(id)}_timestamp`);
-        if (timestamp && !toastShownRef.current) {
-          toastShownRef.current = true;
-          setLastSaved(new Date(timestamp));
-          toast.success('Draft restored from previous session');
-        }
+        console.log('[LoadEffect] Found local draft, showing modal...');
+        // Show modal for existing property draft too
+        setPendingDraft({ ...draft, isEdit: true, existingProperty });
+        setShowDraftModal(true);
       } else {
         console.log('[LoadEffect] No local draft, using API data');
         // No local draft, use data from API
@@ -337,7 +392,7 @@ const PropertyBuilderPage = () => {
         setPropertyData(normalizedProperty);
       }
     } else if (!id) {
-      console.log('[LoadEffect] New property, draft was already loaded in lazy init');
+      console.log('[LoadEffect] New property, draft modal handled by separate effect');
     }
 
     console.log('[LoadEffect] Setting initialLoadComplete to true');
@@ -392,13 +447,33 @@ const PropertyBuilderPage = () => {
 
   const nextStep = () => {
     // Validate current step before proceeding
+    if (currentStep === 1 && window.basicInfoStepValidation) {
+      const isValid = window.basicInfoStepValidation();
+      if (!isValid) {
+        toast.error('Please fill in all required fields correctly');
+        return;
+      }
+    }
+
+    if (currentStep === 2 && window.pricingPlansStepValidation) {
+      const isValid = window.pricingPlansStepValidation();
+      if (!isValid) {
+        toast.error('Please fill in all required fields correctly');
+        return;
+      }
+    }
+
+    if (currentStep === 6 && window.themeStepValidation) {
+      const isValid = window.themeStepValidation();
+      if (!isValid) {
+        toast.error('Please fill in all required fields correctly');
+        return;
+      }
+    }
+
     const stepErrors = validateStep(currentStep);
     if (Object.keys(stepErrors).length > 0) {
       toast.error('Please fill in all required fields');
-      // Trigger validation in the current step component if available
-      if (currentStep === 1 && window.basicInfoStepValidation) {
-        window.basicInfoStepValidation();
-      }
       return;
     }
 
@@ -424,13 +499,15 @@ const PropertyBuilderPage = () => {
         if (!propertyData.address?.fullAddress?.trim()) errors['address.fullAddress'] = 'Full address is required';
         if (!propertyData.address?.locality?.trim()) errors['address.locality'] = 'Locality is required';
         if (!propertyData.address?.city?.trim()) errors['address.city'] = 'City is required';
+        if (!propertyData.address?.state?.trim()) errors['address.state'] = 'State is required';
+        if (!propertyData.address?.pincode?.trim()) errors['address.pincode'] = 'Pincode is required';
         // Price range is now auto-calculated from pricingPlans
         break;
       case 2: // Pricing Plans
-        // Validate pricing plans
+        // Validate pricing plans - at least one valid plan required
         const validPlans = propertyData.pricingPlans?.filter(p => p.configuration && p.price);
         if (!validPlans || validPlans.length === 0) {
-          // Don't block - allow empty pricing for now
+          errors.plans = 'At least one pricing plan is required';
         }
         break;
       case 3: // Sections - no required fields
@@ -442,7 +519,10 @@ const PropertyBuilderPage = () => {
         break;
       case 5: // AI Content - no required fields
         break;
-      case 6: // Theme - no required fields
+      case 6: // Theme - branding required
+        if (!propertyData.branding?.companyName?.trim()) errors.companyName = 'Company Name is required';
+        if (!propertyData.branding?.phoneNumber?.trim()) errors.phoneNumber = 'Contact Number is required';
+        if (!propertyData.branding?.email?.trim()) errors.email = 'Email is required';
         break;
       case 7: // Review - no validation needed
         break;
@@ -610,8 +690,8 @@ const PropertyBuilderPage = () => {
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between h-16 gap-2">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
               <button
                 onClick={() => {
                   // Save draft before leaving
@@ -624,37 +704,36 @@ const PropertyBuilderPage = () => {
                   }
                   navigate('/admin/properties');
                 }}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className="p-2 hover:bg-gray-100 rounded-lg flex-shrink-0"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-base sm:text-xl font-bold text-gray-900 truncate">
                   {id ? 'Edit Property' : 'New Property'}
                 </h1>
-                <div className="flex items-center gap-2">
-                  <p className="text-sm text-gray-500">
+                <div className="flex items-center gap-2 min-w-0">
+                  <p className="text-xs sm:text-sm text-gray-500 truncate">
                     {propertyData.name || 'Untitled'} • {propertyData.status || 'draft'}
                   </p>
-                  {!id && lastSaved && (
-                    <span className="text-xs text-gray-400">
-                      (Auto-saved {lastSaved.toLocaleTimeString()})
-                    </span>
-                  )}
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              {/* Auto-save indicator */}
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+              {/* Clear Draft Button */}
               {lastSaved && (
-                <div className="flex items-center gap-2 text-sm text-emerald-600">
-                  <span>✓ Auto-saved {lastSaved.toLocaleTimeString()}</span>
-                </div>
+                <button
+                  onClick={handleClearDraft}
+                  className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Clear draft and start fresh"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               )}
               <button
                 onClick={handleSaveDraft}
                 disabled={isSubmitting}
-                className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                className="hidden sm:inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <>
@@ -671,17 +750,19 @@ const PropertyBuilderPage = () => {
               <button
                 onClick={handlePublish}
                 disabled={isSubmitting}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-800 text-white rounded-lg hover:bg-blue-900 disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-800 text-white rounded-lg hover:bg-blue-900 disabled:opacity-50 text-sm sm:text-base"
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Publishing...
+                    <span className="hidden sm:inline">Publishing...</span>
+                    <span className="sm:hidden">...</span>
                   </>
                 ) : (
                   <>
                     <Send className="w-4 h-4" />
-                    Publish
+                    <span className="hidden sm:inline">Publish</span>
+                    <span className="sm:hidden">Publish</span>
                   </>
                 )}
               </button>
@@ -691,9 +772,9 @@ const PropertyBuilderPage = () => {
       </div>
 
       {/* Progress Steps */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white border-b border-gray-200 overflow-x-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-4">
+          <div className="flex items-center justify-between py-4 gap-1 sm:gap-0 min-w-max sm:min-w-0">
             {STEPS.map((step, index) => {
               const Icon = step.icon;
               const isActive = currentStep === step.id;
@@ -703,12 +784,12 @@ const PropertyBuilderPage = () => {
                 <div key={step.id} className="flex items-center">
                   <button
                     onClick={() => setCurrentStep(step.id)}
-                    className={`flex items-center gap-2 ${
+                    className={`flex items-center gap-1 sm:gap-2 ${
                       isActive ? 'text-blue-800' : isCompleted ? 'text-emerald-600' : 'text-gray-400'
                     }`}
                   >
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                         isActive
                           ? 'bg-blue-800 text-white'
                           : isCompleted
@@ -716,7 +797,7 @@ const PropertyBuilderPage = () => {
                           : 'bg-gray-100 text-gray-400'
                       }`}
                     >
-                      {isCompleted ? <Check className="w-5 h-5" /> : <Icon className="w-4 h-4" />}
+                      {isCompleted ? <Check className="w-3 h-3 sm:w-4 sm:h-4" /> : <Icon className="w-3 h-3 sm:w-4 sm:h-4" />}
                     </div>
                     <div className="hidden md:block text-left">
                       <p className="font-medium text-sm">{step.name}</p>
@@ -725,7 +806,7 @@ const PropertyBuilderPage = () => {
                   </button>
                   {index < STEPS.length - 1 && (
                     <div
-                      className={`hidden md:block w-12 h-0.5 mx-2 ${
+                      className={`hidden sm:block w-6 md:w-12 h-0.5 mx-1 sm:mx-2 flex-shrink-0 ${
                         currentStep > step.id ? 'bg-emerald-300' : 'bg-gray-200'
                       }`}
                     />
@@ -752,33 +833,136 @@ const PropertyBuilderPage = () => {
         </AnimatePresence>
 
         {/* Navigation Buttons */}
-        <div className="flex justify-between mt-8 pt-8 border-t border-gray-200">
+        <div className="flex justify-between mt-8 pt-8 border-t border-gray-200 gap-3">
           <button
             onClick={prevStep}
             disabled={currentStep === 1}
-            className={`inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium ${
+            className={`inline-flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-medium text-sm sm:text-base ${
               currentStep === 1
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            <ArrowLeft className="w-5 h-5" />
-            Previous
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden sm:inline">Previous</span>
+            <span className="sm:hidden">Back</span>
           </button>
           <button
             onClick={nextStep}
             disabled={currentStep === STEPS.length}
-            className={`inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium ${
+            className={`inline-flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-medium text-sm sm:text-base ${
               currentStep === STEPS.length
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 : 'bg-blue-800 text-white hover:bg-blue-900'
             }`}
           >
-            Next
-            <ArrowRight className="w-5 h-5" />
+            <span className="hidden sm:inline">Next</span>
+            <span className="sm:hidden">Next</span>
+            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
       </div>
+
+      {/* Draft Restoration Modal */}
+      <AnimatePresence>
+        {showDraftModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-xl shadow-xl max-w-md w-full p-4 sm:p-6 max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900">Unsaved Draft Found</h3>
+                <button
+                  onClick={handleDiscardDraft}
+                  className="text-gray-400 hover:text-gray-600 flex-shrink-0"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
+                We found an unsaved draft from your previous session. Would you like to continue where you left off or start fresh?
+              </p>
+              {pendingDraft?.data?.name && (
+                <div className="bg-gray-50 rounded-lg p-3 mb-4 sm:mb-6">
+                  <p className="text-xs sm:text-sm text-gray-500">Draft Property:</p>
+                  <p className="font-medium text-gray-900 truncate text-sm sm:text-base">{pendingDraft.data.name || 'Untitled'}</p>
+                </div>
+              )}
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                <button
+                  onClick={handleContinueDraft}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-blue-800 text-white rounded-lg hover:bg-blue-900 font-medium text-sm sm:text-base"
+                >
+                  <Check className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate">Continue with Draft</span>
+                </button>
+                <button
+                  onClick={handleDiscardDraft}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm sm:text-base"
+                >
+                  <Trash2 className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate">Start Fresh</span>
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Clear Draft Modal */}
+      <AnimatePresence>
+        {showClearModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-xl shadow-xl max-w-md w-full p-4 sm:p-6 max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900">Clear Draft</h3>
+                <button
+                  onClick={() => setShowClearModal(false)}
+                  className="text-gray-400 hover:text-gray-600 flex-shrink-0"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
+                Are you sure you want to clear the draft? All unsaved changes will be lost and you will start with a fresh form.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                <button
+                  onClick={() => setShowClearModal(false)}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm sm:text-base"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmClear}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium text-sm sm:text-base"
+                >
+                  <Trash2 className="w-4 h-4 flex-shrink-0" />
+                  Clear Draft
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

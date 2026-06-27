@@ -7,11 +7,12 @@ import Button from '../../components/common/Button.jsx';
 import { propertiesAPI } from '../../services/api.js';
 import { INDIAN_CITIES, PROPERTY_TYPES, PROPERTY_TYPE_GROUPS, PROPERTY_CATEGORIES, CONFIGURATIONS } from '../../utils/constants.js';
 
-const FiltersPanel = ({ isOpen, onClose, filters, onFilterChange, onClearAll }) => {
+const FiltersPanel = ({ isOpen, onClose, filters, onFilterChange, onClearAll, builders = [] }) => {
   const [localFilters, setLocalFilters] = useState(filters);
   const [expandedSections, setExpandedSections] = useState({
     location: true,
     type: true,
+    builder: false,
     budget: false,
     configuration: false,
     status: false,
@@ -43,6 +44,7 @@ const FiltersPanel = ({ isOpen, onClose, filters, onFilterChange, onClearAll }) 
       propertyType: '',
       category: '',
       configuration: '',
+      builder: '',
       minPrice: '',
       maxPrice: '',
       search: '',
@@ -88,14 +90,14 @@ const FiltersPanel = ({ isOpen, onClose, filters, onFilterChange, onClearAll }) 
                 {hasActiveFilters && (
                   <button
                     onClick={clearFilters}
-                    className="text-sm text-blue-800 hover:text-blue-900"
+                    className="text-sm text-blue-800 hover:text-blue-900 cursor-pointer"
                   >
                     Clear all
                   </button>
                 )}
                 <button
                   onClick={onClose}
-                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -108,7 +110,7 @@ const FiltersPanel = ({ isOpen, onClose, filters, onFilterChange, onClearAll }) 
               <div className="border-b pb-5">
                 <button
                   onClick={() => toggleSection('location')}
-                  className="flex items-center justify-between w-full text-left"
+                  className="flex items-center justify-between w-full text-left cursor-pointer"
                 >
                   <span className="font-medium text-gray-900">Location</span>
                   <ChevronDown
@@ -142,7 +144,7 @@ const FiltersPanel = ({ isOpen, onClose, filters, onFilterChange, onClearAll }) 
               <div className="border-b pb-5">
                 <button
                   onClick={() => toggleSection('type')}
-                  className="flex items-center justify-between w-full text-left"
+                  className="flex items-center justify-between w-full text-left cursor-pointer"
                 >
                   <span className="font-medium text-gray-900">Property Type</span>
                   <ChevronDown
@@ -168,7 +170,7 @@ const FiltersPanel = ({ isOpen, onClose, filters, onFilterChange, onClearAll }) 
                                     localFilters.propertyType === typeValue ? '' : typeValue
                                   )
                                 }
-                                className={`px-3 py-2 text-sm rounded-lg border transition-all ${
+                                className={`px-3 py-2 text-sm rounded-lg border transition-all cursor-pointer ${
                                   localFilters.propertyType === typeValue
                                     ? 'bg-blue-800 text-white border-blue-800'
                                     : 'bg-white text-gray-700 border-gray-200 hover:border-blue-800'
@@ -185,11 +187,47 @@ const FiltersPanel = ({ isOpen, onClose, filters, onFilterChange, onClearAll }) 
                 )}
               </div>
 
+              {/* Builder/Developer */}
+              {builders.length > 0 && (
+                <div className="border-b pb-5">
+                  <button
+                    onClick={() => toggleSection('builder')}
+                    className="flex items-center justify-between w-full text-left cursor-pointer"
+                  >
+                    <span className="font-medium text-gray-900">Builder / Developer</span>
+                    <ChevronDown
+                      className={`w-5 h-5 text-gray-400 transition-transform ${
+                        expandedSections.builder ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
+                  {expandedSections.builder && (
+                    <div className="mt-3 space-y-2 max-h-48 overflow-y-auto">
+                      {builders.map((builder) => (
+                        <label
+                          key={builder}
+                          className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded-lg cursor-pointer"
+                        >
+                          <input
+                            type="radio"
+                            name="builder"
+                            checked={localFilters.builder === builder}
+                            onChange={() => handleLocalChange('builder', builder)}
+                            className="w-4 h-4 text-blue-800 focus:ring-blue-500"
+                          />
+                          <span className="text-gray-700">{builder}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Budget */}
               <div className="border-b pb-5">
                 <button
                   onClick={() => toggleSection('budget')}
-                  className="flex items-center justify-between w-full text-left"
+                  className="flex items-center justify-between w-full text-left cursor-pointer"
                 >
                   <span className="font-medium text-gray-900">Budget</span>
                   <ChevronDown
@@ -215,7 +253,7 @@ const FiltersPanel = ({ isOpen, onClose, filters, onFilterChange, onClearAll }) 
                             handleLocalChange('maxPrice', range.max);
                           }
                         }}
-                        className={`w-full px-3 py-2 text-sm text-left rounded-lg border transition-all ${
+                        className={`w-full px-3 py-2 text-sm text-left rounded-lg border transition-all cursor-pointer ${
                           localFilters.minPrice === range.min &&
                           localFilters.maxPrice === range.max
                             ? 'bg-blue-800 text-white border-blue-800'
@@ -233,7 +271,7 @@ const FiltersPanel = ({ isOpen, onClose, filters, onFilterChange, onClearAll }) 
               <div className="border-b pb-5">
                 <button
                   onClick={() => toggleSection('configuration')}
-                  className="flex items-center justify-between w-full text-left"
+                  className="flex items-center justify-between w-full text-left cursor-pointer"
                 >
                   <span className="font-medium text-gray-900">Configuration</span>
                   <ChevronDown
@@ -253,7 +291,7 @@ const FiltersPanel = ({ isOpen, onClose, filters, onFilterChange, onClearAll }) 
                             localFilters.configuration === config ? '' : config
                           )
                         }
-                        className={`px-4 py-2 text-sm rounded-lg border transition-all ${
+                        className={`px-4 py-2 text-sm rounded-lg border transition-all cursor-pointer ${
                           localFilters.configuration === config
                             ? 'bg-blue-800 text-white border-blue-800'
                             : 'bg-white text-gray-700 border-gray-200 hover:border-blue-800'
@@ -270,7 +308,7 @@ const FiltersPanel = ({ isOpen, onClose, filters, onFilterChange, onClearAll }) 
               <div>
                 <button
                   onClick={() => toggleSection('status')}
-                  className="flex items-center justify-between w-full text-left"
+                  className="flex items-center justify-between w-full text-left cursor-pointer"
                 >
                   <span className="font-medium text-gray-900">Status</span>
                   <ChevronDown
@@ -326,10 +364,24 @@ const PropertiesPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState('grid');
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [builders, setBuilders] = useState([]);
 
   // Scroll to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
+  }, []);
+
+  // Fetch builders
+  useEffect(() => {
+    const fetchBuilders = async () => {
+      try {
+        const response = await propertiesAPI.getBuilders();
+        setBuilders(response.data.data.map(b => b.name) || []);
+      } catch (error) {
+        console.error('Error fetching builders:', error);
+      }
+    };
+    fetchBuilders();
   }, []);
 
   // Get sort from URL and convert to display value
@@ -344,6 +396,7 @@ const PropertiesPage = () => {
     propertyType: searchParams.get('type') || '',
     category: searchParams.get('category') || '',
     configuration: searchParams.get('config') || '',
+    builder: searchParams.get('builder') || '',
     minPrice: searchParams.get('minPrice') || '',
     maxPrice: searchParams.get('maxPrice') || '',
     search: searchParams.get('q') || '',
@@ -370,6 +423,7 @@ const PropertiesPage = () => {
       if (filters.propertyType) params.propertyType = filters.propertyType;
       if (filters.category) params.category = filters.category;
       if (filters.configuration) params.configuration = filters.configuration;
+      if (filters.builder) params.builder = filters.builder;
       if (filters.minPrice) params.minPrice = filters.minPrice;
       if (filters.maxPrice) params.maxPrice = filters.maxPrice;
       if (filters.search) params.search = filters.search;
@@ -403,6 +457,7 @@ const PropertiesPage = () => {
       propertyType: '',
       category: '',
       configuration: '',
+      builder: '',
       minPrice: '',
       maxPrice: '',
       search: '',
@@ -453,7 +508,7 @@ const PropertiesPage = () => {
               {/* Filter Button */}
               <button
                 onClick={() => setFiltersOpen(true)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
               >
                 <SlidersHorizontal className="w-5 h-5" />
                 <span>Filters</span>
@@ -468,7 +523,7 @@ const PropertiesPage = () => {
               <select
                 value={sortBy}
                 onChange={handleSortChange}
-                className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
               >
                 <option value="newest">Newest First</option>
                 <option value="price-low">Price: Low to High</option>
@@ -477,16 +532,16 @@ const PropertiesPage = () => {
               </select>
 
               {/* View Toggle */}
-              <div className="hidden md:flex items-center border border-gray-200 rounded-xl overflow-hidden">
+              <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden">
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`p-2.5 ${viewMode === 'grid' ? 'bg-blue-800 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                  className={`p-2.5 cursor-pointer ${viewMode === 'grid' ? 'bg-blue-800 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
                 >
                   <Grid className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`p-2.5 ${viewMode === 'list' ? 'bg-blue-800 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                  className={`p-2.5 cursor-pointer ${viewMode === 'list' ? 'bg-blue-800 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
                 >
                   <List className="w-5 h-5" />
                 </button>
@@ -501,7 +556,7 @@ const PropertiesPage = () => {
               {filters.city && (
                 <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
                   {filters.city}
-                  <button onClick={() => updateFilters({ ...filters, city: '' })}>
+                  <button onClick={() => updateFilters({ ...filters, city: '' })} className="cursor-pointer">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </span>
@@ -509,7 +564,7 @@ const PropertiesPage = () => {
               {filters.propertyType && (
                 <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
                   {PROPERTY_TYPES.find((t) => t.value === filters.propertyType)?.label}
-                  <button onClick={() => updateFilters({ ...filters, propertyType: '' })}>
+                  <button onClick={() => updateFilters({ ...filters, propertyType: '' })} className="cursor-pointer">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </span>
@@ -517,7 +572,15 @@ const PropertiesPage = () => {
               {filters.configuration && (
                 <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
                   {filters.configuration}
-                  <button onClick={() => updateFilters({ ...filters, configuration: '' })}>
+                  <button onClick={() => updateFilters({ ...filters, configuration: '' })} className="cursor-pointer">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </span>
+              )}
+              {filters.builder && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                  {filters.builder}
+                  <button onClick={() => updateFilters({ ...filters, builder: '' })} className="cursor-pointer">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </span>
@@ -525,7 +588,7 @@ const PropertiesPage = () => {
               {filters.category && (
                 <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
                   {PROPERTY_CATEGORIES.find((c) => c.value === filters.category)?.label}
-                  <button onClick={() => updateFilters({ ...filters, category: '' })}>
+                  <button onClick={() => updateFilters({ ...filters, category: '' })} className="cursor-pointer">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </span>
@@ -548,14 +611,14 @@ const PropertiesPage = () => {
                     }
                     return `Under ${formatPrice(filters.maxPrice)}`;
                   })()}
-                  <button onClick={() => updateFilters({ ...filters, minPrice: '', maxPrice: '' })}>
+                  <button onClick={() => updateFilters({ ...filters, minPrice: '', maxPrice: '' })} className="cursor-pointer">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </span>
               )}
               <button
                 onClick={clearAllFilters}
-                className="text-sm text-red-600 hover:text-red-700 underline"
+                className="text-sm text-red-600 hover:text-red-700 underline cursor-pointer"
               >
                 Clear all
               </button>
@@ -590,7 +653,7 @@ const PropertiesPage = () => {
           <div className="flex flex-wrap items-center justify-center gap-2 mt-8">
             <button
               disabled={pagination.page === 1}
-              className="px-3 sm:px-4 py-2 border border-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors text-sm sm:text-base cursor-pointer"
+              className="px-3 sm:px-4 py-2 border border-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 active:bg-gray-100 transition-colors text-sm sm:text-base cursor-pointer"
             >
               Previous
             </button>
@@ -600,10 +663,10 @@ const PropertiesPage = () => {
                 .map((page) => (
                   <button
                     key={page}
-                    className={`px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base cursor-pointer ${
+                    className={`px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base cursor-pointer transition-colors ${
                       page === pagination.page
-                        ? 'bg-blue-800 text-white'
-                        : 'border border-gray-200 hover:bg-gray-50'
+                        ? 'bg-blue-800 text-white hover:bg-blue-700'
+                        : 'border border-gray-200 hover:bg-gray-50 active:bg-gray-100'
                     }`}
                   >
                     {page}
@@ -612,7 +675,7 @@ const PropertiesPage = () => {
             </div>
             <button
               disabled={pagination.page === pagination.pages}
-              className="px-3 sm:px-4 py-2 border border-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors text-sm sm:text-base cursor-pointer"
+              className="px-3 sm:px-4 py-2 border border-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 active:bg-gray-100 transition-colors text-sm sm:text-base cursor-pointer"
             >
               Next
             </button>
@@ -627,6 +690,7 @@ const PropertiesPage = () => {
         filters={filters}
         onFilterChange={updateFilters}
         onClearAll={clearAllFilters}
+        builders={builders}
       />
     </div>
   );

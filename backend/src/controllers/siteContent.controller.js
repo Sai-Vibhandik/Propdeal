@@ -12,6 +12,7 @@ export const getSiteContent = async (req, res) => {
       heroSlides: content.heroSlides.filter(s => s.isActive),
       whyUs: content.whyUs,
       cities: content.cities?.filter(c => c.isActive) || [],
+      featuredBuilders: content.featuredBuilders || [],
       testimonials: content.testimonials.filter(t => t.isActive),
       faqs: content.faqs.filter(f => f.isActive),
       contact: content.contact,
@@ -441,6 +442,39 @@ export const updateTermsOfService = async (req, res) => {
     });
   } catch (error) {
     console.error('Update terms of service error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
+  }
+};
+
+// @desc    Update featured builders
+// @route   PUT /api/admin/site-content/featured-builders
+// @access  Private (Admin only)
+export const updateFeaturedBuilders = async (req, res) => {
+  try {
+    const { builders } = req.body;
+
+    // Validate max 10 builders
+    if (builders && builders.length > 10) {
+      return res.status(400).json({
+        success: false,
+        message: 'Maximum 10 builders allowed',
+      });
+    }
+
+    const content = await SiteContent.getSingleton();
+    content.featuredBuilders = builders || [];
+    await content.save();
+
+    res.json({
+      success: true,
+      data: content.featuredBuilders,
+      message: 'Featured builders updated successfully',
+    });
+  } catch (error) {
+    console.error('Update featured builders error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error',

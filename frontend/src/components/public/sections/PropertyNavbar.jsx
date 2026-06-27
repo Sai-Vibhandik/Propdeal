@@ -112,7 +112,7 @@ const PropertyNavbar = ({ property, branding, theme = {} }) => {
         whileHover={{ scale: 1.02, y: -2 }}
         whileTap={{ scale: 0.98 }}
         onClick={() => {
-          openModal(property, 'cta-price');
+          openModal(property, 'cta-navbar');
           if (mobile) setIsMobileMenuOpen(false);
         }}
         className={`cta-bounce-shine flex items-center justify-center gap-2 font-semibold text-white rounded-lg cursor-pointer ${

@@ -35,7 +35,18 @@ const leadSchema = new mongoose.Schema({
   // Source Tracking
   source: {
     type: String,
-    enum: ['homepage', 'property-page', 'cta-price', 'cta-visit', 'cta-brochure', 'cta-callback', 'cta-amenities', 'cta-plans', 'cta-gallery', 'cta-video', 'contact-page', 'contact-section'],
+    enum: [
+      // Legacy sources
+      'homepage', 'property-page', 'contact-page',
+      // Get Details buttons
+      'cta-hero', 'cta-highlights', 'cta-overview', 'cta-investment', 'cta-navbar', 'cta-sticky',
+      // Book Site Visit buttons
+      'cta-hero-visit', 'cta-gallery-visit', 'cta-footer-visit', 'cta-video-visit', 'cta-visit',
+      // Get Price Details buttons
+      'cta-pricing-table', 'cta-pricing-sheet', 'cta-pricing-card', 'cta-price',
+      // Other buttons
+      'cta-callback', 'cta-faq', 'cta-amenities', 'cta-plans', 'cta-brochure', 'cta-homeloan',
+    ],
     default: 'property-page',
   },
   utmSource: String,

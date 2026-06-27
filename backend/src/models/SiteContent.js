@@ -129,6 +129,13 @@ const siteContentSchema = new mongoose.Schema({
     isActive: { type: Boolean, default: true },
   }],
 
+  // Featured Builders (shown on homepage, max 5)
+  featuredBuilders: [{
+    name: { type: String, required: true }, // Builder name
+    logo: { type: String }, // URL to builder logo
+    order: { type: Number, default: 0 },
+  }],
+
   // Legal Pages
   privacyPolicy: { type: String, default: '' },
   termsOfService: { type: String, default: '' },

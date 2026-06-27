@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, Phone, CheckCircle } from 'lucide-react';
 import { useLead } from '../../context/LeadContext.jsx';
@@ -13,22 +13,129 @@ const LeadModal = () => {
     email: '',
     phone: '',
   });
+  const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+
+  // Prevent background scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
 
   // Get theme colors
   const { colors } = getThemeStyles(property?.theme);
 
+  // Generate scrollbar thumb color style based on theme
+  const scrollbarStyle = `
+    .lead-modal-scroll::-webkit-scrollbar {
+      width: 4px;
+    }
+    .lead-modal-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .lead-modal-scroll::-webkit-scrollbar-thumb {
+      background: ${colors.primary}40;
+      border-radius: 4px;
+    }
+    .lead-modal-scroll::-webkit-scrollbar-thumb:hover {
+      background: ${colors.primary}60;
+    }
+  `;
+
+  // Dynamic content based on CTA source
+  // Group sources by modal content for consistent UX while tracking exact source
+  const getModalContent = () => {
+    // Book Site Visit - All visit-related buttons
+    const visitSources = ['cta-hero-visit', 'cta-gallery-visit', 'cta-footer-visit', 'cta-video-visit', 'cta-visit'];
+    if (visitSources.includes(source)) {
+      return { title: 'Book Site Visit', subtitle: 'Schedule your visit', button: 'Book Visit' };
+    }
+
+    // Get Details - General enquiry buttons
+    const detailsSources = ['cta-hero', 'cta-highlights', 'cta-overview', 'cta-investment', 'cta-navbar', 'cta-sticky'];
+    if (detailsSources.includes(source)) {
+      return { title: 'Get Details', subtitle: 'We\'ll contact you soon', button: 'Get Details' };
+    }
+
+    // Get Price Details - Pricing-related buttons
+    const priceSources = ['cta-pricing-table', 'cta-pricing-sheet', 'cta-pricing-card', 'cta-price'];
+    if (priceSources.includes(source)) {
+      return { title: 'Get Price Details', subtitle: 'Complete price breakdown', button: 'Get Price' };
+    }
+
+    // Other unique sources
+    const uniqueModals = {
+      'cta-plans': { title: 'Get Floor Plans', subtitle: 'Detailed layout options', button: 'Get Plans' },
+      'cta-callback': { title: 'Request Callback', subtitle: 'Expert will call you soon', button: 'Request Callback' },
+      'cta-faq': { title: 'Schedule a Call', subtitle: 'Expert will call you soon', button: 'Schedule Call' },
+      'cta-amenities': { title: 'Get Amenities Info', subtitle: 'Learn about amenities', button: 'Get Info' },
+      'cta-homeloan': { title: 'Home Loan Assistance', subtitle: 'Get best loan offers', button: 'Get Assistance' },
+      'contact-section': { title: 'Contact Us', subtitle: 'We\'re here to help', button: 'Send Message' },
+    };
+
+    return uniqueModals[source] || { title: 'Get Details', subtitle: 'We\'ll contact you soon', button: 'Submit' };
+  };
+
+  const modalContent = getModalContent();
+
+  // Validation function
+  const validateField = (name, value) => {
+    switch (name) {
+      case 'name':
+        if (!value.trim()) return 'Name is required';
+        if (value.trim().length < 2) return 'Name must be at least 2 characters';
+        return '';
+      case 'phone':
+        if (!value.trim()) return 'Contact Number is required';
+        const digitsOnly = value.replace(/\D/g, '');
+        if (digitsOnly.length < 10 || digitsOnly.length > 15) return 'Please enter a valid contact number';
+        return '';
+      case 'email':
+        if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Please enter a valid email address';
+        return '';
+      default:
+        return '';
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    // For phone field, only allow digits and common formatting characters
+    let filteredValue = value;
+    if (name === 'phone') {
+      filteredValue = value.replace(/[^0-9+\-\s]/g, '');
+    }
+    setFormData((prev) => ({ ...prev, [name]: filteredValue }));
+
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: '' }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.name.trim() || !formData.phone.trim()) {
-      toast.error('Please fill in your name and phone number');
+    // Validate all fields
+    const newErrors = {};
+    const nameError = validateField('name', formData.name);
+    const phoneError = validateField('phone', formData.phone);
+    const emailError = validateField('email', formData.email);
+
+    if (nameError) newErrors.name = nameError;
+    if (phoneError) newErrors.phone = phoneError;
+    if (emailError) newErrors.email = emailError;
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
@@ -46,15 +153,18 @@ const LeadModal = () => {
       setIsSuccess(true);
       toast.success('Thank you! We will contact you soon.');
 
-      // Reset form after a delay
       setTimeout(() => {
         setFormData({ name: '', email: '', phone: '' });
+        setErrors({});
         setIsSuccess(false);
         closeModal();
       }, 2000);
     } catch (error) {
       console.error('Error submitting lead:', error);
-      toast.error(error.response?.data?.message || 'Failed to submit. Please try again.');
+      let message = error.response?.data?.message || 'Failed to submit. Please try again.';
+      // Strip HTML tags from error message
+      message = message.replace(/<[^>]*>/g, '');
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -62,13 +172,10 @@ const LeadModal = () => {
 
   const handleClose = () => {
     setFormData({ name: '', email: '', phone: '' });
+    setErrors({});
     setIsSuccess(false);
     closeModal();
   };
-
-  // Simple consistent heading for all CTAs since form is the same
-  const modalTitle = 'Get in Touch';
-  const modalSubtitle = 'Fill in your details and we\'ll get back to you';
 
   return (
     <AnimatePresence>
@@ -78,22 +185,26 @@ const LeadModal = () => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={handleClose}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', damping: 25 }}
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto overscroll-contain lead-modal-scroll"
+            style={{
+              scrollbarWidth: 'thin',
+              scrollbarColor: `${colors.primary}40 transparent`,
+              overscrollBehavior: 'contain',
+            }}
           >
+            <style>{scrollbarStyle}</style>
             {/* Header */}
             <div className="px-6 py-5" style={{ backgroundColor: colors.primary }}>
               <div className="flex justify-between items-start">
                 <div>
-                  <h2 className="text-xl font-bold text-white">{modalTitle}</h2>
-                  <p className="text-white/80 text-sm mt-1">{modalSubtitle}</p>
+                  <h2 className="text-xl font-bold text-white">{modalContent.title}</h2>
+                  <p className="text-white/80 text-sm mt-1">{modalContent.subtitle}</p>
                 </div>
                 <motion.button
                   whileHover={{ scale: 1.1, rotate: 90 }}
@@ -130,7 +241,7 @@ const LeadModal = () => {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Your Name <span className="text-red-500">*</span>
+                      Your Name<sup className="text-red-500">*</sup>
                     </label>
                     <input
                       type="text"
@@ -138,26 +249,32 @@ const LeadModal = () => {
                       value={formData.name}
                       onChange={handleChange}
                       placeholder="Enter your full name"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all hover:border-gray-300"
-                      style={{ '--tw-ring-color': colors.primary }}
-                      required
+                      maxLength={50}
+                      className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all hover:border-gray-300 ${
+                        errors.name ? 'border-red-500 focus:ring-red-500' : 'border-gray-200'
+                      }`}
+                      style={{ '--tw-ring-color': errors.name ? undefined : colors.primary }}
                     />
+                    {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Phone Number <span className="text-red-500">*</span>
+                      Contact Number<sup className="text-red-500">*</sup>
                     </label>
                     <input
                       type="tel"
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
-                      placeholder="Enter your phone number"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all hover:border-gray-300"
-                      style={{ '--tw-ring-color': colors.primary }}
-                      required
+                      placeholder="Enter your contact number"
+                      maxLength={15}
+                      className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all hover:border-gray-300 ${
+                        errors.phone ? 'border-red-500 focus:ring-red-500' : 'border-gray-200'
+                      }`}
+                      style={{ '--tw-ring-color': errors.phone ? undefined : colors.primary }}
                     />
+                    {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
                   </div>
 
                   <div>
@@ -165,14 +282,18 @@ const LeadModal = () => {
                       Email Address
                     </label>
                     <input
-                      type="email"
+                      type="text"
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
                       placeholder="Enter your email (optional)"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all hover:border-gray-300"
-                      style={{ '--tw-ring-color': colors.primary }}
+                      maxLength={100}
+                      className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all hover:border-gray-300 ${
+                        errors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-200'
+                      }`}
+                      style={{ '--tw-ring-color': errors.email ? undefined : colors.primary }}
                     />
+                    {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
                   </div>
 
                   <motion.button
@@ -191,7 +312,7 @@ const LeadModal = () => {
                     ) : (
                       <>
                         <Send className="w-5 h-5" />
-                        Submit Request
+                        {modalContent.button}
                       </>
                     )}
                   </motion.button>

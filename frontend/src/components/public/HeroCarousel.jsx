@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, MapPin, Building2, Phone, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ChevronRight, MapPin, Building2, Phone, ArrowRight } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 import { useSiteContent } from '../../context/SiteContentContext.jsx';
 import { getFileUrl } from '../../services/api.js';
 
@@ -9,6 +9,7 @@ const HeroCarousel = ({ slides = [] }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const autoPlayTimeoutRef = useRef(null);
+  const location = useLocation();
   const { content } = useSiteContent();
 
   const displaySlides = slides.length > 0 ? slides : [];
@@ -47,15 +48,23 @@ const HeroCarousel = ({ slides = [] }) => {
     autoPlayTimeoutRef.current = setTimeout(() => setIsAutoPlaying(true), 10000);
   }, []);
 
-  const nextSlide = useCallback(() => {
-    if (displaySlides.length === 0) return;
-    goToSlide((currentSlide + 1) % displaySlides.length);
-  }, [currentSlide, displaySlides.length, goToSlide]);
+  // Handle click for hash links
+  const handleHashLinkClick = (e, link) => {
+    const hashIndex = link.indexOf('#');
+    if (hashIndex !== -1) {
+      const hash = link.substring(hashIndex + 1);
+      const targetPath = link.substring(0, hashIndex) || location.pathname;
 
-  const prevSlide = useCallback(() => {
-    if (displaySlides.length === 0) return;
-    goToSlide((currentSlide - 1 + displaySlides.length) % displaySlides.length);
-  }, [currentSlide, displaySlides.length, goToSlide]);
+      // If we're on the same page, just scroll to the element
+      if (targetPath === location.pathname || targetPath === '') {
+        e.preventDefault();
+        const element = document.getElementById(hash);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    }
+  };
 
   // Get CTA button element based on type
   const renderSecondaryCta = (slide) => {
@@ -68,7 +77,7 @@ const HeroCarousel = ({ slides = [] }) => {
           href={`tel:${contactPhone?.replace(/\s/g, '')}`}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/30 text-white font-semibold rounded-xl hover:bg-white/20 transition-all cursor-pointer"
+          className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/30 text-white font-semibold rounded-xl hover:bg-white/20 active:bg-white/30 transition-all cursor-pointer"
         >
           <Phone className="w-5 h-5" />
           {cta.text || 'Call Us'}
@@ -77,16 +86,18 @@ const HeroCarousel = ({ slides = [] }) => {
     }
 
     // Link CTA - use the provided link
+    const MotionLink = motion(Link);
     return (
-      <motion.span whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="inline-block">
-        <Link
-          to={cta.link || '#'}
-          className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/30 text-white font-semibold rounded-xl hover:bg-white/20 transition-all cursor-pointer"
-        >
-          {cta.text || 'Learn More'}
-          <ArrowRight className="w-5 h-5" />
-        </Link>
-      </motion.span>
+      <MotionLink
+        to={cta.link || '/properties'}
+        onClick={(e) => handleHashLinkClick(e, cta.link || '/properties')}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/30 text-white font-semibold rounded-xl hover:bg-white/20 active:bg-white/30 transition-all cursor-pointer"
+      >
+        {cta.text || 'Learn More'}
+        <ArrowRight className="w-5 h-5" />
+      </MotionLink>
     );
   };
 
@@ -183,7 +194,7 @@ const HeroCarousel = ({ slides = [] }) => {
                   <motion.span whileHover={{ scale: 1.02, y: -2 }} whileTap={{ scale: 0.98 }} className="inline-block">
                     <Link
                       to={displaySlides[currentSlide].primaryCta?.link || '/properties'}
-                      className="inline-flex items-center gap-2 px-8 py-4 bg-amber-500 text-white font-semibold rounded-xl hover:bg-amber-600 transition-all shadow-lg shadow-amber-500/30 cursor-pointer"
+                      className="inline-flex items-center gap-2 px-8 py-4 bg-amber-500 text-white font-semibold rounded-xl hover:bg-amber-600 active:bg-amber-700 transition-all shadow-lg shadow-amber-500/30 cursor-pointer"
                     >
                       {displaySlides[currentSlide].primaryCta?.text || 'Browse Properties'}
                       <ChevronRight className="w-5 h-5" />
@@ -210,7 +221,7 @@ const HeroCarousel = ({ slides = [] }) => {
                   className={`transition-all duration-300 cursor-pointer ${
                     index === currentSlide
                       ? 'w-12 h-2 bg-amber-500 rounded-full'
-                      : 'w-2 h-2 bg-white/40 rounded-full hover:bg-white/60'
+                      : 'w-2 h-2 bg-white/40 rounded-full hover:bg-white/60 active:bg-white/80'
                   }`}
                   aria-label={`Go to slide ${index + 1}`}
                 />
@@ -219,26 +230,6 @@ const HeroCarousel = ({ slides = [] }) => {
           </div>
         </div>
       </div>
-
-      {/* Navigation Arrows - Hidden on mobile */}
-      <motion.button
-        onClick={prevSlide}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        className="hidden md:flex absolute left-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full items-center justify-center text-white hover:bg-white/20 transition-all z-10 cursor-pointer"
-        aria-label="Previous slide"
-      >
-        <ChevronLeft className="w-6 h-6" />
-      </motion.button>
-      <motion.button
-        onClick={nextSlide}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        className="hidden md:flex absolute right-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full items-center justify-center text-white hover:bg-white/20 transition-all z-10 cursor-pointer"
-        aria-label="Next slide"
-      >
-        <ChevronRight className="w-6 h-6" />
-      </motion.button>
     </div>
   );
 };

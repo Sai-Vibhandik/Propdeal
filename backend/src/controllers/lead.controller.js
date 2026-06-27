@@ -53,21 +53,37 @@ export const submitLead = async (req, res) => {
 // @access  Private
 export const getLeads = async (req, res) => {
   try {
+    // const {
+    //   page = 1,
+    //   limit = 20,
+    //   status,
+    //   propertyId,
+    //   source,
+    //   search,
+    //   sort = '-createdAt',
+    // } = req.query;
+
     const {
-      page = 1,
-      limit = 20,
-      status,
-      propertyId,
-      source,
-      search,
-      sort = '-createdAt',
-    } = req.query;
+  page = 1,
+  limit = 20,
+  status,
+  propertyId,
+  source,
+  search,
+  startDate,
+  endDate,
+  sort = '-createdAt',
+} = req.query;
 
     const query = {};
 
     if (status) query.status = status;
     if (propertyId) query.propertyId = propertyId;
-    if (source) query.source = source;
+    if (source) {
+      // Support comma-separated sources for filtering multiple sources
+      const sources = source.split(',').map(s => s.trim());
+      query.source = sources.length === 1 ? sources[0] : { $in: sources };
+    }
     if (search) {
       query.$or = [
         { name: new RegExp(search, 'i') },
@@ -75,6 +91,20 @@ export const getLeads = async (req, res) => {
         { phone: new RegExp(search, 'i') },
       ];
     }
+
+    if (startDate || endDate) {
+  query.createdAt = {};
+
+  if (startDate) {
+    query.createdAt.$gte = new Date(startDate);
+  }
+
+  if (endDate) {
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+    query.createdAt.$lte = end;
+  }
+}
 
     const leads = await Lead.find(query)
       .sort(sort)
@@ -85,6 +115,25 @@ export const getLeads = async (req, res) => {
 
     const total = await Lead.countDocuments(query);
 
+    // Get counts by status
+    const statusCounts = await Lead.aggregate([
+      { $match: query },
+      { $group: { _id: '$status', count: { $sum: 1 } } },
+    ]);
+
+    const countsByStatus = {
+      new: 0,
+      'in-progress': 0,
+      converted: 0,
+      lost: 0,
+    };
+
+    statusCounts.forEach(item => {
+      if (countsByStatus.hasOwnProperty(item._id)) {
+        countsByStatus[item._id] = item.count;
+      }
+    });
+
     res.json({
       success: true,
       data: leads,
@@ -94,6 +143,7 @@ export const getLeads = async (req, res) => {
         total,
         pages: Math.ceil(total / limit),
       },
+      statusCounts: countsByStatus,
     });
   } catch (error) {
     console.error('Get leads error:', error);
@@ -274,15 +324,24 @@ export const setFollowUp = async (req, res) => {
 // @access  Private
 export const exportLeads = async (req, res) => {
   try {
-    const { status, propertyId, startDate, endDate } = req.query;
+    const { status, propertyId, startDate, endDate, source } = req.query;
 
     const query = {};
     if (status) query.status = status;
     if (propertyId) query.propertyId = propertyId;
+    if (source) {
+      // Support comma-separated sources for filtering multiple sources
+      const sources = source.split(',').map(s => s.trim());
+      query.source = sources.length === 1 ? sources[0] : { $in: sources };
+    }
     if (startDate || endDate) {
       query.createdAt = {};
       if (startDate) query.createdAt.$gte = new Date(startDate);
-      if (endDate) query.createdAt.$lte = new Date(endDate);
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        query.createdAt.$lte = end;
+      }
     }
 
     const leads = await Lead.find(query)
@@ -290,41 +349,98 @@ export const exportLeads = async (req, res) => {
       .populate('assignedTo', 'name phone')
       .sort('-createdAt');
 
-    // Generate CSV
-    const csvHeaders = [
-      'Name',
-      'Email',
-      'Phone',
-      'Property',
-      'Source',
-      'Status',
-      'Assigned To',
-      'Message',
-      'Created At',
-    ];
+    // Format date helper
+    const formatDate = (date) => {
+      if (!date) return '';
+      const d = new Date(date);
+      const day = String(d.getDate()).padStart(2, '0');
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const month = monthNames[d.getMonth()];
+      const year = d.getFullYear();
+      let hours = d.getHours();
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      hours = String(hours).padStart(2, '0');
+      return `${day} ${month} ${year}, ${hours}:${minutes} ${ampm}`;
+    };
+
+    // Status label helper
+    const getStatusLabel = (status) => {
+      const statusLabels = {
+        'new': 'New',
+        'in-progress': 'In Progress',
+        'converted': 'Converted',
+        'lost': 'Lost',
+      };
+      return statusLabels[status] || status || 'New';
+    };
+
+    // Format source helper
+    const formatSource = (source) => {
+      if (!source) return 'Website';
+      return source.charAt(0).toUpperCase() + source.slice(1).replace(/-/g, ' ');
+    };
+
+    // Escape CSV cell value
+    const escapeCSV = (value) => {
+      if (value === null || value === undefined) return '';
+      const str = String(value);
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    // Generate CSV headers
+    const csvHeaders = ['Name', 'Phone', 'Email', 'Property', 'Assigned To', 'Source', 'Status', 'Date'];
 
     const csvRows = leads.map((lead) => [
-      lead.name,
-      lead.email,
-      lead.phone,
-      lead.propertyId?.name || '',
-      lead.source,
-      lead.status,
-      lead.assignedTo?.name || 'Unassigned',
-      lead.message || '',
-      lead.createdAt.toISOString(),
-    ]);
+      escapeCSV(lead.name),
+      escapeCSV(lead.phone),
+      escapeCSV(lead.email || ''),
+      escapeCSV(lead.propertyId?.name || ''),
+      escapeCSV(lead.assignedTo?.name || 'Unassigned'),
+      escapeCSV(formatSource(lead.source)),
+      escapeCSV(getStatusLabel(lead.status)),
+      escapeCSV(formatDate(lead.createdAt)),
+    ].join(','));
 
-    const csv = [
-      csvHeaders.join(','),
-      ...csvRows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
-    ].join('\n');
+    const csv = [csvHeaders.join(','), ...csvRows].join('\n');
 
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename=leads.csv');
     res.send(csv);
   } catch (error) {
     console.error('Export leads error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
+  }
+};
+
+// @desc    Delete a lead
+// @route   DELETE /api/admin/leads/:id
+// @access  Private
+export const deleteLead = async (req, res) => {
+  try {
+    const lead = await Lead.findByIdAndDelete(req.params.id);
+
+    if (!lead) {
+      return res.status(404).json({
+        success: false,
+        message: 'Lead not found',
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Lead deleted successfully',
+    });
+  } catch (error) {
+    console.error('Delete lead error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error',

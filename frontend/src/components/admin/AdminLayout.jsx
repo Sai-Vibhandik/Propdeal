@@ -53,7 +53,7 @@ const AdminLayout = ({ children }) => {
             src={logoUrl}
             alt={branding.logoAlt || 'Logo'}
             style={{ maxHeight: logoHeight }}
-            className="object-contain"
+            className="object-contain rounded-lg"
           />
           {showText && showName && (
             <span className="font-bold text-white ml-2">
@@ -167,7 +167,7 @@ const AdminLayout = ({ children }) => {
                 src={logoUrl}
                 alt={branding.logoAlt || 'Logo'}
                 style={{ maxHeight: 32 }}
-                className="object-contain"
+                className="object-contain rounded-lg"
               />
               {branding.showSiteNameWithLogo !== false && (
                 <span className="font-bold text-gray-900">
@@ -184,19 +184,22 @@ const AdminLayout = ({ children }) => {
       {/* Mobile Menu Overlay */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="lg:hidden fixed inset-0 z-40 bg-black/50"
-            onClick={() => setMobileMenuOpen(false)}
-          >
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="lg:hidden fixed inset-0 z-40 bg-black/50"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            {/* Sidebar Panel */}
             <motion.div
               initial={{ x: -300 }}
               animate={{ x: 0 }}
               exit={{ x: -300 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="w-72 h-full bg-gradient-to-b from-slate-900 to-slate-800"
+              className="lg:hidden fixed left-0 top-0 bottom-0 w-72 bg-gradient-to-b from-slate-900 to-slate-800 z-[60]"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Logo */}
@@ -243,14 +246,15 @@ const AdminLayout = ({ children }) => {
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                   >
                     <LogOut className="w-5 h-5" />
+                    <span className="text-sm font-medium">Logout</span>
                   </button>
                 </div>
               </div>
             </motion.div>
-          </motion.div>
+          </>
         )}
       </AnimatePresence>
 
@@ -269,7 +273,7 @@ const AdminLayout = ({ children }) => {
                   src={logoUrl}
                   alt={branding.logoAlt || 'Logo'}
                   style={{ maxHeight: branding.sidebarLogoHeight || 40 }}
-                  className="object-contain"
+                  className="object-contain rounded-lg"
                 />
                 {sidebarOpen && branding.showSiteNameWithLogo !== false && (
                   <span className="font-bold text-white">

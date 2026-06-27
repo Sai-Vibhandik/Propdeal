@@ -1,8 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Building2, Phone, Mail, MapPin, Facebook, Twitter, Linkedin, Instagram, Youtube, Send } from 'lucide-react';
+import { Building2, Phone, Mail, MapPin, Facebook, Twitter, Linkedin, Instagram, Youtube } from 'lucide-react';
 import { useSiteContent } from '../../context/SiteContentContext.jsx';
-import { useState, useEffect } from 'react';
-import toast from 'react-hot-toast';
+import { useEffect } from 'react';
 import { getFileUrl } from '../../services/api.js';
 
 // Map platform names to icons
@@ -16,8 +15,6 @@ const PLATFORM_ICONS = {
 
 const Footer = () => {
   const { content } = useSiteContent();
-  const [email, setEmail] = useState('');
-  const [subscribing, setSubscribing] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -35,40 +32,17 @@ const Footer = () => {
   const footerLinks = content?.footerLinks || [];
   const footerSocialLinks = content?.footerSocialLinks || [];
 
-  // Handle newsletter subscription
-  const handleSubscribe = async (e) => {
-    e.preventDefault();
-    if (!email) {
-      toast.error('Please enter your email');
-      return;
-    }
-
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      toast.error('Please enter a valid email');
-      return;
-    }
-
-    setSubscribing(true);
-    // Simulate API call (you can replace with actual newsletter API)
-    setTimeout(() => {
-      toast.success('Thank you for subscribing!');
-      setEmail('');
-      setSubscribing(false);
-    }, 1000);
-  };
-
   // Handle link click for section links
   const handleLinkClick = (e, url) => {
-    // Check if it's a hash link (section link)
-    if (url.startsWith('/#')) {
+    // Check if URL contains a hash (section link)
+    if (url.includes('#')) {
       e.preventDefault();
-      const sectionId = url.substring(2); // Remove '/#'
+      const [pathname, hash] = url.split('#');
+      const targetPath = pathname || '/discover';
 
-      // If we're on homepage, scroll to section
-      if (location.pathname === '/') {
-        const element = document.getElementById(sectionId);
+      // If we're on the target page, scroll to section
+      if (location.pathname === targetPath) {
+        const element = document.getElementById(hash);
         if (element) {
           const navbarHeight = 80;
           const elementPosition = element.getBoundingClientRect().top;
@@ -79,8 +53,18 @@ const Footer = () => {
           });
         }
       } else {
-        // If not on homepage, navigate to homepage with hash
-        window.location.href = url;
+        // If not on target page, navigate to target page with hash
+        navigate(targetPath + '#' + hash);
+      }
+    } else {
+      // For non-hash links, check if we're already on that page
+      if (location.pathname === url) {
+        e.preventDefault();
+        // Scroll to top (hero section)
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
       }
     }
   };
@@ -88,7 +72,7 @@ const Footer = () => {
   // Handle scroll after navigation from other pages
   useEffect(() => {
     const hash = window.location.hash.slice(1);
-    if (hash && location.pathname === '/') {
+    if (hash) {
       const scrollToElement = () => {
         const element = document.getElementById(hash);
         if (element) {
@@ -122,7 +106,7 @@ const Footer = () => {
     <footer className="bg-slate-900 text-slate-300">
       {/* Main Footer */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
           {/* Brand */}
           <div className="space-y-4">
             <Link to="/" className="flex items-center space-x-2 hover:opacity-90 transition-opacity cursor-pointer">
@@ -132,7 +116,7 @@ const Footer = () => {
                     src={logoUrl}
                     alt={branding.logoAlt || 'Logo'}
                     style={{ maxHeight: branding.footerLogoHeight || 32 }}
-                    className="object-contain"
+                    className="object-contain rounded-2xl"
                   />
                   {branding.showSiteNameWithLogo !== false && (
                     <span className="text-xl font-bold text-white">
@@ -157,7 +141,7 @@ const Footer = () => {
                 </>
               )}
             </Link>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-slate-400 max-w-xs">
               {footerSettings.description || seo.siteTagline || 'Discover your dream property with our platform. We help you find the perfect home with detailed insights and virtual tours.'}
             </p>
             {/* Social Links */}
@@ -184,7 +168,7 @@ const Footer = () => {
 
           {/* Quick Links */}
           {footerLinks.filter(l => l.isActive).length > 0 && (
-            <div>
+            <div className="md:text-center lg:text-left">
               <h4 className="text-white font-semibold mb-4">Quick Links</h4>
               <ul className="space-y-2">
                 {footerLinks.filter(l => l.isActive).map((link, index) => (
@@ -203,7 +187,7 @@ const Footer = () => {
           )}
 
           {/* Contact */}
-          <div>
+          <div className="md:col-span-2 lg:col-span-1">
             <h4 className="text-white font-semibold mb-4">Contact Us</h4>
             <ul className="space-y-3">
               {fullAddress && (
@@ -222,10 +206,18 @@ const Footer = () => {
               )}
               {contact.email && (
                 <li className="flex items-center space-x-3">
-                  <Mail className="w-5 h-5 text-amber-500" />
-                  <a href={`mailto:${contact.email}`} className="text-slate-400 hover:text-white transition-colors cursor-pointer">
+                  <Mail className="w-5 h-5 text-amber-500 flex-shrink-0" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const subject = 'Inquiry from Website';
+                      const body = 'Hi, I would like to get more information.';
+                      window.open(`https://mail.google.com/mail/?view=cm&to=${contact.email}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
+                    }}
+                    className="text-slate-400 hover:text-white transition-colors cursor-pointer break-all"
+                  >
                     {contact.email}
-                  </a>
+                  </button>
                 </li>
               )}
               {contact.workingHours && (

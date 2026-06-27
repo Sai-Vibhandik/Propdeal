@@ -50,9 +50,22 @@ export const trackCTAClick = async (req, res) => {
       return res.json({ success: true, skipped: true });
     }
 
-    const validCTAs = ['getPriceDetails', 'bookSiteVisit', 'downloadBrochure', 'requestCallback', 'contactUs'];
+    // Valid CTA types - includes both legacy and new CTA names
+    const validCTAs = [
+      // Legacy CTAs
+      'getPriceDetails', 'bookSiteVisit', 'downloadBrochure', 'requestCallback', 'contactUs',
+      // Enquiry CTAs (from various sections)
+      'heroEnquiry', 'highlightsEnquiry', 'overviewEnquiry', 'investmentEnquiry', 'navbarEnquiry', 'stickyEnquiry',
+      // Site Visit CTAs
+      'heroSiteVisit', 'gallerySiteVisit', 'footerSiteVisit', 'videoSiteVisit', 'siteVisit',
+      // Pricing CTAs
+      'pricingTableEnquiry', 'pricingSheetEnquiry', 'pricingCardEnquiry', 'priceDetails',
+      // Other CTAs
+      'getFloorPlans', 'faqScheduleCall', 'amenitiesInfo', 'homeLoanAssistance',
+    ];
 
     if (!validCTAs.includes(cta)) {
+      console.log(`Invalid CTA type: ${cta}`);
       return res.status(400).json({
         success: false,
         message: 'Invalid CTA type',
@@ -97,7 +110,10 @@ export const getDashboardAnalytics = async (req, res) => {
     }
 
     // Build match condition for leads
-    const leadsMatch = {};
+    // Only count leads that have a propertyId (from landing pages, not homepage enquiries)
+    const leadsMatch = {
+      propertyId: { $exists: true, $ne: null }
+    };
     if (propertyId) {
       leadsMatch.propertyId = new mongoose.Types.ObjectId(propertyId);
     }
@@ -116,13 +132,11 @@ export const getDashboardAnalytics = async (req, res) => {
           totalPageViews: { $sum: '$pageViews' },
           ctaClicks: {
             $sum: {
-              $add: [
-                { $ifNull: ['$ctaClicks.getPriceDetails', 0] },
-                { $ifNull: ['$ctaClicks.bookSiteVisit', 0] },
-                { $ifNull: ['$ctaClicks.downloadBrochure', 0] },
-                { $ifNull: ['$ctaClicks.requestCallback', 0] },
-                { $ifNull: ['$ctaClicks.contactUs', 0] },
-              ],
+              $reduce: {
+                input: { $objectToArray: '$ctaClicks' },
+                initialValue: 0,
+                in: { $add: ['$$value', { $ifNull: ['$$this.v', 0] }] },
+              },
             },
           },
         },
@@ -167,26 +181,46 @@ export const getDashboardAnalytics = async (req, res) => {
     // Get top properties by views (only if not filtering by property)
     let topProperties = [];
     if (!propertyId) {
-      topProperties = await Analytics.aggregate([
-        { $match: { date: { $gte: start, $lte: end } } },
-        {
-          $group: {
-            _id: '$propertyId',
-            totalViews: { $sum: '$pageViews' },
-            totalLeads: { $sum: '$leadsGenerated' },
-          },
-        },
-        { $sort: { totalViews: -1 } },
-        { $limit: 5 },
+      // Get all published properties with their view counts
+      topProperties = await Property.aggregate([
+        { $match: { status: 'published' } },
         {
           $lookup: {
-            from: 'properties',
-            localField: '_id',
-            foreignField: '_id',
-            as: 'property',
-          },
+            from: 'analytics',
+            let: { propertyId: '$_id' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$propertyId', '$$propertyId'] },
+                      { $gte: ['$date', start] },
+                      { $lte: ['$date', end] }
+                    ]
+                  }
+                }
+              }
+            ],
+            as: 'analyticsData'
+          }
         },
-        { $unwind: '$property' },
+        {
+          $addFields: {
+            totalViews: {
+              $sum: '$analyticsData.pageViews'
+            },
+            totalLeads: {
+              $sum: '$analyticsData.leadsGenerated'
+            }
+          }
+        },
+        {
+          $project: {
+            analyticsData: 0
+          }
+        },
+        { $sort: { totalViews: -1 } },
+        { $limit: 5 }
       ]);
     }
 

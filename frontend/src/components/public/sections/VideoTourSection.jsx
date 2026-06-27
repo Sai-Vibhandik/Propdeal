@@ -5,6 +5,25 @@ import { getThemeStyles, getCardClasses, getCardBorderClasses, getSectionBgClass
 import { getFileUrl } from '../../../services/api.js';
 import { useLead } from '../../../context/LeadContext.jsx';
 
+// Extract video thumbnail URL from YouTube/Vimeo
+const getVideoThumbnail = (url) => {
+  if (!url) return null;
+
+  // YouTube URL patterns
+  const youtubeMatch = url.match(/(?:youtube\.com\/(?:embed\/|watch\?v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  if (youtubeMatch) {
+    return `https://img.youtube.com/vi/${youtubeMatch[1]}/maxresdefault.jpg`;
+  }
+
+  // Vimeo URL patterns - return null, will use fallback
+  // Vimeo requires API call for thumbnail, so we'll use fallback
+  if (url.includes('vimeo.com')) {
+    return null;
+  }
+
+  return null;
+};
+
 const VideoTourSection = ({ property, layout = 'full-width', theme = {}, bgVariant = 'white' }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const videoUrl = property.videoTour;
@@ -20,6 +39,11 @@ const VideoTourSection = ({ property, layout = 'full-width', theme = {}, bgVaria
 
   // Check if video is uploaded (local or Cloudinary) or embedded (YouTube/Vimeo)
   const isUploadedVideo = videoUrl.includes('cloudinary.com') || videoUrl.includes('/uploads/videos/') || videoUrl.endsWith('.mp4') || videoUrl.endsWith('.webm');
+
+  // Get video thumbnail - use YouTube thumbnail if available, otherwise fall back to hero/gallery image
+  const videoThumbnail = getVideoThumbnail(videoUrl);
+  const fallbackImage = property.heroImages?.[0]?.url || property.gallery?.[0]?.url;
+  const thumbnailSrc = videoThumbnail || (fallbackImage ? getFileUrl(fallbackImage) : null);
 
   // Render uploaded video player
   const renderUploadedVideo = (height = '400px') => (
@@ -88,7 +112,13 @@ const VideoTourSection = ({ property, layout = 'full-width', theme = {}, bgVaria
           <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="relative rounded-2xl overflow-hidden">
             {!isPlaying ? (
               <div onClick={() => setIsPlaying(true)} className="relative cursor-pointer group">
-                <img src={getFileUrl(property.heroImages?.[0]?.url || property.gallery?.[0]?.url)} alt="Video Thumbnail" className="w-full h-[400px] md:h-[500px] object-cover" />
+                {thumbnailSrc ? (
+                  <img src={thumbnailSrc} alt="Video Thumbnail" className="w-full h-[400px] md:h-[500px] object-cover" />
+                ) : (
+                  <div className="w-full h-[400px] md:h-[500px] bg-gray-800 flex items-center justify-center">
+                    <Play className="w-16 h-16 text-white" />
+                  </div>
+                )}
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-24 h-24 rounded-full flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform" style={{ backgroundColor: colors.secondary }}>
@@ -108,7 +138,13 @@ const VideoTourSection = ({ property, layout = 'full-width', theme = {}, bgVaria
             <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="relative rounded-2xl overflow-hidden">
               {!isPlaying ? (
                 <div onClick={() => setIsPlaying(true)} className="relative cursor-pointer group">
-                  <img src={getFileUrl(property.heroImages?.[0]?.url || property.gallery?.[0]?.url)} alt="Video Thumbnail" className="w-full h-[300px] object-cover" />
+                  {thumbnailSrc ? (
+                    <img src={thumbnailSrc} alt="Video Thumbnail" className="w-full h-[300px] object-cover" />
+                  ) : (
+                    <div className="w-full h-[300px] bg-gray-800 flex items-center justify-center">
+                      <Play className="w-12 h-12 text-white" />
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform" style={{ backgroundColor: colors.secondary }}>
@@ -148,7 +184,7 @@ const VideoTourSection = ({ property, layout = 'full-width', theme = {}, bgVaria
           <motion.button
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => openModal(property, 'cta-visit')}
+            onClick={() => openModal(property, 'cta-video-visit')}
             className="cta-bounce-shine inline-flex items-center gap-2 px-8 py-4 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all cursor-pointer"
             style={{ backgroundColor: colors.primary }}
           >

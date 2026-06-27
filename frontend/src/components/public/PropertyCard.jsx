@@ -42,7 +42,7 @@ const PropertyCard = ({ property, index = 0 }) => {
       whileHover={{ y: -4 }}
       className="group h-full"
     >
-      <Link to={`/property/${slug}`} className="block h-full">
+      <Link to={`/property/${slug}`} className="block h-full cursor-pointer">
         <div className="relative bg-white rounded-2xl overflow-hidden shadow-md shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50 transition-all duration-500 h-full flex flex-col">
           {/* Image Container */}
           <div className="relative h-48 flex-shrink-0 overflow-hidden">

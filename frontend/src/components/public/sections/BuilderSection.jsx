@@ -211,7 +211,7 @@ const BuilderSection = ({ property, layout = 'standard', theme = {}, bgVariant =
   return (
     <section className={`py-10 md:py-12 ${sectionBgClass}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-6 lg:gap-0">
+        <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
           <div
             className={`${isLeft ? 'lg:order-1' : 'lg:order-2'} relative bg-cover bg-center h-[250px] lg:h-auto lg:min-h-[500px] rounded-2xl`}
             style={{ backgroundImage: `url(${bgImage})` }}

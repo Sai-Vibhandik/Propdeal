@@ -23,14 +23,19 @@ const ContactSection = ({ property, layout = 'standard', theme = {}, bgVariant =
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    // For phone field, only allow digits and common formatting characters
+    let filteredValue = value;
+    if (name === 'phone') {
+      filteredValue = value.replace(/[^0-9+\-\s]/g, '');
+    }
+    setFormData((prev) => ({ ...prev, [name]: filteredValue }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!formData.name.trim() || !formData.phone.trim()) {
-      toast.error('Please fill in your name and phone number');
+      toast.error('Please fill in your name and contact number');
       return;
     }
 
@@ -133,7 +138,7 @@ const ContactSection = ({ property, layout = 'standard', theme = {}, bgVariant =
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     <User className="w-4 h-4 inline mr-2" />
-                    Your Name <span className="text-red-500">*</span>
+                    Your Name<sup className="text-red-500">*</sup>
                   </label>
                   <input
                     type="text"
@@ -141,6 +146,7 @@ const ContactSection = ({ property, layout = 'standard', theme = {}, bgVariant =
                     value={formData.name}
                     onChange={handleChange}
                     placeholder="Enter your full name"
+                    maxLength={50}
                     className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:border-transparent transition-all"
                     style={{ '--tw-ring-color': colors.primary }}
                     required
@@ -150,14 +156,15 @@ const ContactSection = ({ property, layout = 'standard', theme = {}, bgVariant =
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     <Phone className="w-4 h-4 inline mr-2" />
-                    Phone Number <span className="text-red-500">*</span>
+                    Contact Number<sup className="text-red-500">*</sup>
                   </label>
                   <input
                     type="tel"
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    placeholder="Enter your phone number"
+                    placeholder="Enter your contact number"
+                    maxLength={15}
                     className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:border-transparent transition-all"
                     style={{ '--tw-ring-color': colors.primary }}
                     required
@@ -170,11 +177,12 @@ const ContactSection = ({ property, layout = 'standard', theme = {}, bgVariant =
                     Email Address
                   </label>
                   <input
-                    type="email"
+                    type="text"
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="Enter your email (optional)"
+                    maxLength={100}
                     className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:border-transparent transition-all"
                     style={{ '--tw-ring-color': colors.primary }}
                   />
@@ -191,6 +199,7 @@ const ContactSection = ({ property, layout = 'standard', theme = {}, bgVariant =
                     onChange={handleChange}
                     placeholder="Any specific questions or requirements?"
                     rows={4}
+                    maxLength={500}
                     className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:border-transparent transition-all resize-none"
                     style={{ '--tw-ring-color': colors.primary }}
                   />

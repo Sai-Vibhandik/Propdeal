@@ -46,6 +46,35 @@ const propertyTypeFields = {
   factory: { showLandArea: true, showBuiltUp: true, showFloors: true },
 };
 
+// Field character limits (min and max)
+const fieldLimits = {
+  name: { min: 3, max: 80 },
+  slug: { min: 3, max: 80 },
+  builder: { min: 2, max: 100 },
+  fullAddress: { min: 10, max: 500 },
+  locality: { min: 2, max: 100 },
+  city: { min: 2, max: 100 },
+  state: { min: 2, max: 100 },
+  pincode: { min: 6, max: 10 },
+  landmark: { min: 3, max: 200 },
+  googleMapUrl: { min: 10, max: 2000 },
+  reraNumber: { min: 5, max: 100 },
+  reraWebsite: { min: 10, max: 500 },
+  advertiserName: { min: 2, max: 100 },
+  advertiserRegNo: { min: 3, max: 50 },
+  totalArea: { min: 1, max: 100 },
+  totalUnits: { min: 1, max: 20 },
+  totalFloors: { min: 1, max: 20 },
+  unitSize: { min: 1, max: 100 },
+  plotSize: { min: 1, max: 100 },
+  landArea: { min: 1, max: 100 },
+  dimensions: { min: 1, max: 100 },
+  facing: { min: 1, max: 50 },
+  builtUpArea: { min: 1, max: 100 },
+  nearbyPlaceName: { min: 2, max: 100 },
+  nearbyPlaceDistance: { min: 1, max: 20 },
+};
+
 const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
   const [errors, setErrors] = useState({});
   const [uploadingReraQr, setUploadingReraQr] = useState(false);
@@ -105,10 +134,18 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
     }
   };
 
-  // Validation function
-  const validateField = (field, value) => {
+  // Validation function with min/max length check
+  const validateField = (field, value, limits) => {
     if (!value || (typeof value === 'string' && !value.trim())) {
       return 'This field is required';
+    }
+    if (limits) {
+      if (value.length < limits.min) {
+        return `Minimum ${limits.min} characters required`;
+      }
+      if (value.length > limits.max) {
+        return `Maximum ${limits.max} characters allowed`;
+      }
     }
     return null;
   };
@@ -119,15 +156,70 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
       window.basicInfoStepValidation = () => {
         const newErrors = {};
 
-        // Property Details
-        if (!propertyData.name?.trim()) newErrors.name = 'Property name is required';
-        if (!propertyData.builder?.trim()) newErrors.builder = 'Builder/Developer name is required';
+        // Property Details - name
+        if (!propertyData.name?.trim()) {
+          newErrors.name = 'Property name is required';
+        } else if (propertyData.name.length < fieldLimits.name.min) {
+          newErrors.name = `Minimum ${fieldLimits.name.min} characters required`;
+        } else if (propertyData.name.length > fieldLimits.name.max) {
+          newErrors.name = `Maximum ${fieldLimits.name.max} characters allowed`;
+        }
 
-        // Location
-        if (!propertyData.address?.fullAddress?.trim()) newErrors['address.fullAddress'] = 'Full address is required';
-        if (!propertyData.address?.locality?.trim()) newErrors['address.locality'] = 'Locality is required';
-        if (!propertyData.address?.city?.trim()) newErrors['address.city'] = 'City is required';
-        // Note: Pricing is now handled in Pricing Plans step
+        // Builder name
+        if (!propertyData.builder?.trim()) {
+          newErrors.builder = 'Builder/Developer name is required';
+        } else if (propertyData.builder.length < fieldLimits.builder.min) {
+          newErrors.builder = `Minimum ${fieldLimits.builder.min} characters required`;
+        } else if (propertyData.builder.length > fieldLimits.builder.max) {
+          newErrors.builder = `Maximum ${fieldLimits.builder.max} characters allowed`;
+        }
+
+        // Location - Full Address
+        if (!propertyData.address?.fullAddress?.trim()) {
+          newErrors['address.fullAddress'] = 'Full address is required';
+        } else if (propertyData.address.fullAddress.length < fieldLimits.fullAddress.min) {
+          newErrors['address.fullAddress'] = `Minimum ${fieldLimits.fullAddress.min} characters required`;
+        } else if (propertyData.address.fullAddress.length > fieldLimits.fullAddress.max) {
+          newErrors['address.fullAddress'] = `Maximum ${fieldLimits.fullAddress.max} characters allowed`;
+        }
+
+        // Locality
+        if (!propertyData.address?.locality?.trim()) {
+          newErrors['address.locality'] = 'Locality is required';
+        } else if (propertyData.address.locality.length < fieldLimits.locality.min) {
+          newErrors['address.locality'] = `Minimum ${fieldLimits.locality.min} characters required`;
+        } else if (propertyData.address.locality.length > fieldLimits.locality.max) {
+          newErrors['address.locality'] = `Maximum ${fieldLimits.locality.max} characters allowed`;
+        }
+
+        // City
+        if (!propertyData.address?.city?.trim()) {
+          newErrors['address.city'] = 'City is required';
+        } else if (propertyData.address.city.length < fieldLimits.city.min) {
+          newErrors['address.city'] = `Minimum ${fieldLimits.city.min} characters required`;
+        } else if (propertyData.address.city.length > fieldLimits.city.max) {
+          newErrors['address.city'] = `Maximum ${fieldLimits.city.max} characters allowed`;
+        }
+
+        // State
+        if (!propertyData.address?.state?.trim()) {
+          newErrors['address.state'] = 'State is required';
+        } else if (propertyData.address.state.length < fieldLimits.state.min) {
+          newErrors['address.state'] = `Minimum ${fieldLimits.state.min} characters required`;
+        } else if (propertyData.address.state.length > fieldLimits.state.max) {
+          newErrors['address.state'] = `Maximum ${fieldLimits.state.max} characters allowed`;
+        }
+
+        // Pincode
+        if (!propertyData.address?.pincode?.trim()) {
+          newErrors['address.pincode'] = 'Pincode is required';
+        } else if (propertyData.address.pincode.length < fieldLimits.pincode.min) {
+          newErrors['address.pincode'] = `Minimum ${fieldLimits.pincode.min} characters required`;
+        } else if (propertyData.address.pincode.length > fieldLimits.pincode.max) {
+          newErrors['address.pincode'] = `Maximum ${fieldLimits.pincode.max} characters allowed`;
+        } else if (!/^\d+$/.test(propertyData.address.pincode)) {
+          newErrors['address.pincode'] = 'Pincode must contain only numbers';
+        }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -244,17 +336,18 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
         <div className="grid md:grid-cols-2 gap-6">
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Property Name <span className="text-red-500">*</span>
+              Property Name<sup className="text-red-500">*</sup>
             </label>
             <input
               type="text"
               value={propertyData.name}
               onChange={(e) => handleChange('name', e.target.value)}
               placeholder="e.g., Prestige Lakeside Habitat"
+              maxLength={fieldLimits.name.max}
               className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.name ? 'border-red-500' : 'border-gray-200'}`}
             />
             {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-            <p className="text-xs text-gray-500 mt-1">The name of your property project as it will appear on the landing page</p>
+            <p className="text-xs text-gray-500 mt-1">{propertyData.name?.length || 0}/{fieldLimits.name.max} characters (min {fieldLimits.name.min})</p>
           </div>
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -267,30 +360,32 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
                 value={propertyData.slug || ''}
                 onChange={(e) => handleSlugChange(e.target.value)}
                 placeholder="auto-generated-from-name"
+                maxLength={fieldLimits.slug.max}
                 className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Auto-generated from name. You can customize it if needed.
+              Auto-generated from name. {propertyData.slug?.length || 0}/{fieldLimits.slug.max} characters (min {fieldLimits.slug.min})
             </p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Builder/Developer Name <span className="text-red-500">*</span>
+              Builder/Developer Name<sup className="text-red-500">*</sup>
             </label>
             <input
               type="text"
               value={propertyData.builder}
               onChange={(e) => handleChange('builder', e.target.value)}
               placeholder="e.g., Prestige Group"
+              maxLength={fieldLimits.builder.max}
               className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.builder ? 'border-red-500' : 'border-gray-200'}`}
             />
             {errors.builder && <p className="text-red-500 text-sm mt-1">{errors.builder}</p>}
-            <p className="text-xs text-gray-500 mt-1">Company or developer building this project</p>
+            <p className="text-xs text-gray-500 mt-1">{propertyData.builder?.length || 0}/{fieldLimits.builder.max} characters (min {fieldLimits.builder.min})</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Property Type <span className="text-red-500">*</span>
+              Property Type<sup className="text-red-500">*</sup>
             </label>
             <select
               value={propertyData.propertyType}
@@ -313,7 +408,7 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Category <span className="text-red-500">*</span>
+              Category<sup className="text-red-500">*</sup>
             </label>
             <select
               value={propertyData.category}
@@ -352,62 +447,78 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
         <div className="grid md:grid-cols-2 gap-6">
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Full Address <span className="text-red-500">*</span>
+              Full Address<sup className="text-red-500">*</sup>
             </label>
             <input
               type="text"
               value={propertyData.address?.fullAddress}
               onChange={(e) => handleAddressChange('fullAddress', e.target.value)}
               placeholder="e.g., Whitefield Main Road, Bangalore - 560066"
+              maxLength={fieldLimits.fullAddress.max}
               className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors['address.fullAddress'] ? 'border-red-500' : 'border-gray-200'}`}
             />
             {errors['address.fullAddress'] && <p className="text-red-500 text-sm mt-1">{errors['address.fullAddress']}</p>}
+            <p className="text-xs text-gray-500 mt-1">{propertyData.address?.fullAddress?.length || 0}/{fieldLimits.fullAddress.max} characters (min {fieldLimits.fullAddress.min})</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Locality <span className="text-red-500">*</span>
+              Locality<sup className="text-red-500">*</sup>
             </label>
             <input
               type="text"
               value={propertyData.address?.locality}
               onChange={(e) => handleAddressChange('locality', e.target.value)}
               placeholder="e.g., Whitefield"
+              maxLength={fieldLimits.locality.max}
               className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors['address.locality'] ? 'border-red-500' : 'border-gray-200'}`}
             />
             {errors['address.locality'] && <p className="text-red-500 text-sm mt-1">{errors['address.locality']}</p>}
+            <p className="text-xs text-gray-500 mt-1">{propertyData.address?.locality?.length || 0}/{fieldLimits.locality.max} characters (min {fieldLimits.locality.min})</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              City <span className="text-red-500">*</span>
+              City<sup className="text-red-500">*</sup>
             </label>
             <input
               type="text"
               value={propertyData.address?.city}
               onChange={(e) => handleAddressChange('city', e.target.value)}
               placeholder="e.g., Bangalore"
+              maxLength={fieldLimits.city.max}
               className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors['address.city'] ? 'border-red-500' : 'border-gray-200'}`}
             />
             {errors['address.city'] && <p className="text-red-500 text-sm mt-1">{errors['address.city']}</p>}
+            <p className="text-xs text-gray-500 mt-1">{propertyData.address?.city?.length || 0}/{fieldLimits.city.max} characters (min {fieldLimits.city.min})</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              State<sup className="text-red-500">*</sup>
+            </label>
             <input
               type="text"
               value={propertyData.address?.state}
               onChange={(e) => handleAddressChange('state', e.target.value)}
               placeholder="e.g., Karnataka"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+              maxLength={fieldLimits.state.max}
+              className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors['address.state'] ? 'border-red-500' : 'border-gray-200'}`}
             />
+            {errors['address.state'] && <p className="text-red-500 text-sm mt-1">{errors['address.state']}</p>}
+            <p className="text-xs text-gray-500 mt-1">{propertyData.address?.state?.length || 0}/{fieldLimits.state.max} characters (min {fieldLimits.state.min})</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Pincode</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Pincode<sup className="text-red-500">*</sup>
+            </label>
             <input
               type="text"
               value={propertyData.address?.pincode}
               onChange={(e) => handleAddressChange('pincode', e.target.value)}
               placeholder="e.g., 560066"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+              maxLength={fieldLimits.pincode.max}
+              className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors['address.pincode'] ? 'border-red-500' : 'border-gray-200'}`}
             />
+            {errors['address.pincode'] && <p className="text-red-500 text-sm mt-1">{errors['address.pincode']}</p>}
+            <p className="text-xs text-gray-500 mt-1">{propertyData.address?.pincode?.length || 0}/{fieldLimits.pincode.max} characters (min {fieldLimits.pincode.min})</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Landmark</label>
@@ -416,35 +527,38 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
               value={propertyData.address?.landmark}
               onChange={(e) => handleAddressChange('landmark', e.target.value)}
               placeholder="e.g., Near ITPL"
+              maxLength={fieldLimits.landmark.max}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+            <p className="text-xs text-gray-500 mt-1">{propertyData.address?.landmark?.length || 0}/{fieldLimits.landmark.max} characters (min {fieldLimits.landmark.min})</p>
           </div>
 
           {/* Google Maps Embed URL */}
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Google Maps Embed URL
+              Google Maps Embed
               <span className="text-gray-400 font-normal ml-1">(optional)</span>
             </label>
             <input
               type="text"
               value={propertyData.googleMapUrl || ''}
               onChange={(e) => updatePropertyData('googleMapUrl', e.target.value)}
-              placeholder="https://www.google.com/maps/embed?pb=!1m18!1m12..."
+              placeholder="<iframe src='https://www.google.com/maps/embed?pb=...' ...></iframe>"
+              maxLength={fieldLimits.googleMapUrl.max}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+            <p className="text-xs text-gray-500 mt-1">{propertyData.googleMapUrl?.length || 0}/{fieldLimits.googleMapUrl.max} characters</p>
             <div className="mt-2 p-3 bg-blue-50 rounded-lg text-sm">
-              <p className="font-medium text-blue-900 mb-1">How to get the embed URL:</p>
+              <p className="font-medium text-blue-900 mb-1">How to get the map embed:</p>
               <ol className="text-blue-700 space-y-1 list-decimal list-inside">
                 <li>Go to <a href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer" className="underline">Google Maps</a></li>
                 <li>Search for your property location</li>
                 <li>Click <strong>Share</strong> (button with arrow icon)</li>
                 <li>Select <strong>Embed a map</strong> tab</li>
-                <li>Click <strong>Copy HTML</strong></li>
-                <li>Paste here and extract only the <code className="bg-blue-100 px-1 rounded">src="..."</code> URL</li>
+                <li>Click <strong>Copy HTML</strong> and paste here</li>
               </ol>
               <p className="text-xs text-blue-600 mt-2">
-                Example: https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3888.51234...
+                You can paste the full iframe code or just the URL
               </p>
             </div>
           </div>
@@ -458,9 +572,10 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
               value={propertyData.reraNumber}
               onChange={(e) => handleChange('reraNumber', e.target.value)}
               placeholder="e.g., PRM/KA/RERA/1251/446/PR/171020/001"
+              maxLength={fieldLimits.reraNumber.max}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <p className="text-xs text-gray-500 mt-1">Real Estate Regulatory Authority registration number</p>
+            <p className="text-xs text-gray-500 mt-1">{propertyData.reraNumber?.length || 0}/{fieldLimits.reraNumber.max} characters (min {fieldLimits.reraNumber.min})</p>
           </div>
 
           {/* RERA QR Code Upload */}
@@ -531,9 +646,10 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
                 reraWebsite: e.target.value,
               })}
               placeholder="e.g., https://www.rera.delhi.gov.in/"
+              maxLength={fieldLimits.reraWebsite.max}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <p className="text-xs text-gray-500 mt-1">The official RERA website URL to display below the RERA number</p>
+            <p className="text-xs text-gray-500 mt-1">{propertyData.branding?.reraWebsite?.length || 0}/{fieldLimits.reraWebsite.max} characters (min {fieldLimits.reraWebsite.min})</p>
           </div>
 
           {/* Advertiser Name */}
@@ -550,9 +666,10 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
                 advertiserName: e.target.value,
               })}
               placeholder="e.g., Homesfy Realty Ltd"
+              maxLength={fieldLimits.advertiserName.max}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <p className="text-xs text-gray-500 mt-1">Government RERA Authorised Advertiser's name</p>
+            <p className="text-xs text-gray-500 mt-1">{propertyData.branding?.advertiserName?.length || 0}/{fieldLimits.advertiserName.max} characters (min {fieldLimits.advertiserName.min})</p>
           </div>
 
           {/* Advertiser Registration No. */}
@@ -569,9 +686,10 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
                 advertiserRegNo: e.target.value,
               })}
               placeholder="e.g., A51900000136"
+              maxLength={fieldLimits.advertiserRegNo.max}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <p className="text-xs text-gray-500 mt-1">Advertiser's RERA registration number</p>
+            <p className="text-xs text-gray-500 mt-1">{propertyData.branding?.advertiserRegNo?.length || 0}/{fieldLimits.advertiserRegNo.max} characters (min {fieldLimits.advertiserRegNo.min})</p>
           </div>
         </div>
       </div>
@@ -594,9 +712,10 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
               value={propertyData.totalArea}
               onChange={(e) => handleChange('totalArea', e.target.value)}
               placeholder="e.g., 15 Acres, 50,000 sq.ft."
+              maxLength={fieldLimits.totalArea.max}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <p className="text-xs text-gray-500 mt-1">Total land area of the project</p>
+            <p className="text-xs text-gray-500 mt-1">{propertyData.totalArea?.length || 0}/{fieldLimits.totalArea.max} characters (min {fieldLimits.totalArea.min})</p>
           </div>
 
           {/* Number of Units - only for apartments/offices */}
@@ -611,9 +730,10 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
                 value={propertyData.totalUnits}
                 onChange={(e) => handleChange('totalUnits', e.target.value)}
                 placeholder="e.g., 500"
+                maxLength={fieldLimits.totalUnits.max}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <p className="text-xs text-gray-500 mt-1">Total units in the project</p>
+              <p className="text-xs text-gray-500 mt-1">{propertyData.totalUnits?.length || 0}/{fieldLimits.totalUnits.max} characters (min {fieldLimits.totalUnits.min})</p>
             </div>
           )}
 
@@ -629,9 +749,10 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
                 value={propertyData.totalFloors}
                 onChange={(e) => handleChange('totalFloors', e.target.value)}
                 placeholder="e.g., Stilt + 14, B+G+18"
+                maxLength={fieldLimits.totalFloors.max}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <p className="text-xs text-gray-500 mt-1">Format: Basement + Ground + Upper floors</p>
+              <p className="text-xs text-gray-500 mt-1">{propertyData.totalFloors?.length || 0}/{fieldLimits.totalFloors.max} characters (min {fieldLimits.totalFloors.min})</p>
             </div>
           )}
 
@@ -673,9 +794,10 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
                 value={propertyData.builtUpArea || ''}
                 onChange={(e) => handleChange('builtUpArea', e.target.value)}
                 placeholder="e.g., 20,000 sq.ft."
+                maxLength={fieldLimits.builtUpArea.max}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <p className="text-xs text-gray-500 mt-1">Total constructed area</p>
+              <p className="text-xs text-gray-500 mt-1">{propertyData.builtUpArea?.length || 0}/{fieldLimits.builtUpArea.max} characters (min {fieldLimits.builtUpArea.min})</p>
             </div>
           )}
         </div>
@@ -758,6 +880,7 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
                       updatePropertyData('customFields', newFields);
                     }}
                     placeholder="Field name (e.g., Plot Facing)"
+                    maxLength={50}
                     className="px-3 py-2 border border-gray-200 rounded-lg text-sm"
                   />
                   <input
@@ -769,6 +892,7 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
                       updatePropertyData('customFields', newFields);
                     }}
                     placeholder="Value (e.g., East Facing)"
+                    maxLength={200}
                     className="px-3 py-2 border border-gray-200 rounded-lg text-sm"
                   />
                 </div>
@@ -796,6 +920,7 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
                 value={newCustomField.label}
                 onChange={(e) => setNewCustomField({ ...newCustomField, label: e.target.value })}
                 placeholder="Field name (e.g., Plot Facing)"
+                maxLength={50}
                 className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <input
@@ -803,6 +928,7 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
                 value={newCustomField.value}
                 onChange={(e) => setNewCustomField({ ...newCustomField, value: e.target.value })}
                 placeholder="Value (e.g., East Facing)"
+                maxLength={200}
                 className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -874,6 +1000,7 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
               value={newPlace.name}
               onChange={(e) => setNewPlace({ ...newPlace, name: e.target.value })}
               placeholder="e.g., Phoenix Mall"
+              maxLength={100}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -884,6 +1011,7 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
               value={newPlace.distance}
               onChange={(e) => setNewPlace({ ...newPlace, distance: e.target.value })}
               placeholder="e.g., 2 km"
+              maxLength={50}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -928,6 +1056,7 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
                       onChange={(e) => handlePlaceChange(index, 'name', e.target.value)}
                       className="px-3 py-2 border border-gray-200 rounded-lg text-sm"
                       placeholder="Place name"
+                      maxLength={100}
                     />
                     <input
                       type="text"
@@ -935,6 +1064,7 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
                       onChange={(e) => handlePlaceChange(index, 'distance', e.target.value)}
                       className="px-3 py-2 border border-gray-200 rounded-lg text-sm"
                       placeholder="Distance"
+                      maxLength={50}
                     />
                     <select
                       value={place.type}

@@ -218,7 +218,7 @@ const InvestmentSection = ({ property, layout = 'cards', theme = {}, bgVariant =
           <motion.button
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => openModal(property, 'cta-callback')}
+            onClick={() => openModal(property, 'cta-investment')}
             className="cta-bounce-shine inline-flex items-center gap-2 px-8 py-4 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all cursor-pointer"
             style={{ backgroundColor: colors.primary }}
           >

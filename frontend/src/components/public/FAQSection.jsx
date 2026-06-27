@@ -85,7 +85,7 @@ const FAQSection = ({ faqs }) => {
               >
                 <button
                   onClick={() => toggleFAQ(index)}
-                  className="w-full flex items-center justify-between p-5 text-left cursor-pointer"
+                  className="w-full flex items-center justify-between p-5 text-left cursor-pointer hover:bg-slate-100 transition-colors rounded-xl"
                 >
                   <h3 className="font-semibold text-slate-800 pr-4">
                     {faq.question}
@@ -134,7 +134,7 @@ const FAQSection = ({ faqs }) => {
             href={`tel:${contactInfo.phone || '+919876543210'}`}
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-slate-800 text-white font-semibold rounded-xl hover:bg-slate-700 transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-slate-800 text-white font-semibold rounded-xl hover:bg-slate-700 active:bg-slate-900 transition-all cursor-pointer"
           >
             Call us at {contactInfo.phone || '+91 98765 43210'}
           </motion.a>

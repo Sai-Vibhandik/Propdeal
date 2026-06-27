@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Home, Building2, Phone, Star, LogIn } from 'lucide-react';
+import { Menu, X, Home, Building2, Star, LogIn } from 'lucide-react';
 import { useSiteContent } from '../../context/SiteContentContext.jsx';
 import { getFileUrl } from '../../services/api.js';
 
@@ -17,8 +17,9 @@ const Navbar = ({ transparent = false }) => {
   const siteName = content?.seo?.siteName || 'PropertyHub';
   const logoUrl = branding.logo ? getFileUrl(branding.logo) : null;
 
-  // Check if we're on homepage (hero page)
-  const isHeroPage = location.pathname === '/';
+  // Check if we're on homepage (hero page) - /discover is the buyer-facing home page with hero
+  const isHeroPage = location.pathname === '/discover';
+  const isDevelopersPage = location.pathname === '/';
 
   // Clear active section when navigating away from homepage
   useEffect(() => {
@@ -29,8 +30,8 @@ const Navbar = ({ transparent = false }) => {
 
   useEffect(() => {
     const handleScroll = () => {
-      // On hero pages, only show solid background after scrolling past hero
-      const scrollThreshold = isHeroPage ? 100 : 20;
+      // On hero pages and developers page, show enhanced background after scrolling
+      const scrollThreshold = 50;
       setIsScrolled(window.scrollY > scrollThreshold);
 
       // Track active section based on scroll position
@@ -111,9 +112,8 @@ const Navbar = ({ transparent = false }) => {
 
   const navLinks = [
     { path: '/', label: 'Home', icon: Home },
-    { path: '/properties', label: 'Properties', icon: Building2 },
-    { path: '#featured', label: 'Featured', icon: Star, isSection: true },
-    { path: '#contact', label: 'Contact', icon: Phone, isSection: true },
+    { path: '/discover', label: 'Discover', icon: Building2 },
+    { path: '/properties', label: 'Properties', icon: Star },
   ];
 
   const isActive = (path) => {
@@ -125,23 +125,17 @@ const Navbar = ({ transparent = false }) => {
     return location.pathname.startsWith(path);
   };
 
-  // Determine navbar background style
+  // Determine navbar background style - consistent dark gradient across all pages
   const getNavStyle = () => {
-    if (isHeroPage && !isScrolled) {
-      // Transparent on hero page when at top
-      return 'bg-transparent';
+    if (isScrolled) {
+      return 'bg-slate-900/95 backdrop-blur-xl shadow-lg shadow-black/20 border-b border-white/5';
     }
-    return isScrolled
-      ? 'bg-white shadow-lg'
-      : 'bg-white/95 backdrop-blur-md';
+    return 'bg-slate-900/80 backdrop-blur-lg';
   };
 
-  // Determine text color
+  // Determine text color - white for dark navbar
   const getTextColor = () => {
-    if (isHeroPage && !isScrolled) {
-      return 'text-white';
-    }
-    return 'text-slate-800';
+    return 'text-white';
   };
 
   // Render logo
@@ -149,6 +143,7 @@ const Navbar = ({ transparent = false }) => {
     const logoHeight = branding.navbarLogoHeight || 40;
     const displayName = branding.siteName || siteName || 'PropertyHub';
     const showName = branding.showSiteNameWithLogo !== false;
+    const nameParts = displayName.split(' ');
 
     if (logoUrl) {
       return (
@@ -157,28 +152,30 @@ const Navbar = ({ transparent = false }) => {
             src={logoUrl}
             alt={branding.logoAlt || 'Logo'}
             style={{ maxHeight: logoHeight }}
-            className="object-contain"
+            className="object-contain rounded-2xl"
           />
           {showName && (
-            <span className={`text-xl font-bold ml-2 ${getTextColor()}`}>
-              {displayName}
+            <span className="text-xl font-bold ml-2">
+              <span className="text-white">{nameParts[0]}</span>
+              {nameParts[1] && <span className="text-amber-400"> {nameParts[1]}</span>}
+              {nameParts.slice(2).join(' ') && <span className="text-white"> {nameParts.slice(2).join(' ')}</span>}
             </span>
           )}
         </>
       );
     }
-    // Fallback to default logo icon + text
-    const nameParts = siteName.split(' ');
+    // Fallback to default logo icon + text with gradient
     return (
-      <>
-        <div className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center">
-          <Building2 className="w-6 h-6 text-white" />
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl flex items-center justify-center shadow-lg shadow-slate-300/50 ring-1 ring-slate-700/10">
+          <Building2 className="w-5 h-5 text-amber-400" />
         </div>
-        <span className={`text-xl font-bold ${getTextColor()}`}>
-          {nameParts[0]}
-          {nameParts[1] && <span className="text-amber-500">{nameParts[1]}</span>}
+        <span className="text-xl font-bold">
+          <span className="text-white">{nameParts[0]}</span>
+          {nameParts[1] && <span className="text-amber-400"> {nameParts[1]}</span>}
+          {nameParts.slice(2).join(' ') && <span className="text-white"> {nameParts.slice(2).join(' ')}</span>}
         </span>
-      </>
+      </div>
     );
   };
 
@@ -192,12 +189,12 @@ const Navbar = ({ transparent = false }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
-            <Link to="/" className="flex items-center space-x-2">
+            <Link to="/" className="flex items-center group">
               {renderLogo()}
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-1">
+            <div className="hidden md:flex items-center gap-1">
               {navLinks.map((link) => {
                 const Icon = link.icon;
                 const active = isActive(link.path);
@@ -208,16 +205,17 @@ const Navbar = ({ transparent = false }) => {
                     <button
                       key={link.path}
                       onClick={() => scrollToSection(link.path.replace('#', ''))}
-                      className={`flex items-center space-x-1 px-4 py-2 rounded-lg transition-all duration-200 cursor-pointer ${
+                      className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer group ${
                         active
-                          ? 'bg-slate-800 text-white'
-                          : isHeroPage && !isScrolled
-                            ? 'text-white/90 hover:bg-white/10'
-                            : 'text-slate-700 hover:bg-slate-100'
+                          ? 'bg-white/15 text-white shadow-lg'
+                          : 'text-white/80 hover:text-white hover:bg-white/10'
                       }`}
                     >
-                      <Icon className="w-4 h-4" />
+                      <Icon className={`w-4 h-4 transition-transform group-hover:scale-110 ${active ? 'text-amber-400' : ''}`} />
                       <span>{link.label}</span>
+                      {active && (
+                        <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-amber-400 rounded-full" />
+                      )}
                     </button>
                   );
                 }
@@ -226,50 +224,55 @@ const Navbar = ({ transparent = false }) => {
                   <Link
                     key={link.path}
                     to={link.path}
-                    className={`flex items-center space-x-1 px-4 py-2 rounded-lg transition-all duration-200 cursor-pointer ${
+                    onClick={() => {
+                      // If clicking Home while on homepage, scroll to top
+                      if (link.path === '/' && isHeroPage) {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        setActiveSection('');
+                      }
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer group ${
                       active
-                        ? 'bg-slate-800 text-white'
-                        : isHeroPage && !isScrolled
-                          ? 'text-white/90 hover:bg-white/10'
-                          : 'text-slate-700 hover:bg-slate-100'
+                        ? 'bg-white/15 text-white shadow-lg'
+                        : 'text-white/80 hover:text-white hover:bg-white/10'
                     }`}
                   >
-                    <Icon className="w-4 h-4" />
+                    <Icon className={`w-4 h-4 transition-transform group-hover:scale-110 ${active ? 'text-amber-400' : ''}`} />
                     <span>{link.label}</span>
+                    {active && (
+                      <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-amber-400 rounded-full" />
+                    )}
                   </Link>
                 );
               })}
             </div>
 
             {/* CTA Buttons */}
-            <div className="hidden md:flex items-center space-x-3">
+            <div className="hidden md:flex items-center gap-3">
               <Link
                 to="/login"
-                className={`flex items-center space-x-1 px-4 py-2 rounded-lg transition-colors cursor-pointer ${
-                  isHeroPage && !isScrolled
-                    ? 'text-white/90 hover:bg-white/10'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                }`}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all duration-200 cursor-pointer group"
               >
-                <LogIn className="w-4 h-4" />
+                <LogIn className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
                 <span>Login</span>
               </Link>
               <Link
                 to="/properties"
-                className="px-5 py-2.5 bg-amber-500 text-white font-medium rounded-lg hover:bg-amber-600 transition-colors"
+                className="relative px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-sm font-semibold rounded-xl overflow-hidden group hover:shadow-lg hover:shadow-amber-500/25 transition-all duration-300"
               >
-                Find Property
+                <span className="relative z-10 flex items-center gap-2">
+                  View Properties
+                  <span className="transition-transform group-hover:translate-x-1">→</span>
+                </span>
+                <span className="absolute inset-0 bg-gradient-to-r from-amber-600 to-amber-700 opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
             </div>
 
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className={`md:hidden p-2 rounded-lg cursor-pointer ${
-                isHeroPage && !isScrolled
-                  ? 'text-white hover:bg-white/10'
-                  : 'text-slate-700 hover:bg-slate-100'
-              }`}
+              className="md:hidden p-2.5 rounded-xl text-white hover:bg-white/10 transition-all cursor-pointer"
             >
               {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -284,7 +287,7 @@ const Navbar = ({ transparent = false }) => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed top-16 left-0 right-0 z-30 md:hidden bg-white shadow-lg shadow-slate-200/50"
+            className="fixed top-16 left-0 right-0 z-50 md:hidden bg-slate-900/95 backdrop-blur-xl shadow-xl shadow-black/20 border-b border-white/5"
           >
             <div className="px-4 py-4 space-y-2">
               {navLinks.map((link) => {
@@ -296,14 +299,14 @@ const Navbar = ({ transparent = false }) => {
                     <button
                       key={link.path}
                       onClick={() => scrollToSection(link.path.replace('#', ''))}
-                      className={`flex items-center space-x-2 px-4 py-3 rounded-lg transition-all w-full text-left cursor-pointer ${
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all w-full text-left cursor-pointer ${
                         isActive(link.path)
-                          ? 'bg-slate-800 text-white'
-                          : 'text-slate-700 hover:bg-slate-100'
+                          ? 'bg-white/15 text-white'
+                          : 'text-white/80 hover:text-white hover:bg-white/10'
                       }`}
                     >
-                      <Icon className="w-5 h-5" />
-                      <span>{link.label}</span>
+                      <Icon className={`w-5 h-5 ${isActive(link.path) ? 'text-amber-400' : ''}`} />
+                      <span className="font-medium">{link.label}</span>
                     </button>
                   );
                 }
@@ -312,40 +315,50 @@ const Navbar = ({ transparent = false }) => {
                   <Link
                     key={link.path}
                     to={link.path}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`flex items-center space-x-2 px-4 py-3 rounded-lg transition-all cursor-pointer ${
+                    onClick={() => {
+                      // If clicking Home while on homepage, scroll to top
+                      if (link.path === '/' && isHeroPage) {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        setActiveSection('');
+                      }
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all cursor-pointer ${
                       isActive(link.path)
-                        ? 'bg-slate-800 text-white'
-                        : 'text-slate-700 hover:bg-slate-100'
+                        ? 'bg-white/15 text-white'
+                        : 'text-white/80 hover:text-white hover:bg-white/10'
                     }`}
                   >
-                    <Icon className="w-5 h-5" />
-                    <span>{link.label}</span>
+                    <Icon className={`w-5 h-5 ${isActive(link.path) ? 'text-amber-400' : ''}`} />
+                    <span className="font-medium">{link.label}</span>
                   </Link>
                 );
               })}
-              <Link
-                to="/login"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center space-x-2 px-4 py-3 rounded-lg transition-all text-slate-700 hover:bg-slate-100 cursor-pointer"
-              >
-                <LogIn className="w-5 h-5" />
-                <span>Login</span>
-              </Link>
-              <Link
-                to="/properties"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block w-full text-center px-4 py-3 bg-amber-500 text-white font-medium rounded-lg hover:bg-amber-600 transition-colors cursor-pointer"
-              >
-                Find Property
-              </Link>
+              <div className="pt-2 border-t border-white/10 mt-2">
+                <Link
+                  to="/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-white/80 hover:text-white hover:bg-white/10 cursor-pointer"
+                >
+                  <LogIn className="w-5 h-5" />
+                  <span className="font-medium">Login</span>
+                </Link>
+                <Link
+                  to="/properties"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 w-full mt-2 px-4 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-amber-500/25 transition-all"
+                >
+                  View Properties
+                  <span>→</span>
+                </Link>
+              </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Spacer for fixed navbar - only on non-hero pages */}
-      {!isHeroPage && <div className="h-16 md:h-20" />}
+      {/* Spacer for fixed navbar */}
+      <div className="h-16 md:h-20" />
     </>
   );
 };

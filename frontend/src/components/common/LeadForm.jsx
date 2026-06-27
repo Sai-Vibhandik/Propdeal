@@ -30,9 +30,12 @@ const LeadForm = ({ isOpen, onClose, propertyId, source = 'property-page', prope
     }
 
     if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
-    } else if (!/^[6-9]\d{9}$/.test(formData.phone.replace(/\D/g, ''))) {
-      newErrors.phone = 'Invalid phone number';
+      newErrors.phone = 'Contact number is required';
+    } else {
+      const digitsOnly = formData.phone.replace(/\D/g, '');
+      if (digitsOnly.length < 10 || digitsOnly.length > 15) {
+        newErrors.phone = 'Please enter a valid contact number';
+      }
     }
 
     setErrors(newErrors);
@@ -41,7 +44,12 @@ const LeadForm = ({ isOpen, onClose, propertyId, source = 'property-page', prope
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    // For phone field, only allow digits and common formatting characters
+    let filteredValue = value;
+    if (name === 'phone') {
+      filteredValue = value.replace(/[^0-9+\-\s]/g, '');
+    }
+    setFormData((prev) => ({ ...prev, [name]: filteredValue }));
 
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
@@ -116,7 +124,7 @@ const LeadForm = ({ isOpen, onClose, propertyId, source = 'property-page', prope
                 {/* Name */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Full Name *
+                    Full Name<sup className="text-red-500">*</sup>
                   </label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -125,6 +133,7 @@ const LeadForm = ({ isOpen, onClose, propertyId, source = 'property-page', prope
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
+                      maxLength={50}
                       className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                         errors.name ? 'border-red-500' : 'border-gray-300'
                       }`}
@@ -137,15 +146,16 @@ const LeadForm = ({ isOpen, onClose, propertyId, source = 'property-page', prope
                 {/* Email */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email Address *
+                    Email Address<sup className="text-red-500">*</sup>
                   </label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
-                      type="email"
+                      type="text"
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
+                      maxLength={100}
                       className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                         errors.email ? 'border-red-500' : 'border-gray-300'
                       }`}
@@ -158,7 +168,7 @@ const LeadForm = ({ isOpen, onClose, propertyId, source = 'property-page', prope
                 {/* Phone */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone Number *
+                    Contact Number<sup className="text-red-500">*</sup>
                   </label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -167,10 +177,11 @@ const LeadForm = ({ isOpen, onClose, propertyId, source = 'property-page', prope
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
+                      maxLength={15}
                       className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                         errors.phone ? 'border-red-500' : 'border-gray-300'
                       }`}
-                      placeholder="Enter your phone number"
+                      placeholder="Enter your contact number"
                     />
                   </div>
                   {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
@@ -210,6 +221,7 @@ const LeadForm = ({ isOpen, onClose, propertyId, source = 'property-page', prope
                       value={formData.message}
                       onChange={handleChange}
                       rows={3}
+                      maxLength={500}
                       className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                       placeholder="Any specific requirements?"
                     />

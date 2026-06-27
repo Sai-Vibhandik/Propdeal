@@ -1,4 +1,4 @@
-import { User, Property, Lead } from '../models/index.js';
+import { User, Property, Lead, Enquiry } from '../models/index.js';
 import bcrypt from 'bcryptjs';
 
 // @desc    Get all telecallers
@@ -353,7 +353,6 @@ export const getTelecallerEnquiries = async (req, res) => {
 
     const query = {
       assignedTo: req.user._id,
-      source: 'contact-section',
     };
 
     if (status) query.status = status;
@@ -365,12 +364,12 @@ export const getTelecallerEnquiries = async (req, res) => {
       ];
     }
 
-    const enquiries = await Lead.find(query)
+    const enquiries = await Enquiry.find(query)
       .sort(sort)
       .skip((page - 1) * limit)
       .limit(Number(limit));
 
-    const total = await Lead.countDocuments(query);
+    const total = await Enquiry.countDocuments(query);
 
     res.json({
       success: true,
@@ -409,10 +408,9 @@ export const updateTelecallerEnquiryStatus = async (req, res) => {
     }
 
     // Find enquiry and verify it belongs to this telecaller
-    const enquiry = await Lead.findOne({
+    const enquiry = await Enquiry.findOne({
       _id: id,
       assignedTo: req.user._id,
-      source: 'contact-section',
     });
 
     if (!enquiry) {
@@ -433,6 +431,190 @@ export const updateTelecallerEnquiryStatus = async (req, res) => {
     });
   } catch (error) {
     console.error('Update telecaller enquiry status error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
+  }
+};
+
+// @desc    Export telecaller's leads as CSV
+// @route   GET /api/telecaller/my-leads/export
+// @access  Private (Telecaller only)
+export const exportTelecallerLeads = async (req, res) => {
+  try {
+    const { status, propertyId, startDate, endDate } = req.query;
+
+    const query = { assignedTo: req.user._id };
+
+    if (status) query.status = status;
+    if (propertyId) query.propertyId = propertyId;
+    if (startDate || endDate) {
+      query.createdAt = {};
+      if (startDate) query.createdAt.$gte = new Date(startDate);
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        query.createdAt.$lte = end;
+      }
+    }
+
+    const leads = await Lead.find(query)
+      .populate('propertyId', 'name')
+      .sort('-createdAt');
+
+    // Format date helper
+    const formatDate = (date) => {
+      if (!date) return '';
+      const d = new Date(date);
+      const day = String(d.getDate()).padStart(2, '0');
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const month = monthNames[d.getMonth()];
+      const year = d.getFullYear();
+      let hours = d.getHours();
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      hours = String(hours).padStart(2, '0');
+      return `${day} ${month} ${year}, ${hours}:${minutes} ${ampm}`;
+    };
+
+    // Status label helper
+    const getStatusLabel = (status) => {
+      const statusLabels = {
+        'new': 'New',
+        'in-progress': 'In Progress',
+        'converted': 'Converted',
+        'lost': 'Lost',
+      };
+      return statusLabels[status] || status || 'New';
+    };
+
+    // Format source helper
+    const formatSource = (source) => {
+      if (!source) return 'Website';
+      return source.charAt(0).toUpperCase() + source.slice(1).replace(/-/g, ' ');
+    };
+
+    // Escape CSV cell value
+    const escapeCSV = (value) => {
+      if (value === null || value === undefined) return '';
+      const str = String(value);
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    // Generate CSV headers
+    const csvHeaders = ['Name', 'Phone', 'Email', 'Property', 'Source', 'Status', 'Date'];
+
+    const csvRows = leads.map((lead) => [
+      escapeCSV(lead.name),
+      escapeCSV(lead.phone),
+      escapeCSV(lead.email || ''),
+      escapeCSV(lead.propertyId?.name || ''),
+      escapeCSV(formatSource(lead.source)),
+      escapeCSV(getStatusLabel(lead.status)),
+      escapeCSV(formatDate(lead.createdAt)),
+    ].join(','));
+
+    const csv = [csvHeaders.join(','), ...csvRows].join('\n');
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=leads.csv');
+    res.send(csv);
+  } catch (error) {
+    console.error('Export telecaller leads error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
+  }
+};
+
+// @desc    Export telecaller's enquiries as CSV
+// @route   GET /api/telecaller/my-enquiries/export
+// @access  Private (Telecaller only)
+export const exportTelecallerEnquiries = async (req, res) => {
+  try {
+    const { status, startDate, endDate } = req.query;
+
+    const query = {
+      assignedTo: req.user._id,
+    };
+
+    if (status) query.status = status;
+    if (startDate || endDate) {
+      query.createdAt = {};
+      if (startDate) query.createdAt.$gte = new Date(startDate);
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        query.createdAt.$lte = end;
+      }
+    }
+
+    const enquiries = await Enquiry.find(query).sort('-createdAt');
+
+    // Format date helper
+    const formatDate = (date) => {
+      if (!date) return '';
+      const d = new Date(date);
+      const day = String(d.getDate()).padStart(2, '0');
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const month = monthNames[d.getMonth()];
+      const year = d.getFullYear();
+      let hours = d.getHours();
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      hours = String(hours).padStart(2, '0');
+      return `${day} ${month} ${year}, ${hours}:${minutes} ${ampm}`;
+    };
+
+    // Status label helper
+    const getStatusLabel = (status) => {
+      const statusLabels = {
+        'new': 'New',
+        'in-progress': 'In Progress',
+        'converted': 'Converted',
+        'lost': 'Lost',
+      };
+      return statusLabels[status] || status || 'New';
+    };
+
+    // Escape CSV cell value
+    const escapeCSV = (value) => {
+      if (value === null || value === undefined) return '';
+      const str = String(value);
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    // Generate CSV headers
+    const csvHeaders = ['Name', 'Phone', 'Email', 'Message', 'Status', 'Date'];
+
+    const csvRows = enquiries.map((enquiry) => [
+      escapeCSV(enquiry.name),
+      escapeCSV(enquiry.phone),
+      escapeCSV(enquiry.email || ''),
+      escapeCSV(enquiry.message || ''),
+      escapeCSV(getStatusLabel(enquiry.status)),
+      escapeCSV(formatDate(enquiry.createdAt)),
+    ].join(','));
+
+    const csv = [csvHeaders.join(','), ...csvRows].join('\n');
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=enquiries.csv');
+    res.send(csv);
+  } catch (error) {
+    console.error('Export telecaller enquiries error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error',

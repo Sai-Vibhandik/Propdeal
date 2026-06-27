@@ -29,7 +29,6 @@ const LAYOUT_OPTIONS = {
     { value: 'grid', label: 'Grid', description: 'Grid with category cards' },
   ],
   pricing: [
-    { value: 'table', label: 'Table', description: 'Price table view' },
     { value: 'cards', label: 'Cards', description: 'Price cards in grid' },
   ],
   plans: [
@@ -39,12 +38,10 @@ const LAYOUT_OPTIONS = {
     { value: 'map-list', label: 'Map with List', description: 'Map alongside nearby places' },
   ],
   gallery: [
-    { value: 'grid', label: 'Grid', description: 'Images in grid layout' },
     { value: 'carousel', label: 'Carousel', description: 'Slide through images' },
   ],
   videoTour: [
     { value: 'full-width', label: 'Full Width', description: 'Full-width video player' },
-    { value: 'compact', label: 'Compact', description: 'Smaller video with info' },
   ],
   builderInfo: [
     { value: 'standard', label: 'Standard', description: 'Builder info with logo' },
@@ -54,15 +51,11 @@ const LAYOUT_OPTIONS = {
   ],
   faq: [
     { value: 'accordion', label: 'Accordion', description: 'Expandable questions' },
-    { value: 'grid', label: 'Grid', description: 'FAQ in card grid' },
   ],
   contact: [
     { value: 'standard', label: 'Standard', description: 'Contact form with details' },
   ],
 };
-
-// Sections that have background image support (configured in ThemeStep)
-const BACKGROUND_IMAGE_SECTIONS = ['overview', 'highlights', 'builderInfo', 'investment', 'location'];
 
 const SectionConfigStep = ({ propertyData, updatePropertyData }) => {
   const [expandedSection, setExpandedSection] = useState(null);
@@ -174,7 +167,7 @@ const SectionConfigStep = ({ propertyData, updatePropertyData }) => {
                 setSections(sections.map(s => ({ ...s, enabled: true })));
                 updatePropertyData('sections', newPropertySections);
               }}
-              className="px-3 py-1.5 text-sm bg-blue-800 text-white rounded-lg hover:bg-blue-900"
+              className="px-3 py-1.5 text-sm bg-blue-800 text-white rounded-lg hover:bg-blue-900 cursor-pointer"
             >
               Enable All
             </button>
@@ -191,19 +184,12 @@ const SectionConfigStep = ({ propertyData, updatePropertyData }) => {
                 setSections(sections.map(s => ({ ...s, enabled: false })));
                 updatePropertyData('sections', newPropertySections);
               }}
-              className="px-3 py-1.5 text-sm bg-white text-blue-800 border border-blue-300 rounded-lg hover:bg-blue-100"
+              className="px-3 py-1.5 text-sm bg-white text-blue-800 border border-blue-300 rounded-lg hover:bg-blue-100 cursor-pointer"
             >
               Disable All
             </button>
           </div>
         </div>
-      </div>
-
-      {/* Background Image Note */}
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-        <p className="text-sm text-amber-800">
-          <strong>Note:</strong> Background images for Overview, Highlights, Builder, and Investment sections can be configured in the <strong>Theme & Branding</strong> step under "Section Backgrounds" tab.
-        </p>
       </div>
 
       {/* Section List */}
@@ -212,7 +198,6 @@ const SectionConfigStep = ({ propertyData, updatePropertyData }) => {
           {sections.map((section, index) => {
             const layoutOptions = LAYOUT_OPTIONS[section.key] || [];
             const hasMultipleLayouts = layoutOptions.length > 1;
-            const hasBackgroundImage = BACKGROUND_IMAGE_SECTIONS.includes(section.key);
 
             return (
               <div
@@ -226,14 +211,14 @@ const SectionConfigStep = ({ propertyData, updatePropertyData }) => {
                       <button
                         onClick={() => moveSection(section.key, 'up')}
                         disabled={index === 0}
-                        className="p-1 hover:bg-gray-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="p-1 hover:bg-gray-100 rounded disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                       >
                         <ChevronUp className="w-4 h-4 text-gray-400" />
                       </button>
                       <button
                         onClick={() => moveSection(section.key, 'down')}
                         disabled={index === sections.length - 1}
-                        className="p-1 hover:bg-gray-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="p-1 hover:bg-gray-100 rounded disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                       >
                         <ChevronDown className="w-4 h-4 text-gray-400" />
                       </button>
@@ -272,7 +257,7 @@ const SectionConfigStep = ({ propertyData, updatePropertyData }) => {
                     {hasMultipleLayouts && section.enabled && (
                       <button
                         onClick={() => setExpandedSection(expandedSection === section.key ? null : section.key)}
-                        className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+                        className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg cursor-pointer"
                         title="Layout options"
                       >
                         <Settings2 className="w-5 h-5" />
@@ -282,7 +267,7 @@ const SectionConfigStep = ({ propertyData, updatePropertyData }) => {
                     {/* Toggle Switch */}
                     <button
                       onClick={() => toggleSection(section.key)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
                         section.enabled ? 'bg-blue-800' : 'bg-gray-200'
                       }`}
                     >
@@ -303,7 +288,7 @@ const SectionConfigStep = ({ propertyData, updatePropertyData }) => {
                           <button
                             key={option.value}
                             onClick={() => updateLayout(section.key, option.value)}
-                            className={`p-3 rounded-lg text-left transition-all ${
+                            className={`p-3 rounded-lg text-left transition-all cursor-pointer ${
                               section.layout === option.value
                                 ? 'bg-blue-800 text-white'
                                 : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
@@ -316,15 +301,6 @@ const SectionConfigStep = ({ propertyData, updatePropertyData }) => {
                           </button>
                         ))}
                       </div>
-                    </div>
-                  )}
-
-                  {/* Background Image Note */}
-                  {hasBackgroundImage && section.enabled && (
-                    <div className="mt-3 pt-3 border-t border-gray-100">
-                      <p className="text-xs text-gray-500">
-                        💡 Background image can be set in Theme & Branding → Section Backgrounds
-                      </p>
                     </div>
                   )}
                 </div>

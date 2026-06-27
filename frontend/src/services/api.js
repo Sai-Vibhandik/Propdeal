@@ -59,6 +59,8 @@ export const authAPI = {
   register: (data) => api.post('/auth/register', data),
   updateProfile: (data) => api.put('/auth/profile', data),
   changePassword: (data) => api.put('/auth/password', data),
+  forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
+  resetPassword: (token, password) => api.post(`/auth/reset-password/${token}`, { password }),
 };
 
 // Properties API
@@ -66,6 +68,7 @@ export const propertiesAPI = {
   // Public
   getAll: (params) => api.get('/properties', { params }),
   getFeatured: () => api.get('/properties/featured'),
+  getBuilders: () => api.get('/properties/builders'),
   getBySlug: (slug) => api.get(`/properties/${slug}`),
 
   // Preview (admin) - can view draft properties
@@ -124,6 +127,20 @@ export const leadsAPI = {
   assign: (id, userId) => api.put(`/leads/admin/${id}/assign`, { userId }),
   setFollowUp: (id, date) => api.put(`/leads/admin/${id}/followup`, { date }),
   export: (params) => api.get('/leads/admin/export', { params, responseType: 'blob' }),
+  delete: (id) => api.delete(`/leads/admin/${id}`),
+};
+
+// Enquiries API
+export const enquiriesAPI = {
+  submit: (data) => api.post('/enquiries', data),
+  getAdminAll: (params) => api.get('/enquiries/admin', { params }),
+  getAdminOne: (id) => api.get(`/enquiries/admin/${id}`),
+  updateStatus: (id, status) => api.put(`/enquiries/admin/${id}/status`, { status }),
+  addNote: (id, note) => api.post(`/enquiries/admin/${id}/notes`, { note }),
+  assign: (id, userId) => api.put(`/enquiries/admin/${id}/assign`, { userId }),
+  setFollowUp: (id, date) => api.put(`/enquiries/admin/${id}/followup`, { date }),
+  export: (params) => api.get('/enquiries/admin/export', { params, responseType: 'blob' }),
+  delete: (id) => api.delete(`/enquiries/admin/${id}`),
 };
 
 // Analytics API
@@ -160,6 +177,8 @@ export const telecallerAPI = {
   updateLeadStatus: (leadId, status) => api.put(`/telecaller/my-leads/${leadId}/status`, { status }),
   getMyEnquiries: (params) => api.get('/telecaller/my-enquiries', { params }),
   updateEnquiryStatus: (enquiryId, status) => api.put(`/telecaller/my-enquiries/${enquiryId}/status`, { status }),
+  exportLeads: (params) => api.get('/telecaller/my-leads/export', { params, responseType: 'blob' }),
+  exportEnquiries: (params) => api.get('/telecaller/my-enquiries/export', { params, responseType: 'blob' }),
 };
 
 // Site Content API (for public website content management)
@@ -181,6 +200,7 @@ export const siteContentAPI = {
   updateFooter: (data) => api.put('/site-content/admin/footer', data),
   updateFooterLinks: (links) => api.put('/site-content/admin/footer-links', { links }),
   updateFooterSocialLinks: (socialLinks) => api.put('/site-content/admin/footer-social-links', { socialLinks }),
+  updateFeaturedBuilders: (builders) => api.put('/site-content/admin/featured-builders', { builders }),
   updatePrivacyPolicy: (content) => api.put('/site-content/admin/privacy-policy', { content }),
   updateTermsOfService: (content) => api.put('/site-content/admin/terms-of-service', { content }),
   resetContent: () => api.post('/site-content/admin/reset'),

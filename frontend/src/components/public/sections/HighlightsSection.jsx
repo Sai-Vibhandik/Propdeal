@@ -64,7 +64,7 @@ const HighlightsSection = ({ property, layout = 'cards', theme = {}, bgVariant =
       <motion.button
         whileHover={{ scale: 1.02, y: -2 }}
         whileTap={{ scale: 0.98 }}
-        onClick={() => openModal(property, 'cta-price')}
+        onClick={() => openModal(property, 'cta-highlights')}
         className={`cta-bounce-shine inline-flex items-center gap-2 px-8 py-3.5 text-white font-semibold rounded-xl transition-all cursor-pointer ${isWhiteText ? '' : 'shadow-lg hover:shadow-xl'}`}
         style={{ backgroundColor: colors.primary }}
       >
@@ -173,7 +173,7 @@ const HighlightsSection = ({ property, layout = 'cards', theme = {}, bgVariant =
   return (
     <section id="highlights" className={`py-10 md:py-12 ${sectionBgClass}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-6 lg:gap-0">
+        <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
           <div
             className={`${isLeft ? 'lg:order-1' : 'lg:order-2'} relative bg-cover bg-center h-[250px] lg:h-auto lg:min-h-[500px] rounded-2xl`}
             style={{ backgroundImage: `url(${bgImage})` }}

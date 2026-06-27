@@ -52,13 +52,13 @@ const OverviewSection = ({ property, layout = 'standard', theme = {}, bgVariant 
     quickFacts.push({ icon: Layers, label: 'Configurations', value: property.configurations.join(', ') });
   }
 
-  quickFacts.push({ icon: Calendar, label: 'Possession', value: property.possessionDate ? formatDate(property.possessionDate, { year: 'numeric', month: 'long' }) : property.category?.replace(/-/g, ' ') || 'Under Construction' });
+  quickFacts.push({ icon: Calendar, label: 'Possession Date', value: property.possessionDate ? formatDate(property.possessionDate, { year: 'numeric', month: 'long' }) : property.category?.replace(/-/g, ' ') || 'Under Construction' });
 
   // Additional facts based on property type
   const additionalFacts = [];
 
   if (property.plotFacing) {
-    additionalFacts.push({ icon: Compass, label: 'Facing', value: property.plotFacing.charAt(0).toUpperCase() + property.plotFacing.slice(1) });
+    additionalFacts.push({ icon: Compass, label: 'Plot Facing', value: property.plotFacing.charAt(0).toUpperCase() + property.plotFacing.slice(1) });
   }
 
   if (property.builtUpArea) {
@@ -132,12 +132,12 @@ const OverviewSection = ({ property, layout = 'standard', theme = {}, bgVariant 
           transition={{ delay: quickFacts.length * 0.1 }}
           whileHover={{ scale: 1.02, y: -2 }}
           whileTap={{ scale: 0.98 }}
-          onClick={() => openModal(property, 'cta-price')}
-          className={`cta-bounce-shine col-span-2 md:col-span-1 rounded-xl p-3 md:p-4 shadow-sm flex flex-col items-center justify-center gap-2 text-white font-semibold cursor-pointer`}
-          style={{ backgroundColor: colors.primary, minHeight: '80px' }}
+          onClick={() => openModal(property, 'cta-overview')}
+          className={`col-span-2 md:col-span-1 rounded-xl p-2 md:p-4 shadow-sm flex flex-row md:flex-col items-center justify-center gap-1.5 md:gap-2 text-white font-medium md:font-semibold cursor-pointer hover:opacity-90 transition-opacity`}
+          style={{ backgroundColor: colors.primary, minHeight: '48px' }}
         >
-          <span className="text-sm md:text-base">Learn More</span>
-          <ArrowRight className="w-4 h-4" />
+          <span className="text-xs md:text-base">Learn More</span>
+          <ArrowRight className="w-3.5 h-3.5 md:w-4 md:h-4" />
         </motion.button>
       </div>
 
@@ -168,18 +168,18 @@ const OverviewSection = ({ property, layout = 'standard', theme = {}, bgVariant 
 
       <div className={`mt-4 md:mt-6 pt-4 md:pt-6 ${isWhiteText ? 'border-white/20' : 'border-gray-200 dark:border-gray-700'} border-t`}>
         <div className={`flex justify-between mb-2 md:mb-3 ${isWhiteText ? 'text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
-          <span className="text-sm md:text-base">Total Area</span>
+          <span className="text-sm md:text-base">Total Land Area</span>
           <span className={`font-semibold text-sm md:text-base ${isWhiteText ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{property.totalArea || '-'}</span>
         </div>
         {property.totalUnits && (
           <div className={`flex justify-between mb-2 md:mb-3 ${isWhiteText ? 'text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
-            <span className="text-sm md:text-base">Total Units</span>
-            <span className={`font-semibold text-sm md:text-base ${isWhiteText ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{property.totalUnits} Units</span>
+            <span className="text-sm md:text-base">Number of Units</span>
+            <span className={`font-semibold text-sm md:text-base ${isWhiteText ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{property.totalUnits}</span>
           </div>
         )}
         {property.totalFloors && (
           <div className={`flex justify-between mb-2 md:mb-3 ${isWhiteText ? 'text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
-            <span className="text-sm md:text-base">Floors</span>
+            <span className="text-sm md:text-base">Number of Floors</span>
             <span className={`font-semibold text-sm md:text-base ${isWhiteText ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{property.totalFloors}</span>
           </div>
         )}
@@ -247,7 +247,7 @@ const OverviewSection = ({ property, layout = 'standard', theme = {}, bgVariant 
   return (
     <section id="overview" className={`py-10 md:py-12 ${sectionBgClass}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-6 lg:gap-0">
+        <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
           <div
             className={`${isLeft ? 'lg:order-1' : 'lg:order-2'} relative bg-cover bg-center h-[250px] lg:h-auto lg:min-h-[500px] rounded-2xl`}
             style={{ backgroundImage: `url(${bgImage})` }}

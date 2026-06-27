@@ -35,6 +35,26 @@ const MediaUploadStep = ({ propertyData, updatePropertyData }) => {
   const [error, setError] = useState(null);
   const [videoInputType, setVideoInputType] = useState('url'); // 'url' or 'upload'
 
+  // Extract URL from iframe embed code
+  const extractVideoUrl = (input) => {
+    if (!input) return '';
+
+    // Check if input contains an iframe tag
+    const iframeMatch = input.match(/<iframe[^>]+src=["']([^"']+)["']/i);
+    if (iframeMatch && iframeMatch[1]) {
+      return iframeMatch[1];
+    }
+
+    // Check for src attribute without iframe
+    const srcMatch = input.match(/src=["']([^"']+)["']/i);
+    if (srcMatch && srcMatch[1]) {
+      return srcMatch[1];
+    }
+
+    // Return as-is if no iframe/embed code detected
+    return input.trim();
+  };
+
   // Upload file to Cloudinary via backend API
   const uploadFile = async (file, type = 'image') => {
     try {
@@ -283,7 +303,7 @@ const MediaUploadStep = ({ propertyData, updatePropertyData }) => {
               />
               <button
                 onClick={() => removeHeroImage(index)}
-                className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -313,15 +333,6 @@ const MediaUploadStep = ({ propertyData, updatePropertyData }) => {
             )
           )}
         </div>
-
-        {(propertyData.heroImages?.length || 0) === 0 && (
-          <label className="block border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-500 transition-colors mt-4">
-            <input type="file" accept="image/*" multiple className="hidden" onChange={handleHeroUpload} disabled={uploading.hero} />
-            <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-            <p className="text-gray-600">Click to upload hero images</p>
-            <p className="text-sm text-gray-400 mt-1">PNG, JPG up to 10MB (Max 4 images)</p>
-          </label>
-        )}
       </div>
 
       {/* Gallery */}
@@ -344,7 +355,7 @@ const MediaUploadStep = ({ propertyData, updatePropertyData }) => {
               />
               <button
                 onClick={() => removeGalleryImage(index)}
-                className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -417,7 +428,7 @@ const MediaUploadStep = ({ propertyData, updatePropertyData }) => {
                                 newPlans.splice(index, 1);
                                 updatePropertyData(['plans', planType.key], newPlans);
                               }}
-                              className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                              className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 cursor-pointer"
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -470,7 +481,7 @@ const MediaUploadStep = ({ propertyData, updatePropertyData }) => {
                             />
                             <button
                               onClick={() => updatePropertyData(['plans', planType.key], { url: '', publicId: '' })}
-                              className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                              className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 cursor-pointer"
                             >
                               <X className="w-5 h-5" />
                             </button>
@@ -562,12 +573,15 @@ const MediaUploadStep = ({ propertyData, updatePropertyData }) => {
             <input
               type="text"
               value={propertyData.videoTour && !propertyData.videoTour.includes('cloudinary.com') ? propertyData.videoTour : ''}
-              onChange={(e) => updatePropertyData('videoTour', e.target.value)}
+              onChange={(e) => {
+                const extractedUrl = extractVideoUrl(e.target.value);
+                updatePropertyData('videoTour', extractedUrl);
+              }}
               placeholder="e.g., https://www.youtube.com/embed/VIDEO_ID"
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <p className="text-xs text-gray-400 mt-2">
-              Paste a YouTube or Vimeo embed URL (e.g., https://www.youtube.com/embed/dQw4w9WgXcQ)
+              Paste a YouTube/Vimeo embed URL or iframe code (e.g., https://www.youtube.com/embed/dQw4w9WgXcQ)
             </p>
           </div>
         )}
@@ -592,7 +606,7 @@ const MediaUploadStep = ({ propertyData, updatePropertyData }) => {
                 </div>
                 <button
                   onClick={removeVideo}
-                  className="text-red-500 hover:text-red-600 text-sm flex items-center gap-1"
+                  className="text-red-500 hover:text-red-600 text-sm flex items-center gap-1 cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                   Remove Video
@@ -647,7 +661,7 @@ const MediaUploadStep = ({ propertyData, updatePropertyData }) => {
 
       {/* Amenities - Manual Entry */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <div>
             <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
               <Grid3X3 className="w-5 h-5" />
@@ -659,7 +673,7 @@ const MediaUploadStep = ({ propertyData, updatePropertyData }) => {
           </div>
           <button
             onClick={addAmenity}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-800 text-white rounded-lg hover:bg-blue-900 transition-colors"
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-800 text-white rounded-lg hover:bg-blue-900 transition-colors flex-shrink-0"
           >
             <Plus className="w-4 h-4" />
             Add Amenity
@@ -687,27 +701,21 @@ const MediaUploadStep = ({ propertyData, updatePropertyData }) => {
                         alt={amenity.name}
                         className="w-full h-full object-cover"
                       />
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                        <label className="cursor-pointer bg-white px-3 py-1.5 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => {
-                              const file = e.target.files[0];
-                              if (file) handleAmenityImageUpload(index, file);
-                            }}
-                            disabled={uploading.amenities}
-                          />
-                          Replace
-                        </label>
-                        <button
-                          onClick={() => updateAmenity(index, 'image', '')}
-                          className="bg-red-500 px-3 py-1.5 rounded text-sm font-medium text-white hover:bg-red-600"
-                        >
-                          Remove
-                        </button>
-                      </div>
+                      <label className="absolute inset-0 bg-black/50 flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) handleAmenityImageUpload(index, file);
+                          }}
+                          disabled={uploading.amenities}
+                        />
+                        <span className="bg-white px-4 py-2 rounded text-sm font-medium text-gray-700 hover:bg-gray-100">
+                          Replace Image
+                        </span>
+                      </label>
                     </div>
                   ) : (
                     <label className="h-full flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors">
@@ -744,9 +752,9 @@ const MediaUploadStep = ({ propertyData, updatePropertyData }) => {
                   />
                   <button
                     onClick={() => removeAmenity(index)}
-                    className="w-full mt-2 py-1.5 text-red-500 hover:text-red-600 hover:bg-red-50 rounded text-sm transition-colors"
+                    className="w-full mt-2 py-1.5 text-red-500 hover:text-red-600 hover:bg-red-50 rounded text-sm transition-colors cursor-pointer"
                   >
-                    Remove
+                    Delete Amenity
                   </button>
                 </div>
               </div>
@@ -757,7 +765,7 @@ const MediaUploadStep = ({ propertyData, updatePropertyData }) => {
         {/* Suggested Amenities */}
         <div className="mt-4 pt-4 border-t border-gray-100">
           <p className="text-sm text-gray-500 mb-2">Quick add common amenities:</p>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
             {['Swimming Pool', 'Gym', 'Clubhouse', 'Children\'s Play Area', 'Garden', 'Parking', '24/7 Security', 'Power Backup', 'Jogging Track', 'Tennis Court', 'Basketball Court', 'Indoor Games'].map((amenity) => (
               <button
                 key={amenity}
@@ -767,7 +775,7 @@ const MediaUploadStep = ({ propertyData, updatePropertyData }) => {
                   }
                 }}
                 disabled={(propertyData.amenities || []).some(a => a.name === amenity)}
-                className={`px-3 py-1 text-sm rounded-full border transition-colors ${
+                className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-full border transition-colors ${
                   (propertyData.amenities || []).some(a => a.name === amenity)
                     ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                     : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300'
@@ -792,19 +800,19 @@ const MediaUploadStep = ({ propertyData, updatePropertyData }) => {
         </p>
 
         {propertyData.brochure?.url ? (
-          <div className="flex items-center justify-between p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
                 <FileText className="w-5 h-5 text-emerald-600" />
               </div>
-              <div>
-                <p className="font-medium text-gray-900">{propertyData.brochure.name || 'Brochure.pdf'}</p>
+              <div className="min-w-0">
+                <p className="font-medium text-gray-900 truncate">{propertyData.brochure.name || 'Brochure.pdf'}</p>
                 <p className="text-sm text-gray-500">PDF uploaded successfully</p>
               </div>
             </div>
             <button
               onClick={removeBrochure}
-              className="text-red-500 hover:text-red-600 text-sm flex items-center gap-1"
+              className="text-red-500 hover:text-red-600 text-sm flex items-center gap-1 cursor-pointer flex-shrink-0"
             >
               <X className="w-4 h-4" />
               Remove

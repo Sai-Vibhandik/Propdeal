@@ -2,6 +2,7 @@ import express from 'express';
 import {
   getPublicProperties,
   getFeaturedProperties,
+  getBuilders,
   getPropertyBySlug,
   getAdminProperties,
   getAdminProperty,
@@ -21,6 +22,7 @@ const router = express.Router();
 // Public routes - specific routes first (before parameterized routes)
 router.get('/', getPublicProperties);
 router.get('/featured', getFeaturedProperties);
+router.get('/builders', getBuilders);
 
 // Admin routes (protected) - must come before /:slug
 router.get('/admin/all', protect, getAdminProperties);

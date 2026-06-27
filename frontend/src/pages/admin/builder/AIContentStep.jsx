@@ -66,7 +66,7 @@ const sanitizeContent = (section, content) => {
 };
 
 const AIContentStep = ({ propertyData, updatePropertyData }) => {
-  const [generating, setGenerating] = useState(null);
+  const [generating, setGenerating] = useState(new Set()); // Set of sections being generated
   const [editingSection, setEditingSection] = useState(null);
   const [aiStatus, setAiStatus] = useState(null);
   const [checkingStatus, setCheckingStatus] = useState(true);
@@ -90,8 +90,9 @@ const AIContentStep = ({ propertyData, updatePropertyData }) => {
 
   // Generate content using AI
   const generateContent = async (section, isParallel = false) => {
+    // Add section to generating set
+    setGenerating(prev => new Set(prev).add(section));
     if (!isParallel) {
-      setGenerating(section);
       toast.loading(`Generating ${section}...`, { id: `generate-${section}` });
     }
     setFallbackUsed(false);
@@ -152,9 +153,12 @@ const AIContentStep = ({ propertyData, updatePropertyData }) => {
 
       return { success: false };
     } finally {
-      if (!isParallel) {
-        setGenerating(null);
-      }
+      // Remove section from generating set
+      setGenerating(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(section);
+        return newSet;
+      });
     }
   };
 
@@ -243,15 +247,15 @@ const AIContentStep = ({ propertyData, updatePropertyData }) => {
   const generateAllContent = async () => {
     const sections = ['hero', 'overview', 'highlights', 'location', 'investment', 'faq', 'seo'];
 
-    // Generate all sections in parallel
-    setGenerating('all'); // Set a special state to show "Generating All..."
+    // Add 'all' to generating set
+    setGenerating(prev => new Set(prev).add('all'));
 
     // Show toast for starting
     toast.loading('Generating all content in parallel...', { id: 'generate-all' });
 
     try {
       const results = await Promise.allSettled(
-        sections.map(section => generateContent(section, true)) // Pass true to skip individual state updates
+        sections.map(section => generateContent(section, true)) // Pass true to skip individual toasts
       );
 
       // Count successes and failures
@@ -276,7 +280,12 @@ const AIContentStep = ({ propertyData, updatePropertyData }) => {
       toast.dismiss('generate-all');
       toast.error('An unexpected error occurred. Please try again.');
     } finally {
-      setGenerating(null);
+      // Remove 'all' from generating set
+      setGenerating(prev => {
+        const newSet = new Set(prev);
+        newSet.delete('all');
+        return newSet;
+      });
     }
   };
 
@@ -362,32 +371,33 @@ const AIContentStep = ({ propertyData, updatePropertyData }) => {
       )}
 
       {/* Generate All Button */}
-      <div className="bg-gradient-to-r from-blue-800 to-blue-900 rounded-xl p-6 text-white">
-        <div className="flex items-center justify-between">
+      <div className="bg-gradient-to-r from-blue-800 to-blue-900 rounded-xl p-4 sm:p-6 text-white">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h3 className="text-lg font-semibold mb-2">Generate All Content</h3>
-            <p className="text-blue-200 text-sm">
+            <h3 className="text-base sm:text-lg font-semibold mb-1 sm:mb-2">Generate All Content</h3>
+            <p className="text-blue-200 text-xs sm:text-sm">
               AI will generate content for all sections in parallel based on property details
             </p>
           </div>
           <button
             onClick={generateAllContent}
-            disabled={generating !== null || checkingStatus}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-blue-800 font-semibold rounded-xl hover:bg-blue-50 transition-colors disabled:opacity-50"
+            disabled={generating.size > 0 || checkingStatus}
+            className="inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-white text-blue-800 font-semibold rounded-xl hover:bg-blue-50 transition-colors disabled:opacity-50 flex-shrink-0 text-sm sm:text-base"
           >
-            {generating === 'all' ? (
+            {generating.has('all') ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Generating All...
+                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                <span className="hidden sm:inline">Generating All...</span>
+                <span className="sm:hidden">Generating...</span>
               </>
-            ) : generating !== null ? (
+            ) : generating.size > 0 ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Generating {generating}...
+                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                Generating...
               </>
             ) : (
               <>
-                <Sparkles className="w-5 h-5" />
+                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
                 Generate All
               </>
             )}
@@ -403,29 +413,29 @@ const AIContentStep = ({ propertyData, updatePropertyData }) => {
             className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
           >
             <div className="p-4 border-b border-gray-200 bg-gray-50">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h3 className="font-semibold text-gray-900">{section.name}</h3>
                   <p className="text-sm text-gray-500">{section.description}</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                   {hasContent(section.key) && (
-                    <span className="flex items-center gap-1 text-emerald-600 text-sm">
+                    <span className="flex items-center justify-center gap-1 text-emerald-600 text-sm">
                       <Check className="w-4 h-4" />
                       Generated
                     </span>
                   )}
                   <button
                     onClick={() => generateContent(section.key)}
-                    disabled={generating !== null}
-                    className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-blue-800 text-white rounded-lg hover:bg-blue-900 disabled:opacity-50"
+                    disabled={generating.has('all')}
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm bg-blue-800 text-white rounded-lg hover:bg-blue-900 disabled:opacity-50"
                   >
-                    {generating === section.key ? (
+                    {generating.has(section.key) ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
                         Generating...
                       </>
-                    ) : generating === 'all' ? (
+                    ) : generating.has('all') ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
                         <span className="opacity-50">Generating...</span>
@@ -486,7 +496,6 @@ const AIContentStep = ({ propertyData, updatePropertyData }) => {
                 {section.key === 'location' && (
                   <div className="space-y-2">
                     <p className="text-sm"><strong>Connectivity:</strong> {propertyData.generatedContent?.location?.connectivity?.substring(0, 100)}...</p>
-                    <p className="text-sm"><strong>Nearby Places:</strong> {propertyData.generatedContent?.location?.nearbyPlaces?.length || 0} places</p>
                   </div>
                 )}
 
@@ -532,6 +541,28 @@ const AIContentStep = ({ propertyData, updatePropertyData }) => {
   );
 };
 
+// Character limits for fields
+const FIELD_LIMITS = {
+  headline: { min: 5, max: 100 },
+  subheadline: { min: 10, max: 300 },
+  ctaText: { min: 2, max: 30 },
+  badge: { min: 2, max: 30 },
+  offerText: { min: 2, max: 100 },
+  offerValidity: { min: 2, max: 50 },
+  keyPoint: { min: 5, max: 200 },
+  description: { min: 20, max: 2000 },
+  highlightTitle: { min: 3, max: 50 },
+  highlightDescription: { min: 10, max: 200 },
+  connectivity: { min: 10, max: 500 },
+  benefit: { min: 5, max: 200 },
+  rentalPotential: { min: 10, max: 500 },
+  futureGrowth: { min: 10, max: 500 },
+  faqQuestion: { min: 10, max: 200 },
+  faqAnswer: { min: 20, max: 1000 },
+  metaTitle: { min: 10, max: 60 },
+  metaDescription: { min: 50, max: 160 },
+};
+
 // Form-based Edit Modal Component
 const EditContentModal = ({ section, content, onClose, onSave }) => {
   const [formData, setFormData] = useState(() => {
@@ -541,16 +572,44 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
     }
     return content ? { ...content } : {};
   });
+  const [errors, setErrors] = useState({});
 
   const handleChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
+    // Clear error when user types
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
   };
 
   const handleArrayItemChange = (index, field, value) => {
     setFormData(prev => {
+      // For overview section, keyPoints is inside the object
+      if (section === 'overview') {
+        const newKeyPoints = [...(prev.keyPoints || [])];
+        newKeyPoints[index] = value;
+        return { ...prev, keyPoints: newKeyPoints };
+      }
+      // For investment section, benefits is inside the object
+      if (section === 'investment') {
+        const newBenefits = [...(prev.benefits || [])];
+        newBenefits[index] = value;
+        return { ...prev, benefits: newBenefits };
+      }
+      // For location section, nearbyPlaces is inside the object
+      if (section === 'location') {
+        const newNearbyPlaces = [...(prev.nearbyPlaces || [])];
+        if (typeof prev.nearbyPlaces[index] === 'object') {
+          newNearbyPlaces[index] = { ...newNearbyPlaces[index], [field]: value };
+        } else {
+          newNearbyPlaces[index] = value;
+        }
+        return { ...prev, nearbyPlaces: newNearbyPlaces };
+      }
+      // For other sections, formData is an array
       const newArray = [...prev];
       if (typeof prev[index] === 'object') {
         newArray[index] = { ...newArray[index], [field]: value };
@@ -559,31 +618,131 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
       }
       return newArray;
     });
+    // Clear error for array items
+    if (errors[`${index}_${field}`]) {
+      setErrors(prev => ({ ...prev, [`${index}_${field}`]: '' }));
+    }
   };
 
-  const addArrayItem = (template) => {
-    setFormData(prev => [...prev, template]);
+  const addArrayItem = (template, fieldName = null) => {
+    setFormData(prev => {
+      // For overview section, add to keyPoints array
+      if (section === 'overview' && fieldName === 'keyPoints') {
+        return { ...prev, keyPoints: [...(prev.keyPoints || []), template] };
+      }
+      // For investment section, add to benefits array
+      if (section === 'investment' && fieldName === 'benefits') {
+        return { ...prev, benefits: [...(prev.benefits || []), template] };
+      }
+      // For location section, add to nearbyPlaces array
+      if (section === 'location' && fieldName === 'nearbyPlaces') {
+        return { ...prev, nearbyPlaces: [...(prev.nearbyPlaces || []), template] };
+      }
+      // For other sections, formData is an array
+      return [...prev, template];
+    });
   };
 
-  const removeArrayItem = (index) => {
-    setFormData(prev => prev.filter((_, i) => i !== index));
+  const removeArrayItem = (index, fieldName = null) => {
+    setFormData(prev => {
+      // For overview section, remove from keyPoints array
+      if (section === 'overview' && fieldName === 'keyPoints') {
+        return { ...prev, keyPoints: (prev.keyPoints || []).filter((_, i) => i !== index) };
+      }
+      // For investment section, remove from benefits array
+      if (section === 'investment' && fieldName === 'benefits') {
+        return { ...prev, benefits: (prev.benefits || []).filter((_, i) => i !== index) };
+      }
+      // For location section, remove from nearbyPlaces array
+      if (section === 'location' && fieldName === 'nearbyPlaces') {
+        return { ...prev, nearbyPlaces: (prev.nearbyPlaces || []).filter((_, i) => i !== index) };
+      }
+      // For other sections, formData is an array
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (section === 'hero') {
+      if (!formData.headline?.trim()) {
+        newErrors.headline = 'Headline is required';
+      } else if (formData.headline.length < FIELD_LIMITS.headline.min) {
+        newErrors.headline = `Minimum ${FIELD_LIMITS.headline.min} characters required`;
+      }
+    }
+
+    if (section === 'overview') {
+      if (!formData.description?.trim()) {
+        newErrors.description = 'Description is required';
+      } else if (formData.description.length < FIELD_LIMITS.description.min) {
+        newErrors.description = `Minimum ${FIELD_LIMITS.description.min} characters required`;
+      }
+    }
+
+    if (section === 'highlights') {
+      formData.forEach((highlight, index) => {
+        if (!highlight.title?.trim()) {
+          newErrors[`${index}_title`] = 'Title is required';
+        }
+        if (!highlight.description?.trim()) {
+          newErrors[`${index}_description`] = 'Description is required';
+        }
+      });
+    }
+
+    if (section === 'faq') {
+      formData.forEach((faq, index) => {
+        if (!faq.question?.trim()) {
+          newErrors[`${index}_question`] = 'Question is required';
+        }
+        if (!faq.answer?.trim()) {
+          newErrors[`${index}_answer`] = 'Answer is required';
+        }
+      });
+    }
+
+    if (section === 'seo') {
+      if (!formData.metaTitle?.trim()) {
+        newErrors.metaTitle = 'Meta title is required';
+      } else if (formData.metaTitle.length < FIELD_LIMITS.metaTitle.min) {
+        newErrors.metaTitle = `Minimum ${FIELD_LIMITS.metaTitle.min} characters required`;
+      }
+      if (!formData.metaDescription?.trim()) {
+        newErrors.metaDescription = 'Meta description is required';
+      } else if (formData.metaDescription.length < FIELD_LIMITS.metaDescription.min) {
+        newErrors.metaDescription = `Minimum ${FIELD_LIMITS.metaDescription.min} characters required`;
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSave = () => {
+    if (!validateForm()) {
+      return;
+    }
     onSave(formData);
   };
 
   const renderHeroEditor = () => (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Headline</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Headline<sup className="text-red-500">*</sup>
+        </label>
         <input
           type="text"
           value={formData.headline || ''}
           onChange={(e) => handleChange('headline', e.target.value)}
           placeholder="e.g., Luxury Living at Prestige Towers"
-          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          maxLength={FIELD_LIMITS.headline.max}
+          className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.headline ? 'border-red-500' : 'border-gray-200'}`}
         />
+        {errors.headline && <p className="text-sm text-red-500 mt-1">{errors.headline}</p>}
+        <p className="text-xs text-gray-400 mt-1">{(formData.headline || '').length}/{FIELD_LIMITS.headline.max}</p>
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Subheadline</label>
@@ -592,8 +751,10 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
           onChange={(e) => handleChange('subheadline', e.target.value)}
           placeholder="e.g., Experience premium apartments in prime location"
           rows={3}
-          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          maxLength={FIELD_LIMITS.subheadline.max}
+          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
         />
+        <p className="text-xs text-gray-400 mt-1">{(formData.subheadline || '').length}/{FIELD_LIMITS.subheadline.max}</p>
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">CTA Button Text</label>
@@ -602,8 +763,10 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
           value={formData.ctaText || ''}
           onChange={(e) => handleChange('ctaText', e.target.value)}
           placeholder="e.g., Schedule a Visit"
+          maxLength={FIELD_LIMITS.ctaText.max}
           className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
+        <p className="text-xs text-gray-400 mt-1">{(formData.ctaText || '').length}/{FIELD_LIMITS.ctaText.max}</p>
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Badge Text</label>
@@ -612,8 +775,10 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
           value={formData.badge || ''}
           onChange={(e) => handleChange('badge', e.target.value)}
           placeholder="e.g., New Launch, Ready to Move"
+          maxLength={FIELD_LIMITS.badge.max}
           className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
+        <p className="text-xs text-gray-400 mt-1">{(formData.badge || '').length}/{FIELD_LIMITS.badge.max}</p>
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Exclusive Offers</label>
@@ -629,6 +794,7 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
                   handleChange('offers', newOffers);
                 }}
                 placeholder={`Offer ${index + 1}`}
+                maxLength={FIELD_LIMITS.offerText.max}
                 className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <label className="flex items-center gap-1 text-xs text-gray-600">
@@ -674,8 +840,10 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
           value={formData.offerValidity || ''}
           onChange={(e) => handleChange('offerValidity', e.target.value)}
           placeholder="e.g., 31st March 2026, Limited Time Only"
+          maxLength={FIELD_LIMITS.offerValidity.max}
           className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
+        <p className="text-xs text-gray-400 mt-1">{(formData.offerValidity || '').length}/{FIELD_LIMITS.offerValidity.max}</p>
       </div>
     </div>
   );
@@ -683,24 +851,19 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
   const renderOverviewEditor = () => (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Description<sup className="text-red-500">*</sup>
+        </label>
         <textarea
           value={formData.description || ''}
           onChange={(e) => handleChange('description', e.target.value)}
           placeholder="Detailed description of the property..."
           rows={5}
-          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          maxLength={FIELD_LIMITS.description.max}
+          className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none ${errors.description ? 'border-red-500' : 'border-gray-200'}`}
         />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Summary</label>
-        <input
-          type="text"
-          value={formData.summary || ''}
-          onChange={(e) => handleChange('summary', e.target.value)}
-          placeholder="Brief summary of the property"
-          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+        {errors.description && <p className="text-sm text-red-500 mt-1">{errors.description}</p>}
+        <p className="text-xs text-gray-400 mt-1">{(formData.description || '').length}/{FIELD_LIMITS.description.max}</p>
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Key Points</label>
@@ -712,10 +875,11 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
                 value={point}
                 onChange={(e) => handleArrayItemChange(index, null, e.target.value)}
                 placeholder={`Point ${index + 1}`}
+                maxLength={FIELD_LIMITS.keyPoint.max}
                 className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
-                onClick={() => removeArrayItem(index)}
+                onClick={() => removeArrayItem(index, 'keyPoints')}
                 className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
               >
                 <Trash2 className="w-4 h-4" />
@@ -723,7 +887,7 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
             </div>
           ))}
           <button
-            onClick={() => addArrayItem('')}
+            onClick={() => addArrayItem('', 'keyPoints')}
             className="flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm"
           >
             <Plus className="w-4 h-4" />
@@ -766,24 +930,34 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
               </select>
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Title</label>
+              <label className="block text-xs text-gray-500 mb-1">
+                Title<sup className="text-red-500">*</sup>
+              </label>
               <input
                 type="text"
                 value={highlight.title || ''}
                 onChange={(e) => handleArrayItemChange(index, 'title', e.target.value)}
                 placeholder="e.g., Ready to Move"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                maxLength={FIELD_LIMITS.highlightTitle.max}
+                className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors[`${index}_title`] ? 'border-red-500' : 'border-gray-200'}`}
               />
+              {errors[`${index}_title`] && <p className="text-xs text-red-500 mt-1">{errors[`${index}_title`]}</p>}
+              <p className="text-xs text-gray-400 mt-1">{(highlight.title || '').length}/{FIELD_LIMITS.highlightTitle.max}</p>
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Description</label>
+              <label className="block text-xs text-gray-500 mb-1">
+                Description<sup className="text-red-500">*</sup>
+              </label>
               <textarea
                 value={highlight.description || ''}
                 onChange={(e) => handleArrayItemChange(index, 'description', e.target.value)}
                 placeholder="Brief description of this highlight"
                 rows={2}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                maxLength={FIELD_LIMITS.highlightDescription.max}
+                className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none ${errors[`${index}_description`] ? 'border-red-500' : 'border-gray-200'}`}
               />
+              {errors[`${index}_description`] && <p className="text-xs text-red-500 mt-1">{errors[`${index}_description`]}</p>}
+              <p className="text-xs text-gray-400 mt-1">{(highlight.description || '').length}/{FIELD_LIMITS.highlightDescription.max}</p>
             </div>
           </div>
         </div>
@@ -807,64 +981,10 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
           onChange={(e) => handleChange('connectivity', e.target.value)}
           placeholder="Describe the location connectivity..."
           rows={4}
-          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          maxLength={FIELD_LIMITS.connectivity.max}
+          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
         />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Nearby Places</label>
-        {(formData.nearbyPlaces || []).map((place, index) => (
-          <div key={index} className="border border-gray-200 rounded-lg p-4 mb-3 relative">
-            <button
-              onClick={() => {
-                const newPlaces = formData.nearbyPlaces.filter((_, i) => i !== index);
-                handleChange('nearbyPlaces', newPlaces);
-              }}
-              className="absolute top-2 right-2 p-1 text-red-500 hover:bg-red-50 rounded"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Name</label>
-                <input
-                  type="text"
-                  value={place.name || ''}
-                  onChange={(e) => {
-                    const newPlaces = [...formData.nearbyPlaces];
-                    newPlaces[index] = { ...newPlaces[index], name: e.target.value };
-                    handleChange('nearbyPlaces', newPlaces);
-                  }}
-                  placeholder="e.g., IT Hub"
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Distance</label>
-                <input
-                  type="text"
-                  value={place.distance || ''}
-                  onChange={(e) => {
-                    const newPlaces = [...formData.nearbyPlaces];
-                    newPlaces[index] = { ...newPlaces[index], distance: e.target.value };
-                    handleChange('nearbyPlaces', newPlaces);
-                  }}
-                  placeholder="e.g., 5 mins"
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          </div>
-        ))}
-        <button
-          onClick={() => {
-            const newPlaces = [...(formData.nearbyPlaces || []), { name: '', distance: '', type: 'landmark', icon: 'map-pin' }];
-            handleChange('nearbyPlaces', newPlaces);
-          }}
-          className="flex items-center gap-2 text-blue-600 hover:text-blue-700"
-        >
-          <Plus className="w-4 h-4" />
-          Add Nearby Place
-        </button>
+        <p className="text-xs text-gray-400 mt-1">{(formData.connectivity || '').length}/{FIELD_LIMITS.connectivity.max}</p>
       </div>
     </div>
   );
@@ -881,10 +1001,11 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
                 value={benefit}
                 onChange={(e) => handleArrayItemChange(index, null, e.target.value)}
                 placeholder={`Benefit ${index + 1}`}
+                maxLength={FIELD_LIMITS.benefit.max}
                 className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
-                onClick={() => removeArrayItem(index)}
+                onClick={() => removeArrayItem(index, 'benefits')}
                 className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
               >
                 <Trash2 className="w-4 h-4" />
@@ -892,7 +1013,7 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
             </div>
           ))}
           <button
-            onClick={() => addArrayItem('')}
+            onClick={() => addArrayItem('', 'benefits')}
             className="flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm"
           >
             <Plus className="w-4 h-4" />
@@ -907,8 +1028,10 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
           onChange={(e) => handleChange('rentalPotential', e.target.value)}
           placeholder="Describe rental potential..."
           rows={3}
-          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          maxLength={FIELD_LIMITS.rentalPotential.max}
+          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
         />
+        <p className="text-xs text-gray-400 mt-1">{(formData.rentalPotential || '').length}/{FIELD_LIMITS.rentalPotential.max}</p>
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Future Growth</label>
@@ -917,8 +1040,10 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
           onChange={(e) => handleChange('futureGrowth', e.target.value)}
           placeholder="Describe future growth potential..."
           rows={3}
-          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          maxLength={FIELD_LIMITS.futureGrowth.max}
+          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
         />
+        <p className="text-xs text-gray-400 mt-1">{(formData.futureGrowth || '').length}/{FIELD_LIMITS.futureGrowth.max}</p>
       </div>
     </div>
   );
@@ -936,24 +1061,34 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
           </button>
           <div className="space-y-3">
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Question</label>
+              <label className="block text-xs text-gray-500 mb-1">
+                Question<sup className="text-red-500">*</sup>
+              </label>
               <input
                 type="text"
                 value={faq.question || ''}
                 onChange={(e) => handleArrayItemChange(index, 'question', e.target.value)}
                 placeholder="Enter question"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                maxLength={FIELD_LIMITS.faqQuestion.max}
+                className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors[`${index}_question`] ? 'border-red-500' : 'border-gray-200'}`}
               />
+              {errors[`${index}_question`] && <p className="text-xs text-red-500 mt-1">{errors[`${index}_question`]}</p>}
+              <p className="text-xs text-gray-400 mt-1">{(faq.question || '').length}/{FIELD_LIMITS.faqQuestion.max}</p>
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Answer</label>
+              <label className="block text-xs text-gray-500 mb-1">
+                Answer<sup className="text-red-500">*</sup>
+              </label>
               <textarea
                 value={faq.answer || ''}
                 onChange={(e) => handleArrayItemChange(index, 'answer', e.target.value)}
                 placeholder="Enter answer"
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                maxLength={FIELD_LIMITS.faqAnswer.max}
+                className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none ${errors[`${index}_answer`] ? 'border-red-500' : 'border-gray-200'}`}
               />
+              {errors[`${index}_answer`] && <p className="text-xs text-red-500 mt-1">{errors[`${index}_answer`]}</p>}
+              <p className="text-xs text-gray-400 mt-1">{(faq.answer || '').length}/{FIELD_LIMITS.faqAnswer.max}</p>
             </div>
           </div>
         </div>
@@ -971,26 +1106,34 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
   const renderSEOEditor = () => (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Meta Title</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Meta Title<sup className="text-red-500">*</sup>
+        </label>
         <input
           type="text"
           value={formData.metaTitle || ''}
           onChange={(e) => handleChange('metaTitle', e.target.value)}
           placeholder="Page title for SEO"
-          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          maxLength={FIELD_LIMITS.metaTitle.max}
+          className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.metaTitle ? 'border-red-500' : 'border-gray-200'}`}
         />
-        <p className="text-xs text-gray-400 mt-1">{(formData.metaTitle || '').length}/60 characters</p>
+        {errors.metaTitle && <p className="text-sm text-red-500 mt-1">{errors.metaTitle}</p>}
+        <p className="text-xs text-gray-400 mt-1">{(formData.metaTitle || '').length}/{FIELD_LIMITS.metaTitle.max} characters (recommended: 50-60)</p>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Meta Description</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Meta Description<sup className="text-red-500">*</sup>
+        </label>
         <textarea
           value={formData.metaDescription || ''}
           onChange={(e) => handleChange('metaDescription', e.target.value)}
           placeholder="Brief description for search engines"
           rows={3}
-          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          maxLength={FIELD_LIMITS.metaDescription.max}
+          className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none ${errors.metaDescription ? 'border-red-500' : 'border-gray-200'}`}
         />
-        <p className="text-xs text-gray-400 mt-1">{(formData.metaDescription || '').length}/160 characters</p>
+        {errors.metaDescription && <p className="text-sm text-red-500 mt-1">{errors.metaDescription}</p>}
+        <p className="text-xs text-gray-400 mt-1">{(formData.metaDescription || '').length}/{FIELD_LIMITS.metaDescription.max} characters (recommended: 150-160)</p>
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Keywords</label>
@@ -1014,6 +1157,7 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
           <input
             type="text"
             placeholder="Add keyword"
+            maxLength={50}
             className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && e.target.value.trim()) {
@@ -1078,7 +1222,7 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
           <h3 className="text-xl font-semibold text-gray-900">Edit {sectionNames[section] || section}</h3>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
           >
             <X className="w-5 h-5 text-gray-500" />
           </button>
@@ -1093,13 +1237,13 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
         <div className="flex justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
           <button
             onClick={onClose}
-            className="px-5 py-2.5 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+            className="px-5 py-2.5 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="px-5 py-2.5 bg-blue-800 text-white rounded-lg hover:bg-blue-900 transition-colors"
+            className="px-5 py-2.5 bg-blue-800 text-white rounded-lg hover:bg-blue-900 transition-colors cursor-pointer"
           >
             Save Changes
           </button>

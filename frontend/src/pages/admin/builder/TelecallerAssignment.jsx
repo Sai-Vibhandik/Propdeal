@@ -187,25 +187,25 @@ const TelecallerAssignment = ({ propertyId }) => {
                 key={telecaller._id}
                 onClick={() => handleAssignTelecaller(telecaller._id)}
                 disabled={saving}
-                className={`flex items-center justify-between p-4 rounded-lg border transition-all ${
+                className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 rounded-lg border transition-all text-left gap-3 ${
                   isAssigned
                     ? 'border-blue-800 bg-blue-50'
                     : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
                 }`}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0">
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                       isAssigned ? 'bg-blue-800 text-white' : 'bg-gray-200 text-gray-600'
                     }`}
                   >
                     {telecaller.name?.charAt(0)?.toUpperCase() || 'T'}
                   </div>
-                  <div className="text-left">
-                    <p className={`font-medium ${isAssigned ? 'text-blue-900' : 'text-gray-900'}`}>
+                  <div className="min-w-0">
+                    <p className={`font-medium truncate ${isAssigned ? 'text-blue-900' : 'text-gray-900'}`}>
                       {telecaller.name}
                     </p>
-                    <p className={`text-sm ${isAssigned ? 'text-blue-700' : 'text-gray-500'}`}>
+                    <p className={`text-sm truncate ${isAssigned ? 'text-blue-700' : 'text-gray-500'}`}>
                       {telecaller.email}
                     </p>
                     {telecaller.phone && (
@@ -216,7 +216,7 @@ const TelecallerAssignment = ({ propertyId }) => {
                   </div>
                 </div>
                 <div
-                  className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  className={`self-start sm:self-auto px-3 py-1.5 rounded-full text-xs font-medium ${
                     isAssigned
                       ? 'bg-blue-800 text-white'
                       : 'bg-gray-100 text-gray-500'

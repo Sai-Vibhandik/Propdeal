@@ -5,6 +5,7 @@ import {
   updateHeroSlides,
   updateWhyUs,
   updateCities,
+  updateFeaturedBuilders,
   updateTestimonials,
   updateFAQs,
   updateContact,
@@ -30,6 +31,7 @@ router.get('/admin', protect, authorize('admin', 'superadmin'), getAdminSiteCont
 router.put('/admin/hero-slides', protect, authorize('admin', 'superadmin'), updateHeroSlides);
 router.put('/admin/why-us', protect, authorize('admin', 'superadmin'), updateWhyUs);
 router.put('/admin/cities', protect, authorize('admin', 'superadmin'), updateCities);
+router.put('/admin/featured-builders', protect, authorize('admin', 'superadmin'), updateFeaturedBuilders);
 router.put('/admin/testimonials', protect, authorize('admin', 'superadmin'), updateTestimonials);
 router.put('/admin/faqs', protect, authorize('admin', 'superadmin'), updateFAQs);
 router.put('/admin/contact', protect, authorize('admin', 'superadmin'), updateContact);

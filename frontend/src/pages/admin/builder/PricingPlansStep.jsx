@@ -10,6 +10,14 @@ const defaultPriceIncludes = [
   'All Statutory Charges',
 ];
 
+// Field character limits
+const fieldLimits = {
+  configuration: { min: 1, max: 50 },
+  size: { min: 1, max: 50 },
+  price: { min: 1, max: 30 },
+  priceIncludeItem: { min: 2, max: 100 },
+};
+
 // Configuration presets based on property type
 const configurationPresets = {
   // Residential
@@ -173,8 +181,6 @@ const defaultConfiguration = {
 const PricingPlansStep = ({ propertyData, updatePropertyData }) => {
   const [plans, setPlans] = useState([]);
   const [uploadingIndex, setUploadingIndex] = useState(null);
-  const [showCustomModal, setShowCustomModal] = useState(false);
-  const [customConfig, setCustomConfig] = useState({ configuration: '', size: '', price: '' });
   const [errors, setErrors] = useState({});
   const [priceIncludes, setPriceIncludes] = useState([]);
   const [newIncludeItem, setNewIncludeItem] = useState('');
@@ -360,32 +366,6 @@ const PricingPlansStep = ({ propertyData, updatePropertyData }) => {
     setPlans(newPlans);
   };
 
-  // Add custom configuration
-  const handleAddCustom = () => {
-    if (!customConfig.configuration.trim()) {
-      setErrors({ customConfig: 'Configuration name is required' });
-      return;
-    }
-
-    const { value, unit } = parsePrice(customConfig.price);
-    setPlans([
-      ...plans,
-      {
-        ...defaultConfiguration,
-        configuration: customConfig.configuration,
-        size: customConfig.size,
-        price: customConfig.price,
-        priceValue: value,
-        priceUnit: unit,
-        isCustom: true,
-      },
-    ]);
-
-    setCustomConfig({ configuration: '', size: '', price: '' });
-    setShowCustomModal(false);
-    setErrors({});
-  };
-
   // Add preset configuration row
   const handleAddPresetConfig = (config) => {
     const exists = plans.some(p => p.configuration === config);
@@ -408,9 +388,16 @@ const PricingPlansStep = ({ propertyData, updatePropertyData }) => {
         validPlans.forEach((plan, index) => {
           if (!plan.configuration) {
             newErrors[`plan-${index}-config`] = 'Configuration is required';
+          } else if (plan.configuration.length > fieldLimits.configuration.max) {
+            newErrors[`plan-${index}-config`] = `Maximum ${fieldLimits.configuration.max} characters allowed`;
           }
           if (!plan.price) {
             newErrors[`plan-${index}-price`] = 'Price is required';
+          } else if (plan.price.length > fieldLimits.price.max) {
+            newErrors[`plan-${index}-price`] = `Maximum ${fieldLimits.price.max} characters allowed`;
+          }
+          if (plan.size && plan.size.length > fieldLimits.size.max) {
+            newErrors[`plan-${index}-size`] = `Maximum ${fieldLimits.size.max} characters allowed`;
           }
         });
 
@@ -462,15 +449,15 @@ const PricingPlansStep = ({ propertyData, updatePropertyData }) => {
 
         {/* Auto-calculated price range */}
         <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-100">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <p className="text-sm text-gray-600">Auto-calculated Price Range</p>
               <p className="text-lg font-bold text-gray-900">{displayPriceRange()}</p>
               <p className="text-xs text-gray-500 mt-1">This will be displayed in the hero section</p>
             </div>
-            <div className="text-right">
+            <div className="flex items-center gap-1.5 sm:text-right">
               <span className="text-xs text-gray-500">Property Type:</span>
-              <p className="text-sm font-medium text-blue-800 capitalize">{propertyType.replace('-', ' ')}</p>
+              <span className="text-sm font-medium text-blue-800 capitalize">{propertyType.replace('-', ' ')}</span>
             </div>
           </div>
         </div>
@@ -492,23 +479,36 @@ const PricingPlansStep = ({ propertyData, updatePropertyData }) => {
               key={index}
               className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors"
             >
-              <div className="flex items-start gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
                 {/* Configuration Select */}
                 <div className="flex-1">
-                  <label className="block text-xs text-gray-500 mb-1">Configuration</label>
+                  <label className="block text-xs text-gray-500 mb-1">
+                    Configuration<sup className="text-red-500">*</sup>
+                  </label>
                   {plan.isCustom ? (
                     <input
                       type="text"
                       value={plan.configuration}
                       onChange={(e) => handleConfigChange(index, 'configuration', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Custom configuration"
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${errors[`plan-${index}-config`] ? 'border-red-500' : 'border-gray-200'}`}
+                      placeholder="Enter custom configuration"
+                      maxLength={fieldLimits.configuration.max}
+                      autoFocus
                     />
                   ) : (
                     <select
                       value={plan.configuration}
-                      onChange={(e) => handleConfigChange(index, 'configuration', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      onChange={(e) => {
+                        if (e.target.value === '__custom__') {
+                          // Switch to custom mode
+                          const newPlans = [...plans];
+                          newPlans[index] = { ...newPlans[index], isCustom: true, configuration: '' };
+                          setPlans(newPlans);
+                        } else {
+                          handleConfigChange(index, 'configuration', e.target.value);
+                        }
+                      }}
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${errors[`plan-${index}-config`] ? 'border-red-500' : 'border-gray-200'}`}
                     >
                       <option value="">Select configuration</option>
                       {preset.configurations.map(config => (
@@ -520,83 +520,98 @@ const PricingPlansStep = ({ propertyData, updatePropertyData }) => {
                   {errors[`plan-${index}-config`] && (
                     <p className="text-red-500 text-xs mt-1">{errors[`plan-${index}-config`]}</p>
                   )}
-                </div>
-
-                {/* Size */}
-                <div className="w-32">
-                  <label className="block text-xs text-gray-500 mb-1">Size</label>
-                  <input
-                    type="text"
-                    value={plan.size}
-                    onChange={(e) => handleConfigChange(index, 'size', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder={preset.sizePlaceholder}
-                  />
-                </div>
-
-                {/* Price */}
-                <div className="w-32">
-                  <label className="block text-xs text-gray-500 mb-1">Price *</label>
-                  <input
-                    type="text"
-                    value={plan.price}
-                    onChange={(e) => handleConfigChange(index, 'price', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder={preset.pricePlaceholder}
-                  />
-                  {errors[`plan-${index}-price`] && (
-                    <p className="text-red-500 text-xs mt-1">{errors[`plan-${index}-price`]}</p>
+                  {plan.isCustom && (
+                    <p className="text-xs text-gray-400 mt-1">{plan.configuration?.length || 0}/{fieldLimits.configuration.max}</p>
                   )}
                 </div>
 
-                {/* Unit Plan (only for property types that have unit plans) */}
-                {preset.showUnitPlan && (
-                  <div className="w-24">
-                    <label className="block text-xs text-gray-500 mb-1">Unit Plan</label>
-                    {plan.unitPlan?.url ? (
-                      <div className="relative group">
-                        <img
-                          src={getFileUrl(plan.unitPlan.url)}
-                          alt="Unit plan"
-                          className="w-20 h-20 object-cover rounded-lg border"
-                        />
-                        <button
-                          onClick={() => handleRemoveUnitPlan(index)}
-                          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="flex flex-col items-center justify-center w-20 h-20 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
-                        {uploadingIndex === index ? (
-                          <div className="w-4 h-4 border-2 border-blue-800 border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <>
-                            <Upload className="w-4 h-4 text-gray-400" />
-                            <span className="text-xs text-gray-400 mt-1">Upload</span>
-                          </>
-                        )}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => handleUnitPlanUpload(index, e.target.files[0])}
-                          disabled={uploadingIndex !== null}
-                        />
-                      </label>
+                {/* Size and Price Row */}
+                <div className="flex gap-3 sm:gap-4">
+                  {/* Size */}
+                  <div className="flex-1 sm:w-28">
+                    <label className="block text-xs text-gray-500 mb-1">Size</label>
+                    <input
+                      type="text"
+                      value={plan.size}
+                      onChange={(e) => handleConfigChange(index, 'size', e.target.value)}
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${errors[`plan-${index}-size`] ? 'border-red-500' : 'border-gray-200'}`}
+                      placeholder={preset.sizePlaceholder}
+                      maxLength={fieldLimits.size.max}
+                    />
+                    {errors[`plan-${index}-size`] && (
+                      <p className="text-red-500 text-xs mt-1">{errors[`plan-${index}-size`]}</p>
                     )}
                   </div>
-                )}
 
-                {/* Remove Button */}
-                <div className="pt-5">
+                  {/* Price */}
+                  <div className="flex-1 sm:w-28">
+                    <label className="block text-xs text-gray-500 mb-1">
+                      Price<sup className="text-red-500">*</sup>
+                    </label>
+                    <input
+                      type="text"
+                      value={plan.price}
+                      onChange={(e) => handleConfigChange(index, 'price', e.target.value)}
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${errors[`plan-${index}-price`] ? 'border-red-500' : 'border-gray-200'}`}
+                      placeholder={preset.pricePlaceholder}
+                      maxLength={fieldLimits.price.max}
+                    />
+                    {errors[`plan-${index}-price`] && (
+                      <p className="text-red-500 text-xs mt-1">{errors[`plan-${index}-price`]}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Unit Plan and Remove Button Row */}
+                <div className="flex items-end gap-3 sm:gap-4">
+                  {/* Unit Plan (only for property types that have unit plans) */}
+                  {preset.showUnitPlan && (
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Unit Plan</label>
+                      {plan.unitPlan?.url ? (
+                        <div className="relative group">
+                          <img
+                            src={getFileUrl(plan.unitPlan.url)}
+                            alt="Unit plan"
+                            className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg border"
+                          />
+                          <button
+                            onClick={() => handleRemoveUnitPlan(index)}
+                            className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="flex flex-col items-center justify-center w-16 h-16 sm:w-20 sm:h-20 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
+                          {uploadingIndex === index ? (
+                            <div className="w-4 h-4 border-2 border-blue-800 border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <>
+                              <Upload className="w-4 h-4 text-gray-400" />
+                              <span className="text-xs text-gray-400 mt-1 hidden sm:block">Upload</span>
+                            </>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleUnitPlanUpload(index, e.target.files[0])}
+                            disabled={uploadingIndex !== null}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Remove Button */}
                   <button
                     onClick={() => handleRemoveRow(index)}
-                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Remove"
+                    className="flex items-center gap-1.5 px-3 py-2 text-sm text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200"
+                    title="Remove this configuration"
                   >
                     <X className="w-4 h-4" />
+                    <span>Remove</span>
                   </button>
                 </div>
               </div>
@@ -614,7 +629,7 @@ const PricingPlansStep = ({ propertyData, updatePropertyData }) => {
                 <button
                   key={config}
                   onClick={() => handleAddPresetConfig(config)}
-                  className="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-blue-100 hover:text-blue-800 transition-colors"
+                  className="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-blue-100 hover:text-blue-800 transition-colors cursor-pointer"
                 >
                   + {config}
                 </button>
@@ -626,17 +641,10 @@ const PricingPlansStep = ({ propertyData, updatePropertyData }) => {
         <div className="flex gap-3 mt-4">
           <button
             onClick={handleAddRow}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-800 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-800 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             Add Row
-          </button>
-          <button
-            onClick={() => setShowCustomModal(true)}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Add Custom Configuration
           </button>
         </div>
       </div>
@@ -651,12 +659,13 @@ const PricingPlansStep = ({ propertyData, updatePropertyData }) => {
           {priceIncludes.map((item, index) => (
             <div
               key={index}
-              className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg group"
+              className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg"
             >
               <span className="text-sm text-gray-700">{item}</span>
               <button
                 onClick={() => handleRemoveIncludeItem(index)}
-                className="w-4 h-4 flex items-center justify-center text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                title="Remove"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -672,12 +681,14 @@ const PricingPlansStep = ({ propertyData, updatePropertyData }) => {
             onChange={(e) => setNewIncludeItem(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddIncludeItem())}
             placeholder="Add new item..."
+            maxLength={fieldLimits.priceIncludeItem.max}
             className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+          <span className="text-xs text-gray-400 self-center">{newIncludeItem.length}/{fieldLimits.priceIncludeItem.max}</span>
           <button
             onClick={handleAddIncludeItem}
             disabled={!newIncludeItem.trim()}
-            className="px-4 py-2 bg-blue-800 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 bg-blue-800 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             Add
           </button>
@@ -691,7 +702,7 @@ const PricingPlansStep = ({ propertyData, updatePropertyData }) => {
               <button
                 key={item}
                 onClick={() => setPriceIncludes([...priceIncludes, item])}
-                className="px-2 py-1 text-xs bg-gray-50 text-gray-600 rounded hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                className="px-2 py-1 text-xs bg-gray-50 text-gray-600 rounded hover:bg-blue-50 hover:text-blue-700 transition-colors cursor-pointer"
               >
                 + {item}
               </button>
@@ -706,85 +717,9 @@ const PricingPlansStep = ({ propertyData, updatePropertyData }) => {
         <ul className="text-sm text-blue-700 space-y-1">
           <li>• Price range is auto-calculated from the configurations you add</li>
           <li>• Floor plan images are optional but recommended</li>
-          <li>• Use "Add Custom Configuration" for unique unit types</li>
-          <li>• You can reorder configurations by dragging</li>
+          <li>• Select "+ Custom" from dropdown to add custom configurations</li>
         </ul>
       </div>
-
-      {/* Custom Configuration Modal */}
-      {showCustomModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Add Custom Configuration</h3>
-
-            {errors.customConfig && (
-              <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm">
-                {errors.customConfig}
-              </div>
-            )}
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Configuration Name *
-                </label>
-                <input
-                  type="text"
-                  value={customConfig.configuration}
-                  onChange={(e) => setCustomConfig({ ...customConfig, configuration: e.target.value })}
-                  placeholder="e.g., Studio, Duplex, Penthouse"
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Size
-                </label>
-                <input
-                  type="text"
-                  value={customConfig.size}
-                  onChange={(e) => setCustomConfig({ ...customConfig, size: e.target.value })}
-                  placeholder={preset.sizePlaceholder}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Price *
-                </label>
-                <input
-                  type="text"
-                  value={customConfig.price}
-                  onChange={(e) => setCustomConfig({ ...customConfig, price: e.target.value })}
-                  placeholder={preset.pricePlaceholder}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => {
-                  setShowCustomModal(false);
-                  setCustomConfig({ configuration: '', size: '', price: '' });
-                  setErrors({});
-                }}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddCustom}
-                className="flex-1 px-4 py-2 bg-blue-800 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Add Configuration
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

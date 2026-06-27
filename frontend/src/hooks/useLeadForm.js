@@ -29,9 +29,12 @@ export const useLeadForm = () => {
     }
 
     if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
-    } else if (!/^[6-9]\d{9}$/.test(formData.phone.replace(/\D/g, ''))) {
-      newErrors.phone = 'Invalid phone number';
+      newErrors.phone = 'Contact number is required';
+    } else {
+      const digitsOnly = formData.phone.replace(/\D/g, '');
+      if (digitsOnly.length < 10 || digitsOnly.length > 15) {
+        newErrors.phone = 'Please enter a valid contact number';
+      }
     }
 
     setErrors(newErrors);
@@ -40,7 +43,12 @@ export const useLeadForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    // For phone field, only allow digits and common formatting characters
+    let filteredValue = value;
+    if (name === 'phone') {
+      filteredValue = value.replace(/[^0-9+\-\s]/g, '');
+    }
+    setFormData((prev) => ({ ...prev, [name]: filteredValue }));
 
     // Clear error when user starts typing
     if (errors[name]) {

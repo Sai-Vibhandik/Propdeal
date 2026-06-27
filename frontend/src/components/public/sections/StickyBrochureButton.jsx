@@ -89,11 +89,30 @@ const StickyBrochureButton = ({ property, theme = {} }) => {
         target="_blank"
         rel="noopener noreferrer"
         onClick={handleBrochureClick}
-        className="fixed bottom-20 right-4 z-40 lg:hidden"
+        className="fixed bottom-20 right-4 z-40 lg:hidden flex flex-col items-center"
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.5, type: 'spring', stiffness: 200 }}
       >
+        {/* Label - on top, centered */}
+        <motion.div
+          className="mb-2 whitespace-nowrap"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+        >
+          <div
+            className="text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5"
+            style={{
+              background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
+              color: 'white',
+            }}
+          >
+            <FileDown className="w-3 h-3" />
+            Brochure
+          </div>
+        </motion.div>
+
         <motion.div className="relative">
           {/* Animated Rings */}
           <motion.div
@@ -153,25 +172,6 @@ const StickyBrochureButton = ({ property, theme = {} }) => {
             {/* Icon */}
             <ArrowDownToLine className="w-6 h-6" strokeWidth={2.5} />
           </motion.div>
-        </motion.div>
-
-        {/* Label */}
-        <motion.div
-          className="absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-        >
-          <div
-            className="text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5"
-            style={{
-              background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
-              color: 'white',
-            }}
-          >
-            <FileDown className="w-3 h-3" />
-            Download
-          </div>
         </motion.div>
       </motion.a>
     </>

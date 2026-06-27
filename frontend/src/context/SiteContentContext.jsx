@@ -128,7 +128,6 @@ export const SiteContentProvider = ({ children }) => {
     footer: {
       description: 'Discover your dream property with our platform. We help you find the perfect home with detailed insights.',
       copyrightText: '© 2024 PropertyHub. All rights reserved.',
-      showNewsletter: true,
     },
     footerLinks: [
       { label: 'Home', url: '/', order: 0, isActive: true },

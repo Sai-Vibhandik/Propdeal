@@ -91,6 +91,19 @@ const TestimonialsSection = ({ testimonials }) => {
     goToSlide((currentIndex - 1 + displayTestimonials.length) % displayTestimonials.length, 'prev');
   }, [currentIndex, displayTestimonials.length, goToSlide]);
 
+  // Handle swipe/drag for mobile
+  const handleDragEnd = useCallback((event, info) => {
+    const threshold = 50; // Minimum drag distance to trigger navigation
+
+    if (info.offset.x < -threshold) {
+      // Swiped left - go next
+      nextTestimonial();
+    } else if (info.offset.x > threshold) {
+      // Swiped right - go previous
+      prevTestimonial();
+    }
+  }, [nextTestimonial, prevTestimonial]);
+
   // Animation variants for smooth transitions
   const variants = {
     enter: (direction) => ({
@@ -134,13 +147,13 @@ const TestimonialsSection = ({ testimonials }) => {
 
         {/* Testimonials Carousel */}
         <div className="relative">
-          {/* Navigation Buttons */}
-          <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between pointer-events-none z-10 px-2 md:px-0">
+          {/* Navigation Buttons - Desktop only */}
+          <div className="hidden md:flex absolute top-1/2 -translate-y-1/2 left-0 right-0 justify-between pointer-events-none z-10">
             <motion.button
               onClick={prevTestimonial}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              className="w-12 h-12 bg-white shadow-lg shadow-slate-200/50 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-800 hover:text-white transition-all pointer-events-auto cursor-pointer"
+              className="w-12 h-12 bg-white shadow-lg shadow-slate-200/50 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-800 active:bg-slate-900 hover:text-white transition-all pointer-events-auto cursor-pointer"
               aria-label="Previous testimonial"
             >
               <ChevronLeft className="w-5 h-5" />
@@ -149,14 +162,14 @@ const TestimonialsSection = ({ testimonials }) => {
               onClick={nextTestimonial}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              className="w-12 h-12 bg-white shadow-lg shadow-slate-200/50 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-800 hover:text-white transition-all pointer-events-auto cursor-pointer"
+              className="w-12 h-12 bg-white shadow-lg shadow-slate-200/50 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-800 active:bg-slate-900 hover:text-white transition-all pointer-events-auto cursor-pointer"
               aria-label="Next testimonial"
             >
               <ChevronRight className="w-5 h-5" />
             </motion.button>
           </div>
 
-          {/* Testimonial Card */}
+          {/* Testimonial Card - Swipeable on mobile */}
           <div className="max-w-3xl mx-auto pt-4">
             <AnimatePresence mode="wait" custom={direction}>
               <motion.div
@@ -167,6 +180,13 @@ const TestimonialsSection = ({ testimonials }) => {
                 animate="center"
                 exit="exit"
                 transition={{ duration: 0.4, ease: 'easeInOut' }}
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.2}
+                dragMomentum={false}
+                dragPropagation={false}
+                onDragEnd={handleDragEnd}
+                className="cursor-grab active:cursor-grabbing md:cursor-default"
               >
                 <div className="bg-white rounded-2xl shadow-lg shadow-slate-200/50 px-8 py-8 md:px-12 md:py-10">
                   {/* Author Info at Top */}
@@ -218,7 +238,7 @@ const TestimonialsSection = ({ testimonials }) => {
                 className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
                   index === currentIndex
                     ? 'w-8 bg-slate-700'
-                    : 'w-2.5 bg-slate-300 hover:bg-slate-400'
+                    : 'w-2.5 bg-slate-300 hover:bg-slate-400 active:bg-slate-500'
                 }`}
                 aria-label={`Go to testimonial ${index + 1}`}
               />

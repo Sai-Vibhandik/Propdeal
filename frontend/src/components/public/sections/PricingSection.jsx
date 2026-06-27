@@ -72,7 +72,7 @@ const PricingSection = ({ property, layout = 'cards', theme = {}, bgVariant = 'w
             className={`${cardBgClass} ${cardBorderClass} rounded-2xl shadow-lg overflow-hidden`}
           >
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[500px]">
+              <table className="w-full">
                 <thead style={{ backgroundColor: colors.primary }}>
                   <tr>
                     <th className="px-6 py-4 text-left font-semibold text-white whitespace-nowrap">Configuration</th>
@@ -93,7 +93,7 @@ const PricingSection = ({ property, layout = 'cards', theme = {}, bgVariant = 'w
                         <motion.button
                           whileHover={{ scale: 1.05, x: 3 }}
                           whileTap={{ scale: 0.95 }}
-                          onClick={() => openModal(property, 'cta-price')}
+                          onClick={() => openModal(property, 'cta-pricing-table')}
                           className="inline-flex items-center gap-1 font-medium hover:opacity-80 cursor-pointer"
                           style={{ color: colors.primary }}
                         >
@@ -185,7 +185,7 @@ const PricingSection = ({ property, layout = 'cards', theme = {}, bgVariant = 'w
                       <motion.button
                         whileHover={{ scale: 1.02, y: -2 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => openModal(property, 'cta-price')}
+                        onClick={() => openModal(property, 'cta-pricing-sheet')}
                         className="flex-1 py-2.5 px-4 text-white font-semibold rounded-xl hover:opacity-90 transition-colors flex items-center justify-center gap-2 cursor-pointer"
                         style={{ backgroundColor: colors.primary }}
                       >
@@ -195,7 +195,7 @@ const PricingSection = ({ property, layout = 'cards', theme = {}, bgVariant = 'w
                       <motion.button
                         whileHover={{ scale: 1.02, y: -2 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => openModal(property, 'cta-price')}
+                        onClick={() => openModal(property, 'cta-pricing-card')}
                         className="flex-1 py-2.5 px-4 border-2 font-semibold rounded-xl hover:opacity-80 transition-all flex items-center justify-center gap-2 cursor-pointer"
                         style={{ borderColor: colors.primary, color: colors.primary }}
                       >

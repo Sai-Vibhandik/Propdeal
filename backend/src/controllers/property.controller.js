@@ -183,6 +183,40 @@ export const getFeaturedProperties = async (req, res) => {
   }
 };
 
+// @desc    Get unique builders with property counts
+// @route   GET /api/properties/builders
+// @access  Public
+export const getBuilders = async (req, res) => {
+  try {
+    const builders = await Property.aggregate([
+      { $match: { status: 'published' } },
+      { $group: {
+        _id: '$builder',
+        count: { $sum: 1 },
+        latestProperty: { $first: '$$ROOT' }
+      }},
+      { $sort: { count: -1 } },
+      { $project: {
+        name: '$_id',
+        count: 1,
+        logo: '$latestProperty.branding.logo',
+        city: '$latestProperty.address.city'
+      }}
+    ]);
+
+    res.json({
+      success: true,
+      data: builders,
+    });
+  } catch (error) {
+    console.error('Get builders error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
+  }
+};
+
 // @desc    Get single property by slug
 // @route   GET /api/properties/:slug
 // @access  Public
