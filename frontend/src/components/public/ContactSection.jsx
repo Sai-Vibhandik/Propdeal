@@ -6,7 +6,7 @@ import { enquiriesAPI } from '../../services/api.js';
 
 const defaultContact = {
   phone: '+91 98765 43210',
-  email: 'info@propertyhub.com',
+  email: 'info@propdeal.com',
   address: '123 Real Estate Tower, MG Road',
   city: 'Bangalore',
   state: 'Karnataka',
@@ -179,9 +179,17 @@ const ContactSection = ({ contact }) => {
                 <div>
                   <h3 className="text-slate-800 font-semibold mb-1">Email Us</h3>
                   <p className="text-slate-500 text-sm">We reply within 24 hours</p>
-                  <a href={`mailto:${contactInfo.email}`} className="text-slate-700 hover:text-amber-500 transition-colors font-medium">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const subject = 'Inquiry from Website';
+                      const body = 'Hi, I would like to get more information.';
+                      window.open(`https://mail.google.com/mail/?view=cm&to=${contactInfo.email}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
+                    }}
+                    className="text-slate-700 hover:text-amber-500 transition-colors font-medium cursor-pointer"
+                  >
                     {contactInfo.email}
-                  </a>
+                  </button>
                 </div>
               </motion.div>
 

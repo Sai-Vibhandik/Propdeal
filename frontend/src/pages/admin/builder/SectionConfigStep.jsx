@@ -133,6 +133,8 @@ const SectionConfigStep = ({ propertyData, updatePropertyData }) => {
   };
 
   const enabledCount = sections.filter((s) => s.enabled).length;
+  const allEnabled = enabledCount === sections.length;
+  const allDisabled = enabledCount === 0;
 
   return (
     <div className="space-y-8">
@@ -167,7 +169,11 @@ const SectionConfigStep = ({ propertyData, updatePropertyData }) => {
                 setSections(sections.map(s => ({ ...s, enabled: true })));
                 updatePropertyData('sections', newPropertySections);
               }}
-              className="px-3 py-1.5 text-sm bg-blue-800 text-white rounded-lg hover:bg-blue-900 cursor-pointer"
+              className={`px-3 py-1.5 text-sm rounded-lg cursor-pointer ${
+                allEnabled
+                  ? 'bg-blue-800 text-white hover:bg-blue-900'
+                  : 'bg-white text-blue-800 border border-blue-300 hover:bg-blue-100'
+              }`}
             >
               Enable All
             </button>
@@ -184,7 +190,11 @@ const SectionConfigStep = ({ propertyData, updatePropertyData }) => {
                 setSections(sections.map(s => ({ ...s, enabled: false })));
                 updatePropertyData('sections', newPropertySections);
               }}
-              className="px-3 py-1.5 text-sm bg-white text-blue-800 border border-blue-300 rounded-lg hover:bg-blue-100 cursor-pointer"
+              className={`px-3 py-1.5 text-sm rounded-lg cursor-pointer ${
+                allDisabled
+                  ? 'bg-blue-800 text-white hover:bg-blue-900'
+                  : 'bg-white text-blue-800 border border-blue-300 hover:bg-blue-100'
+              }`}
             >
               Disable All
             </button>

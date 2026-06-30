@@ -100,6 +100,7 @@ const LAYOUT_OPTIONS = [
 const FIELD_LIMITS = {
   companyName: { max: 100 },
   tagline: { max: 100 },
+  aboutUs: { max: 500 },
   phoneNumber: { max: 20 },
   email: { max: 100 },
   customCtaText: { max: 30 },

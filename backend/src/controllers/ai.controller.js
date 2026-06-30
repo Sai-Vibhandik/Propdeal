@@ -49,6 +49,23 @@ const getMockContent = (section, property) => {
       rentalPotential: 'Expected rental yield of 3-4% per annum',
       futureGrowth: 'Property values expected to appreciate significantly.',
     },
+    builder: {
+      aboutBuilder: `A renowned developer known for quality construction and timely delivery with decades of experience.`,
+      stats: [
+        { icon: 'award', value: '30+', label: 'Years of Experience' },
+        { icon: 'building', value: '250+', label: 'Projects Delivered' },
+        { icon: 'mapPin', value: '15+', label: 'Cities Presence' },
+        { icon: 'users', value: '50,000+', label: 'Happy Customers' },
+      ],
+      keyFacts: [
+        { icon: 'shield', text: 'RERA registered and compliant projects' },
+        { icon: 'clock', text: 'On-time delivery with quality construction' },
+        { icon: 'check', text: 'Transparent pricing with no hidden charges' },
+        { icon: 'award', text: 'Excellent after-sales service' },
+        { icon: 'mapPin', text: 'Prime location selection for all projects' },
+        { icon: 'home', text: 'Modern amenities and premium specifications' },
+      ],
+    },
     faq: [
       {
         question: `What is the possession status?`,
@@ -391,12 +408,56 @@ const parseGeneratedContent = (section, text) => {
       return faqs.slice(0, 10);
     },
     builder: (text) => {
-      const aboutBuilder = text.match(/About:\s*([\s\S]+?)(?=Experience|$)/i)?.[1]?.trim() || '';
-      const experience = text.match(/Experience:\s*(.+)/i)?.[1]?.trim() || '';
-      const totalProjects = text.match(/Total Projects:\s*(.+)/i)?.[1]?.trim() || '';
+      const aboutBuilder = text.match(/About:\s*([\s\S]+?)(?=Stats|Key Facts|$)/i)?.[1]?.trim() || '';
+
+      // Parse stats
+      const statsMatch = text.match(/Stats:\s*([\s\S]+?)(?=Key Facts|$)/i)?.[1]?.trim() || '';
+      const stats = [];
+      if (statsMatch) {
+        const statLines = statsMatch.split('\n').filter(Boolean);
+        for (const line of statLines) {
+          const parts = line.replace(/^[-•]\s*/, '').split('|').map(s => s.trim());
+          if (parts.length >= 3) {
+            stats.push({
+              icon: parts[0] || 'building',
+              value: parts[1] || '',
+              label: parts[2] || '',
+            });
+          }
+        }
+      }
+
+      // Parse key facts with icons
       const keyFactsMatch = text.match(/Key Facts:\s*([\s\S]+)$/i)?.[1]?.split('\n').filter(Boolean).map(s => s.replace(/^[-•]\s*/, '').trim()) || [];
-      if (!aboutBuilder) return null;
-      return { aboutBuilder, experience, totalProjects, keyFacts: keyFactsMatch.slice(0, 5) };
+      const keyFacts = [];
+      // Map common keywords to icons
+      const keywordIconMap = {
+        'rera': 'shield', 'compliant': 'shield', 'registered': 'shield', 'legal': 'shield',
+        'on-time': 'clock', 'timely': 'clock', 'delivery': 'clock', 'delivery': 'clock',
+        'transparent': 'check', 'pricing': 'check', 'hidden': 'check', 'charges': 'check',
+        'after-sales': 'award', 'service': 'award', 'support': 'award', 'customer': 'award',
+        'location': 'mapPin', 'prime': 'mapPin', 'connectivity': 'mapPin',
+        'amenities': 'home', 'modern': 'home', 'specifications': 'home', 'quality': 'home',
+        'construction': 'building', 'project': 'building',
+        'experience': 'award', 'years': 'award',
+      };
+      const getIconForKeyword = (fact) => {
+        const lowerFact = (fact || '').toLowerCase();
+        for (const [keyword, icon] of Object.entries(keywordIconMap)) {
+          if (lowerFact.includes(keyword)) return icon;
+        }
+        return 'check'; // default icon
+      };
+
+      for (const fact of keyFactsMatch) {
+        keyFacts.push({
+          icon: getIconForKeyword(fact),
+          text: fact,
+        });
+      }
+
+      if (!aboutBuilder && stats.length === 0 && keyFacts.length === 0) return null;
+      return { aboutBuilder, stats: stats.slice(0, 4), keyFacts: keyFacts.slice(0, 6) };
     },
     seo: (text) => {
       const metaTitle = text.match(/Title:\s*(.+)/i)?.[1]?.trim() || '';

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { UserPlus, Edit2, Trash2, Eye, EyeOff, Phone, Mail, Search, X } from 'lucide-react';
+import { UserPlus, Edit2, Trash2, Eye, EyeOff, Phone, Mail, Search, X, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { adminAPI } from '../../services/api';
 import toast from 'react-hot-toast';
 import AdminLayout from '../../components/admin/AdminLayout.jsx';
+
+const ITEMS_PER_PAGE = 10;
 
 const TelecallersPage = () => {
   const [telecallers, setTelecallers] = useState([]);
@@ -10,6 +12,7 @@ const TelecallersPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingTelecaller, setEditingTelecaller] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -19,9 +22,55 @@ const TelecallersPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
 
+  // Password validation - same as SettingsPage
+  const validatePassword = (password) => {
+    const errors = [];
+    if (password.length < 8) {
+      errors.push('At least 8 characters');
+    }
+    if (!/[A-Z]/.test(password)) {
+      errors.push('At least one uppercase letter');
+    }
+    if (!/[a-z]/.test(password)) {
+      errors.push('At least one lowercase letter');
+    }
+    if (!/[0-9]/.test(password)) {
+      errors.push('At least one digit');
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      errors.push('At least one special character');
+    }
+    return errors;
+  };
+
+  const getPasswordRequirements = (password) => {
+    return [
+      { label: '8+ characters', valid: password.length >= 8 },
+      { label: 'Uppercase letter', valid: /[A-Z]/.test(password) },
+      { label: 'Lowercase letter', valid: /[a-z]/.test(password) },
+      { label: 'Number', valid: /[0-9]/.test(password) },
+      { label: 'Special character', valid: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) },
+    ];
+  };
+
+  const isPasswordValid = formData.password.length > 0 && validatePassword(formData.password).length === 0;
+
   useEffect(() => {
     fetchTelecallers();
   }, []);
+
+  // Prevent background scroll when modal is open
+  useEffect(() => {
+    if (showModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showModal]);
 
   const fetchTelecallers = async () => {
     try {
@@ -75,10 +124,12 @@ const TelecallersPage = () => {
 
     if (!editingTelecaller && !formData.password) {
       newErrors.password = 'Password is required';
-    }
-
-    if (formData.password && formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+    } else if (formData.password) {
+      // Apply strong password validation
+      const passwordValidationErrors = validatePassword(formData.password);
+      if (passwordValidationErrors.length > 0) {
+        newErrors.password = passwordValidationErrors.join(', ');
+      }
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -152,10 +203,28 @@ const TelecallersPage = () => {
     (t.phone && t.phone.includes(searchTerm))
   );
 
+  // Pagination
+  const totalPages = Math.ceil(filteredTelecallers.length / ITEMS_PER_PAGE);
+  const paginatedTelecallers = filteredTelecallers.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  // Calculate Sr. No. based on current page
+  const getSerialNumber = (index) => {
+    return (currentPage - 1) * ITEMS_PER_PAGE + index + 1;
+  };
+
+  // Reset to page 1 when search changes
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Telecallers</h1>
             <p className="text-gray-600 mt-1">Manage telecaller accounts for lead distribution</p>
@@ -167,10 +236,10 @@ const TelecallersPage = () => {
               setErrors({});
               setShowModal(true);
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-800 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 bg-blue-800 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer text-sm sm:text-base w-full sm:w-auto"
           >
-            <UserPlus className="w-5 h-5" />
-            Add Telecaller
+            <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span>Add Telecaller</span>
           </button>
         </div>
 
@@ -182,7 +251,8 @@ const TelecallersPage = () => {
               type="text"
               placeholder="Search telecallers..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={handleSearchChange}
+              maxLength={100}
               className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -199,9 +269,10 @@ const TelecallersPage = () => {
           </div>
         ) : (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden overflow-x-auto">
-            <table className="w-full min-w-[640px]">
+            <table className="w-full min-w-[700px]">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Sr. No.</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact Number</th>
@@ -211,8 +282,11 @@ const TelecallersPage = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {filteredTelecallers.map((telecaller) => (
+                {paginatedTelecallers.map((telecaller, index) => (
                   <tr key={telecaller._id} className="hover:bg-gray-50">
+                    <td className="px-4 py-4 text-gray-600 font-medium">
+                      {getSerialNumber(index)}
+                    </td>
                     <td className="px-4 py-4">
                       <div className="flex items-center">
                         <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
@@ -270,6 +344,67 @@ const TelecallersPage = () => {
                 ))}
               </tbody>
             </table>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
+                <div className="text-sm text-gray-500">
+                  Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredTelecallers.length)} of {filteredTelecallers.length} telecallers
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`w-8 h-8 rounded-lg text-sm font-medium cursor-pointer ${
+                            currentPage === pageNum
+                              ? 'bg-blue-800 text-white'
+                              : 'border border-gray-200 hover:bg-gray-50 text-gray-600'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Footer - show when only 1 page */}
+            {totalPages === 1 && (
+              <div className="px-4 py-3 border-t border-gray-200">
+                <p className="text-sm text-gray-500">
+                  Showing {filteredTelecallers.length} telecallers
+                </p>
+              </div>
+            )}
           </div>
         )}
 
@@ -293,7 +428,7 @@ const TelecallersPage = () => {
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              <form onSubmit={handleSubmit} className="p-6 space-y-4" noValidate>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Name<sup className="text-red-500">*</sup>
@@ -324,7 +459,7 @@ const TelecallersPage = () => {
                     }}
                     className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.email ? 'border-red-500' : 'border-gray-200'}`}
                     placeholder="Enter email address"
-                    maxLength={100}
+                    maxLength={60}
                   />
                   {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
                 </div>
@@ -371,6 +506,27 @@ const TelecallersPage = () => {
                     </button>
                   </div>
                   {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+
+                  {/* Password Requirements */}
+                  {formData.password && (
+                    <div className="mt-2 space-y-1">
+                      <p className="text-xs text-gray-500 font-medium">Password must contain:</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {getPasswordRequirements(formData.password).map((req, idx) => (
+                          <span
+                            key={idx}
+                            className={`text-xs px-2 py-0.5 rounded-full ${
+                              req.valid
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-gray-100 text-gray-500'
+                            }`}
+                          >
+                            {req.valid ? '✓' : '○'} {req.label}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="flex gap-3 pt-4">
                   <button
@@ -386,7 +542,12 @@ const TelecallersPage = () => {
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-2 bg-blue-800 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
+                    disabled={
+                      !editingTelecaller
+                        ? !isPasswordValid
+                        : formData.password && !isPasswordValid
+                    }
+                    className="flex-1 px-4 py-2 bg-blue-800 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   >
                     {editingTelecaller ? 'Update' : 'Create'}
                   </button>

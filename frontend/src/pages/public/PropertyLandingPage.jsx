@@ -108,24 +108,48 @@ const PropertyLandingPage = () => {
     // Apply custom favicon if set
     if (property?.branding?.favicon) {
       const faviconUrl = getFileUrl(property.branding.favicon);
+      // Use property's updatedAt timestamp for cache-busting
+      // This ensures favicon updates when property is actually modified
+      const updatedAt = property.updatedAt ? new Date(property.updatedAt).getTime() : Date.now();
+      const cacheBustedUrl = faviconUrl + (faviconUrl.includes('?') ? '&' : '?') + `v=${updatedAt}`;
 
-      // Update existing favicon or create new one
-      let link = document.querySelector("link[rel~='icon']");
-      if (!link) {
-        link = document.createElement('link');
-        link.rel = 'icon';
-        document.head.appendChild(link);
-      }
-      link.href = faviconUrl;
+      // Remove all existing favicons first
+      const existingIcons = document.querySelectorAll("link[rel~='icon'], link[rel~='shortcut icon'], link[rel~='apple-touch-icon']");
+      existingIcons.forEach(icon => icon.remove());
 
-      // Also update apple-touch-icon
-      let appleLink = document.querySelector("link[rel~='apple-touch-icon']");
-      if (!appleLink) {
-        appleLink = document.createElement('link');
-        appleLink.rel = 'apple-touch-icon';
-        document.head.appendChild(appleLink);
-      }
-      appleLink.href = faviconUrl;
+      // Create new favicon links with proper attributes
+      const icon32 = document.createElement('link');
+      icon32.rel = 'icon';
+      icon32.type = 'image/png';
+      icon32.sizes = '32x32';
+      icon32.href = cacheBustedUrl;
+      document.head.appendChild(icon32);
+
+      const icon16 = document.createElement('link');
+      icon16.rel = 'icon';
+      icon16.type = 'image/png';
+      icon16.sizes = '16x16';
+      icon16.href = cacheBustedUrl;
+      document.head.appendChild(icon16);
+
+      const shortcutIcon = document.createElement('link');
+      shortcutIcon.rel = 'shortcut icon';
+      shortcutIcon.type = 'image/png';
+      shortcutIcon.href = cacheBustedUrl;
+      document.head.appendChild(shortcutIcon);
+
+      const appleTouchIcon = document.createElement('link');
+      appleTouchIcon.rel = 'apple-touch-icon';
+      appleTouchIcon.sizes = '180x180';
+      appleTouchIcon.href = cacheBustedUrl;
+      document.head.appendChild(appleTouchIcon);
+
+      // Force browser to recognize the new favicon by changing the document title briefly
+      const originalTitle = document.title;
+      document.title = originalTitle + ' ';
+      setTimeout(() => {
+        document.title = originalTitle;
+      }, 100);
     }
 
     // Cleanup: remove dark class when leaving this page

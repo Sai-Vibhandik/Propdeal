@@ -63,9 +63,15 @@ const generatedContentSchema = new mongoose.Schema({
   // Builder
   builder: {
     aboutBuilder: String,
-    experience: String,
-    totalProjects: String,
-    keyFacts: [String],
+    stats: [{
+      icon: String,
+      value: String,
+      label: String,
+    }],
+    keyFacts: [{
+      icon: String,
+      text: String,
+    }],
   },
 
   // SEO

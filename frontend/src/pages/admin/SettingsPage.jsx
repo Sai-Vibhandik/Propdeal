@@ -303,7 +303,7 @@ const SettingsPage = () => {
                             }}
                             className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${accountErrors.email ? 'border-red-500' : 'border-gray-300'}`}
                             placeholder="Enter your email"
-                            maxLength={100}
+                            maxLength={60}
                           />
                           {accountErrors.email && (
                             <p className="text-sm text-red-500 mt-1">{accountErrors.email}</p>

@@ -1,12 +1,62 @@
 import { motion } from 'framer-motion';
-import { Building2, Award, MapPin, Users } from 'lucide-react';
+import { Building2, Award, MapPin, Users, Briefcase, Home, Globe, Star, CheckCircle2, Shield, Clock } from 'lucide-react';
 import { getThemeStyles, getCardClasses, getCardBorderClasses, getSectionBgClasses } from '../../../utils/theme.js';
 import { getFileUrl } from '../../../services/api.js';
+
+// Icon mapping for stats
+const iconMap = {
+  building: Building2,
+  award: Award,
+  mapPin: MapPin,
+  users: Users,
+  briefcase: Briefcase,
+  home: Home,
+  globe: Globe,
+  star: Star,
+  shield: Shield,
+  clock: Clock,
+  check: CheckCircle2,
+};
+
+// Icon mapping for features (Why Choose Us) - based on keywords
+const featureIconMap = {
+  'rera': 'shield',
+  'compliant': 'shield',
+  'registered': 'shield',
+  'on-time': 'clock',
+  'timely': 'clock',
+  'delivery': 'clock',
+  'transparent': 'check',
+  'pricing': 'check',
+  'hidden': 'check',
+  'after-sales': 'award',
+  'service': 'award',
+  'support': 'award',
+  'location': 'mapPin',
+  'prime': 'mapPin',
+  'amenities': 'home',
+  'modern': 'home',
+  'specifications': 'home',
+  'quality': 'award',
+  'construction': 'building',
+};
+
+// Get icon name for a feature based on keywords
+const getFeatureIconName = (text) => {
+  const lowerText = (text || '').toLowerCase();
+  for (const [keyword, iconName] of Object.entries(featureIconMap)) {
+    if (lowerText.includes(keyword)) return iconName;
+  }
+  return 'check'; // default
+};
 
 const BuilderSection = ({ property, layout = 'standard', theme = {}, bgVariant = 'white' }) => {
   const builderName = property.builder || property.branding?.companyName || 'Developer';
   const builderLogo = property.branding?.logo ? getFileUrl(property.branding.logo) : '';
   const branding = property.branding || {};
+
+  // Get AI-generated builder content
+  const builderContent = property.generatedContent?.builder || {};
 
   const sectionBg = property.sectionBackgrounds?.builderInfo || { image: '', layout: 'background' };
   const bgImage = sectionBg.image ? getFileUrl(sectionBg.image) : '';
@@ -19,21 +69,70 @@ const BuilderSection = ({ property, layout = 'standard', theme = {}, bgVariant =
   const cardBgClass = getCardClasses(bgVariant, isDark);
   const cardBorderClass = getCardBorderClasses(bgVariant, isDark);
 
-  const stats = [
-    { icon: Building2, value: '250+', label: 'Projects Delivered' },
-    { icon: Award, value: '30+', label: 'Years of Experience' },
-    { icon: MapPin, value: '15+', label: 'Cities Presence' },
-    { icon: Users, value: '50,000+', label: 'Happy Customers' },
+  // Use builder stats from AI-generated content, otherwise use defaults
+  const defaultStats = [
+    { icon: 'building', value: '250+', label: 'Projects Delivered' },
+    { icon: 'award', value: '30+', label: 'Years of Experience' },
+    { icon: 'mapPin', value: '15+', label: 'Cities Presence' },
+    { icon: 'users', value: '50,000+', label: 'Happy Customers' },
   ];
 
-  const features = [
-    'RERA registered and compliant projects',
-    'On-time delivery with quality construction',
-    'Transparent pricing with no hidden charges',
-    'Excellent after-sales service',
-    'Prime location selection',
-    'Modern amenities and specifications',
+  const stats = (builderContent.stats && builderContent.stats.length > 0
+    ? builderContent.stats
+    : defaultStats
+  ).map(stat => ({
+    ...stat,
+    Icon: iconMap[stat.icon] || Building2,
+  }));
+
+  // Use AI-generated key facts if available, otherwise use defaults
+  const defaultKeyFacts = [
+    { icon: 'shield', text: 'RERA registered and compliant projects' },
+    { icon: 'clock', text: 'On-time delivery with quality construction' },
+    { icon: 'check', text: 'Transparent pricing with no hidden charges' },
+    { icon: 'award', text: 'Excellent after-sales service' },
+    { icon: 'mapPin', text: 'Prime location selection for all projects' },
+    { icon: 'home', text: 'Modern amenities and premium specifications' },
   ];
+
+  const keyFacts = (builderContent.keyFacts && builderContent.keyFacts.length > 0
+    ? builderContent.keyFacts
+    : defaultKeyFacts
+  ).map(fact => ({
+    ...fact,
+    Icon: iconMap[fact.icon] || iconMap[getFeatureIconName(fact.text)] || CheckCircle2,
+  }));
+
+  // Render Why Choose Us section
+  const renderWhyChooseUs = (isDarkMode = false) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {keyFacts.map((fact, index) => (
+        <motion.div
+          key={index}
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: index * 0.05 }}
+          whileHover={{ scale: 1.02, y: -2 }}
+          className={`flex items-start gap-3 p-3 rounded-lg transition-all cursor-default ${
+            isDarkMode
+              ? 'bg-white/5 hover:bg-white/10'
+              : 'bg-gray-50 hover:bg-gray-100'
+          }`}
+        >
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: `${colors.primary}15` }}
+          >
+            <fact.Icon className="w-4 h-4" style={{ color: colors.primary }} />
+          </div>
+          <span className={`text-sm leading-tight ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+            {fact.text}
+          </span>
+        </motion.div>
+      ))}
+    </div>
+  );
 
   // No background image
   if (!bgImage || bgLayout === 'none') {
@@ -55,7 +154,7 @@ const BuilderSection = ({ property, layout = 'standard', theme = {}, bgVariant =
                 {builderName}
               </h2>
               <p className="text-gray-600 dark:text-gray-300 mt-2 max-w-xl">
-                {branding.tagline || `${builderName} is a renowned real estate developer known for delivering quality projects with modern amenities and excellent construction standards.`}
+                {builderContent.aboutBuilder || branding.tagline || `${builderName} is a renowned real estate developer known for delivering quality projects with modern amenities and excellent construction standards.`}
               </p>
             </div>
           </div>
@@ -71,20 +170,17 @@ const BuilderSection = ({ property, layout = 'standard', theme = {}, bgVariant =
             >
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Our Track Record</h3>
               <div className="grid grid-cols-2 gap-4">
-                {stats.map((stat, index) => {
-                  const Icon = stat.icon;
-                  return (
-                    <motion.div
-                      key={index}
-                      whileHover={{ scale: 1.02, y: -3 }}
-                      className={`p-4 rounded-xl cursor-pointer ${isDark ? 'bg-gray-800 hover:bg-gray-750' : 'bg-gray-50 hover:bg-gray-100'} transition-colors`}
-                    >
-                      <Icon className="w-8 h-8 mb-2" style={{ color: colors.primary }} />
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{stat.label}</p>
-                    </motion.div>
-                  );
-                })}
+                {stats.map((stat, index) => (
+                  <motion.div
+                    key={index}
+                    whileHover={{ scale: 1.02, y: -3 }}
+                    className={`p-4 rounded-xl cursor-pointer ${isDark ? 'bg-gray-800 hover:bg-gray-750' : 'bg-gray-50 hover:bg-gray-100'} transition-colors`}
+                  >
+                    <stat.Icon className="w-8 h-8 mb-2" style={{ color: colors.primary }} />
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{stat.label}</p>
+                  </motion.div>
+                ))}
               </div>
             </motion.div>
 
@@ -96,29 +192,7 @@ const BuilderSection = ({ property, layout = 'standard', theme = {}, bgVariant =
               className={`${cardBgClass} ${cardBorderClass} rounded-2xl p-6 shadow-sm`}
             >
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Why Choose Us</h3>
-              <div className="space-y-3">
-                {features.map((feature, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: 10 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.05 }}
-                    whileHover={{ x: 5 }}
-                    className="flex items-center gap-3 cursor-pointer"
-                  >
-                    <div
-                      className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: `${colors.accent}20` }}
-                    >
-                      <svg className="w-4 h-4" style={{ color: colors.accent }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <span className="text-gray-700 dark:text-gray-300">{feature}</span>
-                  </motion.div>
-                ))}
-              </div>
+              {renderWhyChooseUs(false)}
             </motion.div>
           </div>
         </div>
@@ -149,7 +223,7 @@ const BuilderSection = ({ property, layout = 'standard', theme = {}, bgVariant =
                 {builderName}
               </h2>
               <p className="text-gray-200 mt-2 max-w-xl">
-                {branding.tagline || `${builderName} is a renowned real estate developer known for delivering quality projects with modern amenities and excellent construction standards.`}
+                {builderContent.aboutBuilder || branding.tagline || `${builderName} is a renowned real estate developer known for delivering quality projects with modern amenities and excellent construction standards.`}
               </p>
             </div>
           </div>
@@ -165,16 +239,13 @@ const BuilderSection = ({ property, layout = 'standard', theme = {}, bgVariant =
             >
               <h3 className="text-lg font-bold text-white mb-4">Our Track Record</h3>
               <div className="grid grid-cols-2 gap-4">
-                {stats.map((stat, index) => {
-                  const Icon = stat.icon;
-                  return (
-                    <div key={index} className="p-4 rounded-xl bg-white/10">
-                      <Icon className="w-8 h-8 mb-2" style={{ color: colors.secondary }} />
-                      <p className="text-2xl font-bold text-white">{stat.value}</p>
-                      <p className="text-sm text-gray-300">{stat.label}</p>
-                    </div>
-                  );
-                })}
+                {stats.map((stat, index) => (
+                  <div key={index} className="p-4 rounded-xl bg-white/10">
+                    <stat.Icon className="w-8 h-8 mb-2" style={{ color: colors.secondary }} />
+                    <p className="text-2xl font-bold text-white">{stat.value}</p>
+                    <p className="text-sm text-gray-300">{stat.label}</p>
+                  </div>
+                ))}
               </div>
             </motion.div>
 
@@ -186,18 +257,7 @@ const BuilderSection = ({ property, layout = 'standard', theme = {}, bgVariant =
               className="bg-white/10 backdrop-blur-sm rounded-2xl p-6"
             >
               <h3 className="text-lg font-bold text-white mb-4">Why Choose Us</h3>
-              <div className="space-y-3">
-                {features.map((feature, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 bg-white/20">
-                      <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <span className="text-gray-200">{feature}</span>
-                  </div>
-                ))}
-              </div>
+              {renderWhyChooseUs(true)}
             </motion.div>
           </div>
         </div>
@@ -234,38 +294,26 @@ const BuilderSection = ({ property, layout = 'standard', theme = {}, bgVariant =
                   {builderName}
                 </h2>
                 <p className="text-gray-600 dark:text-gray-300 mt-2">
-                  {branding.tagline || `${builderName} is a renowned real estate developer known for delivering quality projects.`}
+                  {builderContent.aboutBuilder || branding.tagline || `${builderName} is a renowned real estate developer known for delivering quality projects.`}
                 </p>
               </div>
             </div>
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 gap-4 mb-6">
-              {stats.map((stat, index) => {
-                const Icon = stat.icon;
-                return (
-                  <div key={index} className={`${cardBgClass} ${cardBorderClass} rounded-xl p-4 shadow-sm`}>
-                    <Icon className="w-6 h-6 mb-1" style={{ color: colors.primary }} />
-                    <p className="text-xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{stat.label}</p>
-                  </div>
-                );
-              })}
+              {stats.map((stat, index) => (
+                <div key={index} className={`${cardBgClass} ${cardBorderClass} rounded-xl p-4 shadow-sm`}>
+                  <stat.Icon className="w-6 h-6 mb-1" style={{ color: colors.primary }} />
+                  <p className="text-xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{stat.label}</p>
+                </div>
+              ))}
             </div>
 
             {/* Why Choose Us */}
             <div className={`${cardBgClass} ${cardBorderClass} rounded-xl p-5 shadow-sm`}>
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">Why Choose Us</h3>
-              <div className="grid grid-cols-2 gap-2">
-                {features.map((feature, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <svg className="w-4 h-4 flex-shrink-0" style={{ color: colors.accent }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span className="text-sm text-gray-700 dark:text-gray-300">{feature}</span>
-                  </div>
-                ))}
-              </div>
+              {renderWhyChooseUs(false)}
             </div>
           </div>
         </div>

@@ -70,7 +70,7 @@ const siteContentSchema = new mongoose.Schema({
   // Contact Information
   contact: {
     phone: { type: String, default: '+91 98765 43210' },
-    email: { type: String, default: 'info@propertyhub.com' },
+    email: { type: String, default: 'info@propdeal.com' },
     address: { type: String, default: '123 Real Estate Tower, MG Road' },
     city: { type: String, default: 'Bangalore' },
     state: { type: String, default: 'Karnataka' },
@@ -89,7 +89,7 @@ const siteContentSchema = new mongoose.Schema({
 
   // SEO Settings
   seo: {
-    siteName: { type: String, default: 'PropertyHub' },
+    siteName: { type: String, default: 'PropDeal' },
     siteTagline: { type: String, default: 'Find Your Perfect Home' },
     metaDescription: { type: String },
     metaKeywords: [String],
@@ -110,7 +110,7 @@ const siteContentSchema = new mongoose.Schema({
   // Footer Settings
   footer: {
     description: { type: String, default: 'Discover your dream property with our platform. We help you find the perfect home with detailed insights and virtual tours.' },
-    copyrightText: { type: String, default: '© 2024 PropertyHub. All rights reserved.' },
+    copyrightText: { type: String, default: '© 2024 PropDeal. All rights reserved.' },
     showNewsletter: { type: Boolean, default: true },
   },
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Map, Layers, Maximize, Home, ZoomIn, X, ArrowRight, FileText } from 'lucide-react';
 import { getThemeStyles, getCardClasses, getCardBorderClasses, getSectionBgClasses } from '../../../utils/theme.js';
@@ -10,6 +10,8 @@ const PlansSection = ({ property, theme = {}, bgVariant = 'white' }) => {
   const [showLightbox, setShowLightbox] = useState(false);
   const { colors, isDark } = getThemeStyles(theme);
   const { openModal } = useLead();
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
 
   // Get section and card classes for proper contrast
   const sectionBgClass = getSectionBgClasses(bgVariant, isDark);
@@ -102,6 +104,33 @@ const PlansSection = ({ property, theme = {}, bgVariant = 'white' }) => {
       newIndex = (currentIndex - 1 + plans.length) % plans.length;
     }
     setSelectedPlan(plans[newIndex]);
+  };
+
+  // Touch handlers for swipe
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    const swipeThreshold = 50; // Minimum distance for swipe
+    const diff = touchStartX.current - touchEndX.current;
+
+    if (Math.abs(diff) > swipeThreshold) {
+      if (diff > 0) {
+        // Swiped left - go next
+        navigatePlan('next');
+      } else {
+        // Swiped right - go previous
+        navigatePlan('prev');
+      }
+    }
+    // Reset
+    touchStartX.current = 0;
+    touchEndX.current = 0;
   };
 
   return (
@@ -202,7 +231,12 @@ const PlansSection = ({ property, theme = {}, bgVariant = 'white' }) => {
 
       {/* Lightbox */}
       {showLightbox && selectedPlan && (
-        <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
+        <div
+          className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           {/* Close Button */}
           <button
             onClick={closeLightbox}
@@ -211,12 +245,12 @@ const PlansSection = ({ property, theme = {}, bgVariant = 'white' }) => {
             <X className="w-6 h-6 text-gray-700 dark:text-gray-200" />
           </button>
 
-          {/* Navigation Arrows */}
+          {/* Navigation Arrows - Hidden on mobile */}
           {plans.length > 1 && (
             <>
               <button
                 onClick={() => navigatePlan('prev')}
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity z-10"
+                className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white dark:bg-gray-800 rounded-full items-center justify-center hover:opacity-80 transition-opacity z-10"
               >
                 <svg className="w-6 h-6 text-gray-700 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -224,13 +258,26 @@ const PlansSection = ({ property, theme = {}, bgVariant = 'white' }) => {
               </button>
               <button
                 onClick={() => navigatePlan('next')}
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity z-10"
+                className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white dark:bg-gray-800 rounded-full items-center justify-center hover:opacity-80 transition-opacity z-10"
               >
                 <svg className="w-6 h-6 text-gray-700 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
             </>
+          )}
+
+          {/* Swipe indicator on mobile */}
+          {plans.length > 1 && (
+            <div className="absolute bottom-24 md:hidden left-1/2 -translate-x-1/2 text-white/60 text-xs flex items-center gap-1.5">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+              </svg>
+              <span>Swipe to navigate</span>
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </div>
           )}
 
           {/* Image */}
@@ -248,37 +295,18 @@ const PlansSection = ({ property, theme = {}, bgVariant = 'white' }) => {
           </AnimatePresence>
 
           {/* Image Info */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 dark:bg-gray-800/90 px-6 py-3 rounded-full shadow-lg">
-            <div className="flex items-center gap-2">
-              <selectedPlan.icon className="w-4 h-4" style={{ color: colors.primary }} />
-              <span className="font-semibold text-gray-900 dark:text-white">{selectedPlan.title}</span>
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 dark:bg-gray-800/90 px-4 sm:px-6 py-2 sm:py-3 rounded-full shadow-lg max-w-[90%] sm:max-w-none">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <selectedPlan.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color: colors.primary }} />
+              <span className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">{selectedPlan.title}</span>
               {selectedPlan.subtitle && (
                 <>
                   <span className="text-gray-400">•</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">{selectedPlan.subtitle}</span>
+                  <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{selectedPlan.subtitle}</span>
                 </>
               )}
             </div>
           </div>
-
-          {/* Thumbnails */}
-          {plans.length > 1 && (
-            <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex gap-2">
-              {plans.map((plan, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedPlan(plan)}
-                  className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
-                    selectedPlan.url === plan.url
-                      ? 'border-white scale-110'
-                      : 'border-transparent opacity-50 hover:opacity-80'
-                  }`}
-                >
-                  <img src={plan.url} alt={plan.title} className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
-          )}
         </div>
       )}
     </section>

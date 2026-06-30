@@ -8,7 +8,7 @@ dotenv.config();
 const createTelecallerUser = async () => {
   try {
     // Telecaller credentials
-    const telecallerEmail = 'telecaller@propertyhub.com';
+    const telecallerEmail = 'telecaller@propdeal.com';
     const telecallerPassword = 'tele123';
     const telecallerName = 'Test Telecaller';
     const telecallerPhone = '9876543210';

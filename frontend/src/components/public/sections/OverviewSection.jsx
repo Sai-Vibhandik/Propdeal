@@ -99,52 +99,17 @@ const OverviewSection = ({ property, layout = 'standard', theme = {}, bgVariant 
     </>
   );
 
-  const renderQuickFacts = (isWhiteText = false) => (
-    <div className={`rounded-2xl p-4 md:p-6 lg:p-8 ${isWhiteText ? 'bg-white/10 backdrop-blur-sm' : `${cardBgClass} ${cardBorderClass}`}`}>
-      <h3 className={`text-lg md:text-xl font-bold mb-4 md:mb-6 ${isWhiteText ? 'text-white' : 'text-gray-900 dark:text-white'}`}>Quick Facts</h3>
-      <div className="grid grid-cols-2 gap-3 md:gap-4">
-        {quickFacts.map((fact, index) => {
-          const Icon = fact.icon;
-          return (
-            <motion.div
-              key={fact.label}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              className={`rounded-xl p-3 md:p-4 shadow-sm ${isWhiteText ? 'bg-white/10' : `${cardBgClass} ${cardBorderClass}`}`}
-            >
-              <div className="flex items-center gap-2 mb-1.5 md:mb-2">
-                <Icon className="w-4 h-4 md:w-5 md:h-5" style={{ color: isWhiteText ? colors.secondary : colors.primary }} />
-                <p className={`text-xs md:text-sm font-medium ${isWhiteText ? 'text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>{fact.label}</p>
-              </div>
-              <p className={`font-semibold text-sm md:text-base break-words pl-6 md:pl-7 ${isWhiteText ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{fact.value}</p>
-            </motion.div>
-          );
-        })}
+  const renderQuickFacts = (isWhiteText = false) => {
+    // Combine all facts into one array
+    const allFacts = [...quickFacts, ...additionalFacts];
 
-        {/* Learn More CTA as 4th card */}
-        <motion.button
-          key="learn-more-cta"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: quickFacts.length * 0.1 }}
-          whileHover={{ scale: 1.02, y: -2 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => openModal(property, 'cta-overview')}
-          className={`col-span-2 md:col-span-1 rounded-xl p-2 md:p-4 shadow-sm flex flex-row md:flex-col items-center justify-center gap-1.5 md:gap-2 text-white font-medium md:font-semibold cursor-pointer hover:opacity-90 transition-opacity`}
-          style={{ backgroundColor: colors.primary, minHeight: '48px' }}
-        >
-          <span className="text-xs md:text-base">Learn More</span>
-          <ArrowRight className="w-3.5 h-3.5 md:w-4 md:h-4" />
-        </motion.button>
-      </div>
+    return (
+      <div className={`rounded-2xl p-4 md:p-6 lg:p-8 ${isWhiteText ? 'bg-white/10 backdrop-blur-sm' : `${cardBgClass} ${cardBorderClass}`}`}>
+        <h3 className={`text-lg md:text-xl font-bold mb-4 md:mb-6 ${isWhiteText ? 'text-white' : 'text-gray-900 dark:text-white'}`}>Quick Facts</h3>
 
-      {/* Additional Facts (Facing, Built-up Area) */}
-      {additionalFacts.length > 0 && (
-        <div className={`grid grid-cols-2 gap-3 md:gap-4 mt-3 md:mt-4`}>
-          {additionalFacts.map((fact, index) => {
+        {/* All facts in one grid */}
+        <div className="grid grid-cols-2 gap-3 md:gap-4">
+          {allFacts.map((fact, index) => {
             const Icon = fact.icon;
             return (
               <motion.div
@@ -152,7 +117,7 @@ const OverviewSection = ({ property, layout = 'standard', theme = {}, bgVariant 
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: (quickFacts.length + index) * 0.1 }}
+                transition={{ delay: index * 0.1 }}
                 className={`rounded-xl p-3 md:p-4 shadow-sm ${isWhiteText ? 'bg-white/10' : `${cardBgClass} ${cardBorderClass}`}`}
               >
                 <div className="flex items-center gap-2 mb-1.5 md:mb-2">
@@ -164,46 +129,63 @@ const OverviewSection = ({ property, layout = 'standard', theme = {}, bgVariant 
             );
           })}
         </div>
-      )}
 
-      <div className={`mt-4 md:mt-6 pt-4 md:pt-6 ${isWhiteText ? 'border-white/20' : 'border-gray-200 dark:border-gray-700'} border-t`}>
-        <div className={`flex justify-between mb-2 md:mb-3 ${isWhiteText ? 'text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
-          <span className="text-sm md:text-base">Total Land Area</span>
-          <span className={`font-semibold text-sm md:text-base ${isWhiteText ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{property.totalArea || '-'}</span>
+        {/* Learn More CTA Button - Full width below all facts */}
+        <motion.button
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: allFacts.length * 0.1 }}
+          whileHover={{ scale: 1.02, y: -2 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => openModal(property, 'cta-overview')}
+          className={`w-full mt-4 md:mt-6 rounded-xl py-3 px-4 shadow-sm flex items-center justify-center gap-2 text-white font-semibold cursor-pointer hover:opacity-90 transition-opacity`}
+          style={{ backgroundColor: colors.primary }}
+        >
+          <span>Learn More</span>
+          <ArrowRight className="w-4 h-4" />
+        </motion.button>
+
+        {/* Property Details Section */}
+        <div className={`mt-4 md:mt-6 pt-4 md:pt-6 ${isWhiteText ? 'border-white/20' : 'border-gray-200 dark:border-gray-700'} border-t`}>
+          <div className={`flex justify-between mb-2 md:mb-3 ${isWhiteText ? 'text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
+            <span className="text-sm md:text-base">Total Land Area</span>
+            <span className={`font-semibold text-sm md:text-base ${isWhiteText ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{property.totalArea || '-'}</span>
+          </div>
+          {property.totalUnits && (
+            <div className={`flex justify-between mb-2 md:mb-3 ${isWhiteText ? 'text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
+              <span className="text-sm md:text-base">Number of Units</span>
+              <span className={`font-semibold text-sm md:text-base ${isWhiteText ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{property.totalUnits}</span>
+            </div>
+          )}
+          {property.totalFloors && (
+            <div className={`flex justify-between mb-2 md:mb-3 ${isWhiteText ? 'text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
+              <span className="text-sm md:text-base">Number of Floors</span>
+              <span className={`font-semibold text-sm md:text-base ${isWhiteText ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{property.totalFloors}</span>
+            </div>
+          )}
+          {property.reraNumber && (
+            <div className={`flex justify-between mb-2 md:mb-3 ${isWhiteText ? 'text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
+              <span className="text-sm md:text-base">RERA Number</span>
+              <span className={`font-semibold text-xs md:text-sm ${isWhiteText ? 'text-white' : 'text-gray-900 dark:text-white'} break-all text-right`}>{property.reraNumber}</span>
+            </div>
+          )}
+
+          {/* Custom Fields */}
+          {customFields.length > 0 && (
+            <div className={`mt-4 pt-4 ${isWhiteText ? 'border-white/20' : 'border-gray-200 dark:border-gray-700'} border-t`}>
+              {customFields.map((field, index) => (
+                <div key={index} className={`flex justify-between mb-2 md:mb-3 ${isWhiteText ? 'text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
+                  <span className="text-sm md:text-base">{field.label}</span>
+                  <span className={`font-semibold text-sm md:text-base ${isWhiteText ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{field.value}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-        {property.totalUnits && (
-          <div className={`flex justify-between mb-2 md:mb-3 ${isWhiteText ? 'text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
-            <span className="text-sm md:text-base">Number of Units</span>
-            <span className={`font-semibold text-sm md:text-base ${isWhiteText ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{property.totalUnits}</span>
-          </div>
-        )}
-        {property.totalFloors && (
-          <div className={`flex justify-between mb-2 md:mb-3 ${isWhiteText ? 'text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
-            <span className="text-sm md:text-base">Number of Floors</span>
-            <span className={`font-semibold text-sm md:text-base ${isWhiteText ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{property.totalFloors}</span>
-          </div>
-        )}
-        {property.reraNumber && (
-          <div className={`flex justify-between mb-2 md:mb-3 ${isWhiteText ? 'text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
-            <span className="text-sm md:text-base">RERA Number</span>
-            <span className={`font-semibold text-xs md:text-sm ${isWhiteText ? 'text-white' : 'text-gray-900 dark:text-white'} break-all text-right`}>{property.reraNumber}</span>
-          </div>
-        )}
-
-        {/* Custom Fields */}
-        {customFields.length > 0 && (
-          <div className={`mt-4 pt-4 ${isWhiteText ? 'border-white/20' : 'border-gray-200 dark:border-gray-700'} border-t`}>
-            {customFields.map((field, index) => (
-              <div key={index} className={`flex justify-between mb-2 md:mb-3 ${isWhiteText ? 'text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
-                <span className="text-sm md:text-base">{field.label}</span>
-                <span className={`font-semibold text-sm md:text-base ${isWhiteText ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{field.value}</span>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
-    </div>
-  );
+    );
+  };
 
   if (!bgImage || bgLayout === 'none') {
     return (

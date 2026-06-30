@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Lock, Eye, EyeOff, CheckCircle } from 'lucide-react';
@@ -14,6 +14,15 @@ const ResetPasswordPage = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  // Prevent background scroll on this page
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
 
   // Password validation rules
   const validatePassword = (password) => {
@@ -135,7 +144,7 @@ const ResetPasswordPage = () => {
 
         {/* Reset Form */}
         <div className="bg-white rounded-2xl shadow-xl p-8">
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5" noValidate>
             {/* Password */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
@@ -245,7 +254,7 @@ const ResetPasswordPage = () => {
 
         {/* Footer */}
         <p className="text-center text-blue-200 text-sm mt-6">
-          © {new Date().getFullYear()} PropertyHub. All rights reserved.
+          © {new Date().getFullYear()} PropDeal. All rights reserved.
         </p>
       </motion.div>
     </div>

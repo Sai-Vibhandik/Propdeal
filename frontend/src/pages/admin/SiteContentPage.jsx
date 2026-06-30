@@ -237,6 +237,7 @@ const SiteContentPage = () => {
   // Remove builder from featured list
   const removeFeaturedBuilder = (index) => {
     setFeaturedBuilders(featuredBuilders.filter((_, i) => i !== index));
+    toast.success('Builder removed');
   };
 
   // Move builder up/down in order
@@ -340,6 +341,7 @@ const SiteContentPage = () => {
 
   const removeHeroSlide = (index) => {
     setHeroSlides(heroSlides.filter((_, i) => i !== index));
+    toast.success('Slide removed');
   };
 
   const moveHeroSlide = (index, direction) => {
@@ -367,6 +369,7 @@ const SiteContentPage = () => {
 
   const removeFeature = (index) => {
     setWhyUs({ ...whyUs, features: whyUs.features.filter((_, i) => i !== index) });
+    toast.success('Feature removed');
   };
 
   const addStat = () => {
@@ -385,6 +388,7 @@ const SiteContentPage = () => {
 
   const removeStat = (index) => {
     setWhyUs({ ...whyUs, stats: whyUs.stats.filter((_, i) => i !== index) });
+    toast.success('Stat removed');
   };
 
   // Cities Functions
@@ -404,6 +408,7 @@ const SiteContentPage = () => {
 
   const removeCity = (index) => {
     setCities(cities.filter((_, i) => i !== index));
+    toast.success('City removed');
   };
 
   // Testimonials Functions
@@ -423,6 +428,7 @@ const SiteContentPage = () => {
 
   const removeTestimonial = (index) => {
     setTestimonials(testimonials.filter((_, i) => i !== index));
+    toast.success('Testimonial removed');
   };
 
   // FAQs Functions
@@ -439,6 +445,7 @@ const SiteContentPage = () => {
 
   const removeFaq = (index) => {
     setFaqs(faqs.filter((_, i) => i !== index));
+    toast.success('FAQ removed');
   };
 
   const moveFaq = (index, direction) => {
@@ -817,6 +824,7 @@ const SiteContentPage = () => {
 
   const removeFooterLink = (index) => {
     setFooterLinks(footerLinks.filter((_, i) => i !== index));
+    toast.success('Link removed');
   };
 
   const saveFooterLinks = async () => {
@@ -868,6 +876,7 @@ const SiteContentPage = () => {
 
   const removeFooterSocialLink = (index) => {
     setFooterSocialLinks(footerSocialLinks.filter((_, i) => i !== index));
+    toast.success('Social link removed');
   };
 
   const saveFooterSocialLinks = async () => {
@@ -939,6 +948,7 @@ const SiteContentPage = () => {
 
   const removeKeyword = (index) => {
     setSeo({ ...seo, metaKeywords: seo.metaKeywords.filter((_, i) => i !== index) });
+    toast.success('Keyword removed');
   };
 
   if (loading) {
@@ -1477,8 +1487,16 @@ const SiteContentPage = () => {
                             <input
                               type="text"
                               value={stat.value}
+                              onKeyDown={(e) => {
+                                // Prevent typing letters
+                                if (/^[a-zA-Z]$/.test(e.key)) {
+                                  e.preventDefault();
+                                }
+                              }}
                               onChange={(e) => {
-                                updateStat(index, 'value', e.target.value);
+                                // Only allow numbers, decimals, and special characters (no letters)
+                                const filteredValue = e.target.value.replace(/[a-zA-Z]/g, '');
+                                updateStat(index, 'value', filteredValue);
                                 if (whyUsErrors.stats?.[index]?.value) {
                                   const newErrors = { ...whyUsErrors };
                                   if (newErrors.stats?.[index]) {
@@ -2267,7 +2285,7 @@ const SiteContentPage = () => {
                             setContactErrors({ ...contactErrors, email: '' });
                           }
                         }}
-                        placeholder="info@propertyhub.com"
+                        placeholder="info@propdeal.com"
                         maxLength={100}
                         className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${contactErrors.email ? 'border-red-500' : 'border-gray-300'}`}
                       />
@@ -2384,7 +2402,7 @@ const SiteContentPage = () => {
                             setSeoErrors({ ...seoErrors, siteName: '' });
                           }
                         }}
-                        placeholder="PropertyHub"
+                        placeholder="PropDeal"
                         maxLength={50}
                         className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${seoErrors.siteName ? 'border-red-500' : 'border-gray-300'}`}
                       />
@@ -2505,7 +2523,7 @@ const SiteContentPage = () => {
                                 />
                                 {branding.showSiteNameWithLogo !== false && (
                                   <span className="font-bold text-gray-900">
-                                    {branding.siteName || content?.seo?.siteName || 'PropertyHub'}
+                                    {branding.siteName || content?.seo?.siteName || 'PropDeal'}
                                   </span>
                                 )}
                               </div>
@@ -2521,7 +2539,7 @@ const SiteContentPage = () => {
                                 />
                                 {branding.showSiteNameWithLogo !== false && (
                                   <span className="font-bold text-white">
-                                    {branding.siteName || content?.seo?.siteName || 'PropertyHub'}
+                                    {branding.siteName || content?.seo?.siteName || 'PropDeal'}
                                   </span>
                                 )}
                               </div>
@@ -2537,7 +2555,7 @@ const SiteContentPage = () => {
                                 />
                                 {branding.showSiteNameWithLogo !== false && (
                                   <span className="font-bold text-gray-900">
-                                    {branding.siteName || content?.seo?.siteName || 'PropertyHub'}
+                                    {branding.siteName || content?.seo?.siteName || 'PropDeal'}
                                   </span>
                                 )}
                               </div>
@@ -2614,7 +2632,7 @@ const SiteContentPage = () => {
                               type="text"
                               value={branding.siteName || ''}
                               onChange={(e) => setBranding({ ...branding, siteName: e.target.value })}
-                              placeholder={content?.seo?.siteName || 'PropertyHub'}
+                              placeholder={content?.seo?.siteName || 'PropDeal'}
                               maxLength={50}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
@@ -2766,7 +2784,7 @@ const SiteContentPage = () => {
                               setFooterErrors({ ...footerErrors, copyrightText: '' });
                             }
                           }}
-                          placeholder="© 2024 PropertyHub. All rights reserved."
+                          placeholder="© 2024 PropDeal. All rights reserved."
                           maxLength={100}
                           className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${footerErrors.copyrightText ? 'border-red-500' : 'border-gray-300'}`}
                         />

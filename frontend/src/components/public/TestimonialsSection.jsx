@@ -35,21 +35,21 @@ const defaultTestimonials = [
     location: 'Bangalore',
     rating: 5,
     property: 'Prestige Lakeside Habitat',
-    text: 'Found my dream home through PropertyHub. The team was incredibly helpful and guided me through every step. The property details were accurate and the photos matched exactly what I saw during the visit.',
+    text: 'Found my dream home through PropDeal. The team was incredibly helpful and guided me through every step. The property details were accurate and the photos matched exactly what I saw during the visit.',
   },
   {
     name: 'Priya Patel',
     location: 'Mumbai',
     rating: 5,
     property: 'Lodha World Towers',
-    text: 'I was skeptical about online property search, but PropertyHub made it so easy. The RERA verification gave me confidence, and the pricing was transparent with no hidden charges. Highly recommend!',
+    text: 'I was skeptical about online property search, but PropDeal made it so easy. The RERA verification gave me confidence, and the pricing was transparent with no hidden charges. Highly recommend!',
   },
   {
     name: 'Amit Kumar',
     location: 'Gurgaon',
     rating: 5,
     property: 'DLF The Camellias',
-    text: 'The team helped me find the perfect 4BHK for my family. They understood my requirements and showed me only relevant properties. Saved me weeks of searching. Thank you PropertyHub!',
+    text: 'The team helped me find the perfect 4BHK for my family. They understood my requirements and showed me only relevant properties. Saved me weeks of searching. Thank you PropDeal!',
   },
 ];
 

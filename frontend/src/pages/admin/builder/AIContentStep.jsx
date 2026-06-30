@@ -56,6 +56,15 @@ const sanitizeContent = (section, content) => {
     }
   }
 
+  if (section === 'builder') {
+    if (sanitized.keyFacts && !isValidArray(sanitized.keyFacts)) {
+      sanitized.keyFacts = [];
+    }
+    if (sanitized.stats && !isValidArray(sanitized.stats)) {
+      sanitized.stats = [];
+    }
+  }
+
   if (section === 'seo') {
     if (sanitized.keywords && !isValidArray(sanitized.keywords)) {
       sanitized.keywords = [];
@@ -212,6 +221,23 @@ const AIContentStep = ({ propertyData, updatePropertyData }) => {
         rentalPotential: 'Expected rental yield of 3-4% per annum',
         futureGrowth: 'Property values expected to appreciate significantly in the coming years.',
       },
+      builder: {
+        aboutBuilder: `A renowned developer known for quality construction and timely delivery with decades of experience.`,
+        stats: [
+          { icon: 'award', value: '30+', label: 'Years of Experience' },
+          { icon: 'building', value: '250+', label: 'Projects Delivered' },
+          { icon: 'mapPin', value: '15+', label: 'Cities Presence' },
+          { icon: 'users', value: '50,000+', label: 'Happy Customers' },
+        ],
+        keyFacts: [
+          { icon: 'shield', text: 'RERA registered and compliant projects' },
+          { icon: 'clock', text: 'On-time delivery with quality construction' },
+          { icon: 'check', text: 'Transparent pricing with no hidden charges' },
+          { icon: 'award', text: 'Excellent after-sales service' },
+          { icon: 'mapPin', text: 'Prime location selection for all projects' },
+          { icon: 'home', text: 'Modern amenities and premium specifications' },
+        ],
+      },
       faq: [
         {
           question: `What is the possession status of ${propertyData.name}?`,
@@ -245,7 +271,7 @@ const AIContentStep = ({ propertyData, updatePropertyData }) => {
   };
 
   const generateAllContent = async () => {
-    const sections = ['hero', 'overview', 'highlights', 'location', 'investment', 'faq', 'seo'];
+    const sections = ['hero', 'overview', 'highlights', 'location', 'investment', 'builder', 'faq', 'seo'];
 
     // Add 'all' to generating set
     setGenerating(prev => new Set(prev).add('all'));
@@ -295,6 +321,7 @@ const AIContentStep = ({ propertyData, updatePropertyData }) => {
     { key: 'highlights', name: 'Highlights', description: 'Key selling points' },
     { key: 'location', name: 'Location', description: 'Nearby places' },
     { key: 'investment', name: 'Investment', description: 'Investment benefits' },
+    { key: 'builder', name: 'Builder', description: 'About developer and key facts' },
     { key: 'faq', name: 'FAQ', description: 'Frequently asked questions' },
     { key: 'seo', name: 'SEO', description: 'Meta tags and keywords' },
   ];
@@ -506,6 +533,14 @@ const AIContentStep = ({ propertyData, updatePropertyData }) => {
                   </div>
                 )}
 
+                {section.key === 'builder' && (
+                  <div className="space-y-2">
+                    <p className="text-sm"><strong>About:</strong> {propertyData.generatedContent?.builder?.aboutBuilder?.substring(0, 80)}...</p>
+                    <p className="text-sm"><strong>Stats:</strong> {propertyData.generatedContent?.builder?.stats?.length || 0} stats</p>
+                    <p className="text-sm"><strong>Key Facts:</strong> {propertyData.generatedContent?.builder?.keyFacts?.length || 0} facts</p>
+                  </div>
+                )}
+
                 {section.key === 'faq' && (
                   <div className="space-y-2">
                     <p className="text-sm"><strong>Questions:</strong> {propertyData.generatedContent?.faq?.length || 0} FAQs</p>
@@ -599,6 +634,12 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
         newBenefits[index] = value;
         return { ...prev, benefits: newBenefits };
       }
+      // For builder section, keyFacts is inside the object
+      if (section === 'builder') {
+        const newKeyFacts = [...(prev.keyFacts || [])];
+        newKeyFacts[index] = value;
+        return { ...prev, keyFacts: newKeyFacts };
+      }
       // For location section, nearbyPlaces is inside the object
       if (section === 'location') {
         const newNearbyPlaces = [...(prev.nearbyPlaces || [])];
@@ -634,6 +675,10 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
       if (section === 'investment' && fieldName === 'benefits') {
         return { ...prev, benefits: [...(prev.benefits || []), template] };
       }
+      // For builder section, add to keyFacts array
+      if (section === 'builder' && fieldName === 'keyFacts') {
+        return { ...prev, keyFacts: [...(prev.keyFacts || []), template] };
+      }
       // For location section, add to nearbyPlaces array
       if (section === 'location' && fieldName === 'nearbyPlaces') {
         return { ...prev, nearbyPlaces: [...(prev.nearbyPlaces || []), template] };
@@ -652,6 +697,10 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
       // For investment section, remove from benefits array
       if (section === 'investment' && fieldName === 'benefits') {
         return { ...prev, benefits: (prev.benefits || []).filter((_, i) => i !== index) };
+      }
+      // For builder section, remove from keyFacts array
+      if (section === 'builder' && fieldName === 'keyFacts') {
+        return { ...prev, keyFacts: (prev.keyFacts || []).filter((_, i) => i !== index) };
       }
       // For location section, remove from nearbyPlaces array
       if (section === 'location' && fieldName === 'nearbyPlaces') {
@@ -701,6 +750,14 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
           newErrors[`${index}_answer`] = 'Answer is required';
         }
       });
+    }
+
+    if (section === 'builder') {
+      if (!formData.aboutBuilder?.trim()) {
+        newErrors.aboutBuilder = 'About builder is required';
+      } else if (formData.aboutBuilder.length < 10) {
+        newErrors.aboutBuilder = 'Minimum 10 characters required';
+      }
     }
 
     if (section === 'seo') {
@@ -913,10 +970,11 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
             <div>
               <label className="block text-xs text-gray-500 mb-1">Icon</label>
               <select
-                value={highlight.icon || 'home'}
+                value={highlight.icon || ''}
                 onChange={(e) => handleArrayItemChange(index, 'icon', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
+                <option value="">Select an icon</option>
                 <option value="home">Home</option>
                 <option value="pool">Pool</option>
                 <option value="tree">Tree</option>
@@ -963,7 +1021,7 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
         </div>
       ))}
       <button
-        onClick={() => addArrayItem({ icon: 'star', title: '', description: '' })}
+        onClick={() => addArrayItem({ icon: '', title: '', description: '' })}
         className="flex items-center gap-2 text-blue-600 hover:text-blue-700"
       >
         <Plus className="w-4 h-4" />
@@ -1103,6 +1161,167 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
     </div>
   );
 
+  const renderBuilderEditor = () => {
+    const iconOptions = [
+      { value: 'building', label: 'Building', icon: '🏢' },
+      { value: 'award', label: 'Award', icon: '🏆' },
+      { value: 'mapPin', label: 'Map Pin', icon: '📍' },
+      { value: 'users', label: 'Users', icon: '👥' },
+      { value: 'briefcase', label: 'Briefcase', icon: '💼' },
+      { value: 'home', label: 'Home', icon: '🏠' },
+      { value: 'globe', label: 'Globe', icon: '🌐' },
+      { value: 'star', label: 'Star', icon: '⭐' },
+    ];
+
+    return (
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            About Builder<sup className="text-red-500">*</sup>
+          </label>
+          <textarea
+            value={formData.aboutBuilder || ''}
+            onChange={(e) => handleChange('aboutBuilder', e.target.value)}
+            placeholder="Brief description of the builder (1-2 lines, max 150 characters)"
+            rows={2}
+            maxLength={150}
+            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none ${errors.aboutBuilder ? 'border-red-500' : 'border-gray-200'}`}
+          />
+          {errors.aboutBuilder && <p className="text-sm text-red-500 mt-1">{errors.aboutBuilder}</p>}
+          <p className="text-xs text-gray-400 mt-1">{(formData.aboutBuilder || '').length}/150 characters (1-2 lines recommended)</p>
+        </div>
+
+        {/* Stats Section */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Builder Stats</label>
+          <p className="text-xs text-gray-500 mb-3">Add statistics like projects delivered, years of experience, etc.</p>
+          <div className="space-y-2">
+            {(formData.stats || []).map((stat, index) => (
+              <div key={index} className="flex gap-2 items-center p-2 bg-gray-50 rounded-lg">
+                <select
+                  value={stat.icon || 'building'}
+                  onChange={(e) => {
+                    const newStats = [...(formData.stats || [])];
+                    newStats[index] = { ...newStats[index], icon: e.target.value };
+                    handleChange('stats', newStats);
+                  }}
+                  className="px-2 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                >
+                  {iconOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.icon} {opt.label}</option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  value={stat.value || ''}
+                  onChange={(e) => {
+                    const newStats = [...(formData.stats || [])];
+                    newStats[index] = { ...newStats[index], value: e.target.value };
+                    handleChange('stats', newStats);
+                  }}
+                  placeholder="e.g., 250+"
+                  maxLength={20}
+                  className="w-20 px-2 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                />
+                <input
+                  type="text"
+                  value={stat.label || ''}
+                  onChange={(e) => {
+                    const newStats = [...(formData.stats || [])];
+                    newStats[index] = { ...newStats[index], label: e.target.value };
+                    handleChange('stats', newStats);
+                  }}
+                  placeholder="e.g., Projects Delivered"
+                  maxLength={50}
+                  className="flex-1 px-2 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                />
+                <button
+                  onClick={() => {
+                    const newStats = (formData.stats || []).filter((_, i) => i !== index);
+                    handleChange('stats', newStats);
+                  }}
+                  className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+            {(formData.stats || []).length < 6 && (
+              <button
+                onClick={() => {
+                  const newStats = [...(formData.stats || []), { icon: 'building', value: '', label: '' }];
+                  handleChange('stats', newStats);
+                }}
+                className="flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm"
+              >
+                <Plus className="w-4 h-4" />
+                Add Stat
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Key Facts Section */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Why Choose Us (Key Facts)</label>
+          <p className="text-xs text-gray-500 mb-3">Add 4-6 key facts about the builder that will appear in the "Why Choose Us" section</p>
+          <div className="space-y-2">
+            {(formData.keyFacts || []).map((fact, index) => (
+              <div key={index} className="flex gap-2 items-center p-2 bg-gray-50 rounded-lg">
+                <select
+                  value={fact.icon || 'check'}
+                  onChange={(e) => {
+                    const newKeyFacts = [...(formData.keyFacts || [])];
+                    newKeyFacts[index] = { ...newKeyFacts[index], icon: e.target.value };
+                    handleChange('keyFacts', newKeyFacts);
+                  }}
+                  className="px-2 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                >
+                  {iconOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.icon} {opt.label}</option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  value={fact.text || ''}
+                  onChange={(e) => {
+                    const newKeyFacts = [...(formData.keyFacts || [])];
+                    newKeyFacts[index] = { ...newKeyFacts[index], text: e.target.value };
+                    handleChange('keyFacts', newKeyFacts);
+                  }}
+                  placeholder={`Fact ${index + 1}`}
+                  maxLength={200}
+                  className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                />
+                <button
+                  onClick={() => {
+                    const newKeyFacts = (formData.keyFacts || []).filter((_, i) => i !== index);
+                    handleChange('keyFacts', newKeyFacts);
+                  }}
+                  className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+            {(formData.keyFacts || []).length < 6 && (
+              <button
+                onClick={() => {
+                  const newKeyFacts = [...(formData.keyFacts || []), { icon: 'check', text: '' }];
+                  handleChange('keyFacts', newKeyFacts);
+                }}
+                className="flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm"
+              >
+                <Plus className="w-4 h-4" />
+                Add Key Fact
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderSEOEditor = () => (
     <div className="space-y-4">
       <div>
@@ -1195,6 +1414,8 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
         return renderLocationEditor();
       case 'investment':
         return renderInvestmentEditor();
+      case 'builder':
+        return renderBuilderEditor();
       case 'faq':
         return renderFAQEditor();
       case 'seo':
@@ -1210,6 +1431,7 @@ const EditContentModal = ({ section, content, onClose, onSave }) => {
     highlights: 'Highlights',
     location: 'Location',
     investment: 'Investment',
+    builder: 'Builder',
     faq: 'FAQ',
     seo: 'SEO'
   };

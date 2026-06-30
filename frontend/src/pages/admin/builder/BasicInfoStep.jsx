@@ -431,6 +431,8 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
               type="date"
               value={propertyData.possessionDate ? (typeof propertyData.possessionDate === 'string' && propertyData.possessionDate.includes('-') ? propertyData.possessionDate.split('T')[0] : new Date(propertyData.possessionDate).toISOString().split('T')[0]) : ''}
               onChange={(e) => handleChange('possessionDate', e.target.value)}
+              min="2000-01-01"
+              max="2099-12-31"
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <p className="text-xs text-gray-500 mt-1">Expected completion/possession date</p>

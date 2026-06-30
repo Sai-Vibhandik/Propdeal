@@ -303,39 +303,42 @@ const EnquiriesPage = () => {
 
         {/* Filters */}
         <div className="bg-white rounded-xl p-4 border border-gray-200">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search by name, email, phone..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                maxLength={100}
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+          <div className="flex flex-col gap-4">
+            {/* Search and Status Row */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search by name, email, phone..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  maxLength={100}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              >
+                <option value="">All Status</option>
+                <option value="new">New</option>
+                <option value="in-progress">In Progress</option>
+                <option value="converted">Converted</option>
+                <option value="lost">Lost</option>
+              </select>
             </div>
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-            >
-              <option value="">All Status</option>
-              <option value="new">New</option>
-              <option value="in-progress">In Progress</option>
-              <option value="converted">Converted</option>
-              <option value="lost">Lost</option>
-            </select>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
-              <div className="flex items-center gap-2">
-                <label className="text-sm text-gray-500 whitespace-nowrap">
+            {/* Date Range Row */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex items-center gap-2 flex-1">
+                <label className="text-sm text-gray-600 font-medium whitespace-nowrap">
                   From:
                 </label>
-
                 <input
                   type="date"
                   value={dateRange.start}
@@ -346,15 +349,14 @@ const EnquiriesPage = () => {
                     });
                     setCurrentPage(1);
                   }}
-                  className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
-              <div className="flex items-center gap-2">
-                <label className="text-sm text-gray-500 whitespace-nowrap">
+              <div className="flex items-center gap-2 flex-1">
+                <label className="text-sm text-gray-600 font-medium whitespace-nowrap">
                   To:
                 </label>
-
                 <input
                   type="date"
                   value={dateRange.end}
@@ -366,7 +368,7 @@ const EnquiriesPage = () => {
                     });
                     setCurrentPage(1);
                   }}
-                  className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
@@ -384,7 +386,7 @@ const EnquiriesPage = () => {
                     });
                     setCurrentPage(1);
                   }}
-                  className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg"
+                  className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg whitespace-nowrap"
                 >
                   Clear Filters
                 </button>

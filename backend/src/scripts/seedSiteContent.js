@@ -141,7 +141,7 @@ const defaultContent = {
       location: 'Bangalore',
       rating: 5,
       property: 'Prestige Lakeside Habitat',
-      text: 'Found my dream home through PropertyHub. The team was incredibly helpful and guided me through every step. The property details were accurate and the photos matched exactly what I saw during the visit.',
+      text: 'Found my dream home through PropDeal. The team was incredibly helpful and guided me through every step. The property details were accurate and the photos matched exactly what I saw during the visit.',
       order: 0,
       isActive: true,
     },
@@ -150,7 +150,7 @@ const defaultContent = {
       location: 'Mumbai',
       rating: 5,
       property: 'Lodha World Towers',
-      text: 'I was skeptical about online property search, but PropertyHub made it so easy. The RERA verification gave me confidence, and the pricing was transparent with no hidden charges. Highly recommend!',
+      text: 'I was skeptical about online property search, but PropDeal made it so easy. The RERA verification gave me confidence, and the pricing was transparent with no hidden charges. Highly recommend!',
       order: 1,
       isActive: true,
     },
@@ -159,7 +159,7 @@ const defaultContent = {
       location: 'Gurgaon',
       rating: 5,
       property: 'DLF The Camellias',
-      text: 'The team helped me find the perfect 4BHK for my family. They understood my requirements and showed me only relevant properties. Saved me weeks of searching. Thank you PropertyHub!',
+      text: 'The team helped me find the perfect 4BHK for my family. They understood my requirements and showed me only relevant properties. Saved me weeks of searching. Thank you PropDeal!',
       order: 2,
       isActive: true,
     },
@@ -193,7 +193,7 @@ const defaultContent = {
     },
     {
       question: 'Are all properties RERA registered?',
-      answer: 'Yes, all properties listed on PropertyHub are RERA registered. We verify the RERA registration number for every property before listing. You can view the RERA details on each property page, including the registration number and project status.',
+      answer: 'Yes, all properties listed on PropDeal are RERA registered. We verify the RERA registration number for every property before listing. You can view the RERA details on each property page, including the registration number and project status.',
       order: 1,
       isActive: true,
     },
@@ -205,7 +205,7 @@ const defaultContent = {
     },
     {
       question: 'Are the property prices negotiable?',
-      answer: 'Property prices on PropertyHub are direct builder prices. While some flexibility exists depending on the builder and market conditions, we ensure you get the best possible price without any hidden charges. We negotiate on your behalf to get you the best deal.',
+      answer: 'Property prices on PropDeal are direct builder prices. While some flexibility exists depending on the builder and market conditions, we ensure you get the best possible price without any hidden charges. We negotiate on your behalf to get you the best deal.',
       order: 3,
       isActive: true,
     },
@@ -238,7 +238,7 @@ const defaultContent = {
   // Contact Information
   contact: {
     phone: '+91 98765 43210',
-    email: 'info@propertyhub.com',
+    email: 'info@propdeal.com',
     address: '123 Real Estate Tower, MG Road',
     city: 'Bangalore',
     state: 'Karnataka',
@@ -248,16 +248,16 @@ const defaultContent = {
 
   // Social Links
   social: {
-    facebook: 'https://facebook.com/propertyhub',
-    twitter: 'https://twitter.com/propertyhub',
-    instagram: 'https://instagram.com/propertyhub',
-    linkedin: 'https://linkedin.com/company/propertyhub',
-    youtube: 'https://youtube.com/propertyhub',
+    facebook: 'https://facebook.com/propdeal',
+    twitter: 'https://twitter.com/propdeal',
+    instagram: 'https://instagram.com/propdeal',
+    linkedin: 'https://linkedin.com/company/propdeal',
+    youtube: 'https://youtube.com/propdeal',
   },
 
   // SEO Settings
   seo: {
-    siteName: 'PropertyHub',
+    siteName: 'PropDeal',
     siteTagline: 'Find Your Perfect Home',
     metaDescription: 'Find your dream property with verified listings, real photos, and transparent pricing. Explore premium apartments, villas, and plots in top cities.',
     metaKeywords: ['property', 'real estate', 'apartments', 'villas', 'flats', 'buy property', 'property search', 'property hub'],
@@ -267,7 +267,7 @@ const defaultContent = {
   // Footer Settings
   footer: {
     description: 'Discover your dream property with our platform. We help you find the perfect home with detailed insights and virtual tours.',
-    copyrightText: '© 2024 PropertyHub. All rights reserved.',
+    copyrightText: '© 2024 PropDeal. All rights reserved.',
     showNewsletter: true,
   },
 

@@ -91,7 +91,7 @@ export const SiteContentProvider = ({ children }) => {
         location: 'Bangalore',
         rating: 5,
         property: 'Prestige Lakeside Habitat',
-        text: 'Found my dream home through PropertyHub. The team was incredibly helpful and guided me through every step.',
+        text: 'Found my dream home through PropDeal. The team was incredibly helpful and guided me through every step.',
         isActive: true,
       },
     ],
@@ -104,7 +104,7 @@ export const SiteContentProvider = ({ children }) => {
     ],
     contact: {
       phone: '+91 98765 43210',
-      email: 'info@propertyhub.com',
+      email: 'info@propdeal.com',
       address: '123 Real Estate Tower, MG Road',
       city: 'Bangalore',
       state: 'Karnataka',
@@ -113,7 +113,7 @@ export const SiteContentProvider = ({ children }) => {
     },
     social: {},
     seo: {
-      siteName: 'PropertyHub',
+      siteName: 'PropDeal',
       siteTagline: 'Find Your Perfect Home',
     },
     branding: {
@@ -127,7 +127,7 @@ export const SiteContentProvider = ({ children }) => {
     },
     footer: {
       description: 'Discover your dream property with our platform. We help you find the perfect home with detailed insights.',
-      copyrightText: '© 2024 PropertyHub. All rights reserved.',
+      copyrightText: '© 2024 PropDeal. All rights reserved.',
     },
     footerLinks: [
       { label: 'Home', url: '/', order: 0, isActive: true },

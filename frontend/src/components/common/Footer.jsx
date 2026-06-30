@@ -22,7 +22,7 @@ const Footer = () => {
 
   // Get data from site content
   const branding = content?.branding || {};
-  const siteName = content?.seo?.siteName || 'PropertyHub';
+  const siteName = content?.seo?.siteName || 'PropDeal';
   const logoUrl = branding.logo ? getFileUrl(branding.logo) : null;
   const contact = content?.contact || {};
   const footerSettings = content?.footer || {};

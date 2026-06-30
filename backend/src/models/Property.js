@@ -350,6 +350,18 @@ const propertySchema = new mongoose.Schema({
       rentalPotential: String,
       futureGrowth: String,
     },
+    builder: {
+      aboutBuilder: String,
+      stats: [{
+        icon: String,
+        value: String,
+        label: String,
+      }],
+      keyFacts: [{
+        icon: String,
+        text: String,
+      }],
+    },
     faq: [{
       question: String,
       answer: String,

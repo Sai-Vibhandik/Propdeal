@@ -164,7 +164,7 @@ const LoginPage = () => {
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}
                     placeholder="Enter your Email ID"
-                    maxLength={254}
+                    maxLength={60}
                     className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                   />
                 </div>
@@ -191,7 +191,7 @@ const LoginPage = () => {
             </div>
           ) : (
             /* Login Form */
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-5" noValidate>
               {/* Email */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
@@ -206,7 +206,7 @@ const LoginPage = () => {
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="Enter your Email ID"
-                    maxLength={254}
+                    maxLength={60}
                     className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
                       errors.email ? 'border-red-500' : 'border-gray-200'
                     }`}
@@ -298,7 +298,7 @@ const LoginPage = () => {
 
         {/* Footer */}
         <p className="text-center text-blue-200 text-sm mt-6">
-          © {new Date().getFullYear()} PropertyHub. All rights reserved.
+          © {new Date().getFullYear()} PropDeal. All rights reserved.
         </p>
       </motion.div>
     </div>

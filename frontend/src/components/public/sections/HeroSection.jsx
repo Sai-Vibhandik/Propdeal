@@ -40,7 +40,7 @@ const HeroSection = ({ property, layout = 'full-screen', theme = {}, branding = 
   const showReraBadge = reraNumber && brandingData.showReraBadge !== false;
 
   return (
-    <section className="relative pt-16 md:pt-20">
+    <section className="relative">
       <div className="flex flex-col lg:flex-row">
 
         {/* Left Side - Image Carousel (70%) */}
@@ -221,9 +221,11 @@ const HeroSection = ({ property, layout = 'full-screen', theme = {}, branding = 
                     </div>
                   ))}
                 </div>
-                <p className={`text-xs mt-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                  Valid till {content.offerValidity || 'Limited Time Only'}
-                </p>
+                {content.offerValidity && (
+                  <p className={`text-xs mt-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                    Valid till {content.offerValidity}
+                  </p>
+                )}
               </motion.div>
 
               {/* Divider */}

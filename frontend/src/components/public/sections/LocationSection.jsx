@@ -69,6 +69,7 @@ const LocationSection = ({ property, layout = 'map-list', theme = {}, bgVariant 
 
   let embedUrl = null;
   let mapSearchUrl = null;
+  let directionsUrl = null;
 
   if (googleMapUrl) {
     embedUrl = extractEmbedUrl(googleMapUrl);
@@ -76,13 +77,19 @@ const LocationSection = ({ property, layout = 'map-list', theme = {}, bgVariant 
     const extractedMapUrl = getMapSearchUrl(embedUrl);
     if (extractedMapUrl) {
       mapSearchUrl = extractedMapUrl;
+      directionsUrl = extractedMapUrl;
     } else {
       // Fallback to address search
       mapSearchUrl = `https://www.google.com/maps/search/${encodeURIComponent(fullAddress)}`;
+      directionsUrl = `https://www.google.com/maps/search/${encodeURIComponent(fullAddress)}`;
     }
   } else if (hasCoordinates) {
     embedUrl = `https://maps.google.com/maps?q=${property.coordinates.lat},${property.coordinates.lng}&z=15&output=embed`;
     mapSearchUrl = `https://www.google.com/maps/search/?api=1&query=${property.coordinates.lat},${property.coordinates.lng}`;
+    directionsUrl = `https://www.google.com/maps/search/?api=1&query=${property.coordinates.lat},${property.coordinates.lng}`;
+  } else {
+    // Fallback to address search
+    directionsUrl = `https://www.google.com/maps/search/${encodeURIComponent(fullAddress)}`;
   }
 
   return (
@@ -92,7 +99,10 @@ const LocationSection = ({ property, layout = 'map-list', theme = {}, bgVariant 
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-10">
           <span className="font-semibold text-sm uppercase tracking-wider" style={{ color: colors.secondary }}>Location</span>
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mt-2">Prime Location with Excellent Connectivity</h2>
-          <p className="text-gray-600 dark:text-gray-300 mt-3 max-w-2xl mx-auto">{fullAddress}</p>
+          <p className="text-gray-600 dark:text-gray-300 mt-3 max-w-2xl mx-auto">
+            {[property.address?.locality, property.address?.city, property.address?.state].filter(Boolean).join(', ')}
+            {property.address?.pincode && ` - ${property.address.pincode}`}
+          </p>
         </motion.div>
 
         {/* Map - Full Width */}
@@ -115,11 +125,14 @@ const LocationSection = ({ property, layout = 'map-list', theme = {}, bgVariant 
                     <Navigation className="w-10 h-10" style={{ color: colors.primary }} />
                   </div>
                   <p className="font-medium text-lg text-gray-900 dark:text-white">{property.address?.locality}</p>
-                  <p className="text-gray-600 dark:text-gray-300">{property.address?.city}, {property.address?.state}</p>
+                  <p className="text-gray-600 dark:text-gray-300">{property.address?.city}, {property.address?.state}{property.address?.pincode && ` - ${property.address.pincode}`}</p>
+                  {property.address?.landmark && (
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Near: {property.address.landmark}</p>
+                  )}
                   <motion.a
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`}
+                    href={directionsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 mt-4 text-white px-4 py-2 rounded-lg font-medium hover:opacity-90 cursor-pointer"
@@ -177,18 +190,34 @@ const LocationSection = ({ property, layout = 'map-list', theme = {}, bgVariant 
           className="mt-8 p-6 rounded-2xl"
           style={{ backgroundColor: `${colors.primary}08` }}
         >
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-1">Complete Address</h4>
-              <p className="text-gray-600 dark:text-gray-300">{fullAddress}{property.address?.pincode ? ` - ${property.address.pincode}` : ''}</p>
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+            <div className="flex-1">
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                <MapPin className="w-5 h-5" style={{ color: colors.primary }} />
+                Complete Address
+              </h4>
+              <div className="space-y-2">
+                {property.address?.fullAddress && (
+                  <p className="text-gray-700 dark:text-gray-200">{property.address.fullAddress}</p>
+                )}
+                <p className="text-gray-600 dark:text-gray-300">
+                  {[property.address?.locality, property.address?.city, property.address?.state].filter(Boolean).join(', ')}
+                  {property.address?.pincode && ` - ${property.address.pincode}`}
+                </p>
+                {property.address?.landmark && (
+                  <p className="text-gray-500 dark:text-gray-400 text-sm flex items-center gap-1">
+                    <span className="font-medium">Near:</span> {property.address.landmark}
+                  </p>
+                )}
+              </div>
             </div>
             <motion.a
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`}
+              href={directionsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium text-white hover:opacity-90 transition-opacity cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium text-white hover:opacity-90 transition-opacity cursor-pointer whitespace-nowrap"
               style={{ backgroundColor: colors.primary }}
             >
               <Navigation className="w-4 h-4" /> Get Directions

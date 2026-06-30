@@ -8,7 +8,7 @@ dotenv.config();
 const createAdminUser = async () => {
   try {
     // Get credentials from environment or use defaults
-    const adminEmail = process.env.ADMIN_EMAIL || 'admin@propertyhub.com';
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@propdeal.com';
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
     const adminName = 'Admin';
 

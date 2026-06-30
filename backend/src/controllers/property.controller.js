@@ -1,4 +1,4 @@
-import { Property, PropertyMedia, GeneratedContent } from '../models/index.js';
+import { Property, PropertyMedia, GeneratedContent, Lead } from '../models/index.js';
 import { generateUniqueSlug } from '../utils/slugGenerator.js';
 
 // @desc    Get all published properties (public)
@@ -320,9 +320,29 @@ export const getAdminProperties = async (req, res) => {
 
     const total = await Property.countDocuments(query);
 
+    // Get lead counts for each property
+    const propertyIds = properties.map(p => p._id);
+    const leadCounts = await Lead.aggregate([
+      { $match: { propertyId: { $in: propertyIds } } },
+      { $group: { _id: '$propertyId', count: { $sum: 1 } } }
+    ]);
+
+    // Create a map of propertyId -> leadCount
+    const leadCountMap = {};
+    leadCounts.forEach(lc => {
+      leadCountMap[lc._id.toString()] = lc.count;
+    });
+
+    // Add leadCount to each property
+    const propertiesWithLeads = properties.map(property => {
+      const p = property.toObject();
+      p.leadCount = leadCountMap[property._id.toString()] || 0;
+      return p;
+    });
+
     res.json({
       success: true,
-      data: properties,
+      data: propertiesWithLeads,
       pagination: {
         page: Number(page),
         limit: Number(limit),
@@ -461,6 +481,9 @@ export const createProperty = async (req, res) => {
       if (gc.investment?.benefits && !Array.isArray(gc.investment.benefits)) {
         gc.investment.benefits = [];
       }
+      if (gc.builder?.keyFacts && !Array.isArray(gc.builder.keyFacts)) {
+        gc.builder.keyFacts = [];
+      }
       if (gc.seo?.keywords && !Array.isArray(gc.seo.keywords)) {
         gc.seo.keywords = [];
       }
@@ -557,6 +580,9 @@ export const updateProperty = async (req, res) => {
       }
       if (gc.investment && !Array.isArray(gc.investment.benefits)) {
         gc.investment.benefits = [];
+      }
+      if (gc.builder && !Array.isArray(gc.builder.keyFacts)) {
+        gc.builder.keyFacts = [];
       }
       if (gc.seo && !Array.isArray(gc.seo.keywords)) {
         gc.seo.keywords = [];

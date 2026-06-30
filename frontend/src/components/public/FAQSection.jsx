@@ -10,7 +10,7 @@ const defaultFAQs = [
   },
   {
     question: 'Are all properties RERA registered?',
-    answer: 'Yes, all properties listed on PropertyHub are RERA registered. We verify the RERA registration number for every property before listing. You can view the RERA details on each property page, including the registration number and project status.',
+    answer: 'Yes, all properties listed on PropDeal are RERA registered. We verify the RERA registration number for every property before listing. You can view the RERA details on each property page, including the registration number and project status.',
   },
   {
     question: 'What documents do I need to buy a property?',
@@ -18,7 +18,7 @@ const defaultFAQs = [
   },
   {
     question: 'Are the property prices negotiable?',
-    answer: 'Property prices on PropertyHub are direct builder prices. While some flexibility exists depending on the builder and market conditions, we ensure you get the best possible price without any hidden charges. We negotiate on your behalf to get you the best deal.',
+    answer: 'Property prices on PropDeal are direct builder prices. While some flexibility exists depending on the builder and market conditions, we ensure you get the best possible price without any hidden charges. We negotiate on your behalf to get you the best deal.',
   },
   {
     question: 'How long does the property buying process take?',

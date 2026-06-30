@@ -208,7 +208,7 @@ A2: Yes, the project is RERA registered. You can verify the registration number 
 
 Now write your response following the same format (8-10 FAQs):`,
 
-  builder: (property) => `You are a professional real estate researcher. Generate builder information for a property listing.
+  builder: (property) => `You are a professional real estate copywriter. Generate builder information for a property listing.
 
 Builder Details:
 - Name: ${property.builder}
@@ -219,32 +219,38 @@ CRITICAL INSTRUCTION: Write your response as PLAIN TEXT. Do NOT use JavaScript s
 
 Write your response in this EXACT format:
 
-About: [Write a paragraph about the builder here - 100 to 150 words]
+About: [Write ONE short sentence about the builder - maximum 150 characters, 1-2 lines only]
 
-Experience: [Number of years]
-
-Total Projects: [Number of projects]
+Stats:
+- [Icon: building/award/mapPin/users] | [Value: e.g., 250+] | [Label: e.g., Projects Delivered]
+- [Icon: building/award/mapPin/users] | [Value: e.g., 30+] | [Label: e.g., Years of Experience]
+- [Icon: building/award/mapPin/users] | [Value: e.g., 15+] | [Label: e.g., Cities Presence]
+- [Icon: building/award/mapPin/users] | [Value: e.g., 10,000+] | [Label: e.g., Happy Customers]
 
 Key Facts:
-- [Fact 1]
-- [Fact 2]
-- [Fact 3]
-- [Fact 4]
-- [Fact 5]
+- [Fact 1 - Why choose this builder]
+- [Fact 2 - Why choose this builder]
+- [Fact 3 - Why choose this builder]
+- [Fact 4 - Why choose this builder]
+- [Fact 5 - Why choose this builder]
+- [Fact 6 - Why choose this builder]
 
 Here is an example of correct output:
-About: Prestige Group is one of India's leading real estate developers with over three decades of experience in the industry. The company has delivered numerous landmark projects across residential, commercial, and retail segments.
+About: A renowned developer known for quality construction and timely delivery with decades of experience.
 
-Experience: 35+ years
-
-Total Projects: 250+
+Stats:
+- award | 30+ | Years of Experience
+- building | 250+ | Projects Delivered
+- mapPin | 15+ | Cities Presence
+- users | 50,000+ | Happy Customers
 
 Key Facts:
-- Known for quality construction and timely delivery
-- Presence in multiple cities across India
-- Won numerous awards for excellence in real estate
-- Strong track record of customer satisfaction
-- Pioneer in introducing international standards to Indian real estate
+- RERA registered and compliant projects
+- On-time delivery with quality construction
+- Transparent pricing with no hidden charges
+- Excellent after-sales service
+- Prime location selection for all projects
+- Modern amenities and premium specifications
 
 Now write your response following the same format:`,
 

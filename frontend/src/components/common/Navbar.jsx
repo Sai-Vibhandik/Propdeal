@@ -1,20 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Home, Building2, Star, LogIn } from 'lucide-react';
+import { Building2, LogIn, Briefcase, Compass, Home } from 'lucide-react';
 import { useSiteContent } from '../../context/SiteContentContext.jsx';
 import { getFileUrl } from '../../services/api.js';
 
 const Navbar = ({ transparent = false }) => {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('');
   const location = useLocation();
   const { content } = useSiteContent();
 
   // Get branding data
   const branding = content?.branding || {};
-  const siteName = content?.seo?.siteName || 'PropertyHub';
+  const siteName = content?.seo?.siteName || 'PropDeal';
   const logoUrl = branding.logo ? getFileUrl(branding.logo) : null;
 
   // Check if we're on homepage (hero page) - /discover is the buyer-facing home page with hero
@@ -22,11 +20,19 @@ const Navbar = ({ transparent = false }) => {
   const isDevelopersPage = location.pathname === '/';
 
   // Clear active section when navigating away from homepage
+  // Also reset scroll state on route change
   useEffect(() => {
     if (!isHeroPage) {
       setActiveSection('');
     }
+    // Reset scroll state on route change to prevent navbar style flicker
+    setIsScrolled(false);
   }, [isHeroPage, location.pathname]);
+
+  // Reset scroll position on route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -75,7 +81,6 @@ const Navbar = ({ transparent = false }) => {
       });
       setActiveSection(sectionId);
     }
-    setIsMobileMenuOpen(false);
   };
 
   // Handle scroll after navigation from other pages (using URL hash)
@@ -111,9 +116,9 @@ const Navbar = ({ transparent = false }) => {
   }, [isHeroPage]);
 
   const navLinks = [
-    { path: '/', label: 'Home', icon: Home },
-    { path: '/discover', label: 'Discover', icon: Building2 },
-    { path: '/properties', label: 'Properties', icon: Star },
+    { path: '/', label: 'For Professionals', icon: Briefcase },
+    { path: '/discover', label: 'For Buyers', icon: Compass },
+    { path: '/properties', label: 'Properties', icon: Home },
   ];
 
   const isActive = (path) => {
@@ -141,7 +146,7 @@ const Navbar = ({ transparent = false }) => {
   // Render logo
   const renderLogo = () => {
     const logoHeight = branding.navbarLogoHeight || 40;
-    const displayName = branding.siteName || siteName || 'PropertyHub';
+    const displayName = branding.siteName || siteName || 'PropDeal';
     const showName = branding.showSiteNameWithLogo !== false;
     const nameParts = displayName.split(' ');
 
@@ -181,20 +186,18 @@ const Navbar = ({ transparent = false }) => {
 
   return (
     <>
-      <motion.nav
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${getNavStyle()}`}
+      <nav
+        className={`fixed top-0 left-0 right-0 z-40 ${getNavStyle()}`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
-            {/* Logo */}
-            <Link to="/" className="flex items-center group">
+            {/* Logo - Fixed width container to prevent shift */}
+            <Link to="/" className="flex items-center group min-w-0">
               {renderLogo()}
             </Link>
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-1">
+            {/* Desktop Navigation - Fixed width */}
+            <div className="hidden md:flex items-center gap-1 flex-shrink-0">
               {navLinks.map((link) => {
                 const Icon = link.icon;
                 const active = isActive(link.path);
@@ -205,7 +208,7 @@ const Navbar = ({ transparent = false }) => {
                     <button
                       key={link.path}
                       onClick={() => scrollToSection(link.path.replace('#', ''))}
-                      className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer group ${
+                      className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer group ${
                         active
                           ? 'bg-white/15 text-white shadow-lg'
                           : 'text-white/80 hover:text-white hover:bg-white/10'
@@ -230,9 +233,8 @@ const Navbar = ({ transparent = false }) => {
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                         setActiveSection('');
                       }
-                      setIsMobileMenuOpen(false);
                     }}
-                    className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer group ${
+                    className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer group ${
                       active
                         ? 'bg-white/15 text-white shadow-lg'
                         : 'text-white/80 hover:text-white hover:bg-white/10'
@@ -248,65 +250,46 @@ const Navbar = ({ transparent = false }) => {
               })}
             </div>
 
-            {/* CTA Buttons */}
-            <div className="hidden md:flex items-center gap-3">
+            {/* CTA Buttons - Desktop */}
+            <div className="hidden md:flex items-center gap-3 flex-shrink-0">
               <Link
                 to="/login"
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all duration-200 cursor-pointer group"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-colors cursor-pointer group"
               >
                 <LogIn className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
                 <span>Login</span>
               </Link>
               <Link
                 to="/properties"
-                className="relative px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-sm font-semibold rounded-xl overflow-hidden group hover:shadow-lg hover:shadow-amber-500/25 transition-all duration-300"
+                className="relative px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-sm font-semibold rounded-xl overflow-hidden group hover:shadow-lg hover:shadow-amber-500/25 transition-shadow"
               >
                 <span className="relative z-10 flex items-center gap-2">
-                  View Properties
+                  Explore Properties
                   <span className="transition-transform group-hover:translate-x-1">→</span>
                 </span>
                 <span className="absolute inset-0 bg-gradient-to-r from-amber-600 to-amber-700 opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
             </div>
 
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2.5 rounded-xl text-white hover:bg-white/10 transition-all cursor-pointer"
-            >
-              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
-        </div>
-      </motion.nav>
-
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed top-16 left-0 right-0 z-50 md:hidden bg-slate-900/95 backdrop-blur-xl shadow-xl shadow-black/20 border-b border-white/5"
-          >
-            <div className="px-4 py-4 space-y-2">
+            {/* Mobile Navigation - Icons Only */}
+            <div className="flex md:hidden items-center gap-1 flex-shrink-0">
               {navLinks.map((link) => {
                 const Icon = link.icon;
+                const active = isActive(link.path);
 
-                // Section links (Featured, Contact)
                 if (link.isSection) {
                   return (
                     <button
                       key={link.path}
                       onClick={() => scrollToSection(link.path.replace('#', ''))}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all w-full text-left cursor-pointer ${
-                        isActive(link.path)
+                      className={`p-2.5 rounded-xl transition-colors cursor-pointer ${
+                        active
                           ? 'bg-white/15 text-white'
                           : 'text-white/80 hover:text-white hover:bg-white/10'
                       }`}
+                      title={link.label}
                     >
-                      <Icon className={`w-5 h-5 ${isActive(link.path) ? 'text-amber-400' : ''}`} />
-                      <span className="font-medium">{link.label}</span>
+                      <Icon className={`w-5 h-5 ${active ? 'text-amber-400' : ''}`} />
                     </button>
                   );
                 }
@@ -316,46 +299,33 @@ const Navbar = ({ transparent = false }) => {
                     key={link.path}
                     to={link.path}
                     onClick={() => {
-                      // If clicking Home while on homepage, scroll to top
                       if (link.path === '/' && isHeroPage) {
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                         setActiveSection('');
                       }
-                      setIsMobileMenuOpen(false);
                     }}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all cursor-pointer ${
-                      isActive(link.path)
+                    className={`p-2.5 rounded-xl transition-colors cursor-pointer ${
+                      active
                         ? 'bg-white/15 text-white'
                         : 'text-white/80 hover:text-white hover:bg-white/10'
                     }`}
+                    title={link.label}
                   >
-                    <Icon className={`w-5 h-5 ${isActive(link.path) ? 'text-amber-400' : ''}`} />
-                    <span className="font-medium">{link.label}</span>
+                    <Icon className={`w-5 h-5 ${active ? 'text-amber-400' : ''}`} />
                   </Link>
                 );
               })}
-              <div className="pt-2 border-t border-white/10 mt-2">
-                <Link
-                  to="/login"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-white/80 hover:text-white hover:bg-white/10 cursor-pointer"
-                >
-                  <LogIn className="w-5 h-5" />
-                  <span className="font-medium">Login</span>
-                </Link>
-                <Link
-                  to="/properties"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center justify-center gap-2 w-full mt-2 px-4 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-amber-500/25 transition-all"
-                >
-                  View Properties
-                  <span>→</span>
-                </Link>
-              </div>
+              <Link
+                to="/login"
+                className="p-2.5 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                title="Login"
+              >
+                <LogIn className="w-5 h-5" />
+              </Link>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        </div>
+      </nav>
 
       {/* Spacer for fixed navbar */}
       <div className="h-16 md:h-20" />
