@@ -850,7 +850,6 @@ const TelecallerDashboard = () => {
                     <tr>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-16">Sr. No.</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Message</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                       <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -876,11 +875,6 @@ const TelecallerDashboard = () => {
                               </div>
                             )}
                           </div>
-                        </td>
-                        <td className="px-4 py-4">
-                          <p className="text-gray-700 line-clamp-2 max-w-xs">
-                            {enquiry.message || 'No message provided'}
-                          </p>
                         </td>
                         <td className="px-4 py-4">
                           <select

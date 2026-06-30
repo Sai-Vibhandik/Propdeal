@@ -71,11 +71,11 @@ const DevelopersPage = () => {
   const benefits = [
     'Unlimited property landing pages',
     'AI-enhanced property content',
-    'Real-time lead notifications',
+    'Timely lead updates',
     'Lead distribution to your team',
-    'Detailed performance reports',
+    'Regular performance reports',
     'Brand visibility & marketing support',
-    'WhatsApp integration & support',
+    'WhatsApp support',
     'Regional partnership opportunities',
   ];
 
@@ -466,7 +466,7 @@ const DevelopersPage = () => {
                 {
                   icon: BarChart3,
                   title: 'Property Performance Reports',
-                  description: 'Receive detailed reports on page views, buyer engagement, and enquiry metrics for your properties.',
+                  description: 'We provide detailed performance reports showing page views, buyer engagement, and enquiry trends so you always know how your properties are performing.',
                 },
                 {
                   icon: Palette,
@@ -531,7 +531,7 @@ const DevelopersPage = () => {
                 {
                   icon: TrendingUp,
                   title: 'Growth Resources',
-                  description: 'Marketing tools, training, and resources to help you succeed.',
+                  description: 'Marketing support, business guidance, and resources to help you succeed.',
                 },
                 {
                   icon: Shield,
@@ -802,15 +802,15 @@ const DevelopersPage = () => {
                   Data-Driven Insights
                 </span>
                 <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mt-2 mb-4">
-                  Track Your Property Performance
+                  Your Property Performance
                 </h2>
                 <p className="text-slate-600 mb-6">
-                  We provide detailed performance reports so you can make informed decisions. Track engagement, monitor enquiry sources, and measure results across all your properties.
+                  We continuously monitor your campaign performance and share detailed reports so you can understand buyer engagement and enquiry trends.
                 </p>
                 <ul className="space-y-4">
                   {[
                     { icon: Search, text: 'Detailed source attribution' },
-                    { icon: Zap, text: 'Instant lead notifications' },
+                    { icon: Zap, text: 'Timely lead updates' },
                     { icon: Shield, text: 'Secure data management' },
                   ].map((item, index) => {
                     const Icon = item.icon;

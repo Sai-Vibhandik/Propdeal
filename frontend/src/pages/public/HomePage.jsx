@@ -115,9 +115,9 @@ const HomePage = () => {
                     className="block group cursor-pointer"
                   >
                     <motion.div
-                      whileHover={{ y: -4 }}
+                      whileHover={{ y: -8, scale: 1.02 }}
                       transition={{ duration: 0.2 }}
-                      className="relative rounded-2xl overflow-hidden bg-white shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50 active:shadow-md transition-all duration-500"
+                      className="relative rounded-2xl overflow-hidden bg-white shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-amber-500/10 border border-transparent hover:border-amber-200 transition-all duration-300"
                     >
                       <div className="relative h-40 overflow-hidden">
                         {city.image ? (
@@ -133,7 +133,7 @@ const HomePage = () => {
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                         <div className="absolute bottom-4 left-4">
-                          <h3 className="text-lg font-bold text-white">{city.name}</h3>
+                          <h3 className="text-lg font-bold text-white group-hover:text-amber-400 transition-colors">{city.name}</h3>
                           {city.description && (
                             <p className="text-white/80 text-sm line-clamp-1">{city.description}</p>
                           )}
@@ -142,8 +142,8 @@ const HomePage = () => {
                       <div className="p-4">
                         <div className="flex items-center justify-between">
                           <p className="text-slate-600 text-sm">{city.description || `Explore properties in ${city.name}`}</p>
-                          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-slate-800 transition-colors flex-shrink-0 ml-2">
-                            <ArrowRight className="w-5 h-5 text-slate-600 group-hover:text-white transition-colors" />
+                          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-amber-500 transition-colors flex-shrink-0 ml-2">
+                            <ArrowRight className="w-5 h-5 text-slate-600 group-hover:text-white transition-colors group-hover:translate-x-0.5 transition-transform" />
                           </div>
                         </div>
                       </div>
@@ -158,10 +158,10 @@ const HomePage = () => {
                 <motion.span whileHover={{ scale: 1.02, y: -2 }} whileTap={{ scale: 0.98 }} className="inline-block">
                   <Link
                     to="/properties"
-                    className="inline-flex items-center justify-center gap-2 px-6 py-4 bg-slate-800 text-white font-semibold rounded-xl hover:bg-slate-700 active:bg-slate-900 transition-all shadow-lg shadow-slate-800/30 cursor-pointer"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-4 bg-slate-800 text-white font-semibold rounded-xl hover:bg-slate-700 hover:shadow-lg hover:shadow-slate-800/30 active:shadow-md transition-all duration-300 cursor-pointer"
                   >
                     View All Cities
-                    <ArrowRight className="w-5 h-5" />
+                    <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                   </Link>
                 </motion.span>
               </div>
@@ -208,10 +208,10 @@ const HomePage = () => {
               <motion.span whileHover={{ scale: 1.02, y: -2 }} whileTap={{ scale: 0.98 }} className="inline-block">
                 <Link
                   to="/properties"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-4 bg-slate-800 text-white font-semibold rounded-xl hover:bg-slate-700 active:bg-slate-900 transition-all shadow-lg shadow-slate-800/30 cursor-pointer"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-4 bg-slate-800 text-white font-semibold rounded-xl hover:bg-slate-700 hover:shadow-lg hover:shadow-slate-800/30 active:shadow-md transition-all duration-300 cursor-pointer"
                 >
                   View All Properties
-                  <ArrowRight className="w-5 h-5" />
+                  <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                 </Link>
               </motion.span>
             </div>

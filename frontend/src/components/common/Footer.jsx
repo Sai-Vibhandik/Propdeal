@@ -1,4 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Building2, Phone, Mail, MapPin, Facebook, Twitter, Linkedin, Instagram, Youtube } from 'lucide-react';
 import { useSiteContent } from '../../context/SiteContentContext.jsx';
 import { useEffect } from 'react';
@@ -150,16 +151,18 @@ const Footer = () => {
                 {footerSocialLinks.filter(s => s.isActive).map((social, index) => {
                   const Icon = PLATFORM_ICONS[social.platform] || Facebook;
                   return (
-                    <a
+                    <motion.a
                       key={index}
                       href={social.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-slate-700 hover:scale-110 transition-all cursor-pointer"
+                      whileHover={{ scale: 1.1, y: -2 }}
+                      transition={{ duration: 0.2 }}
+                      className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-amber-500 transition-colors cursor-pointer"
                       aria-label={social.platform}
                     >
                       <Icon className="w-5 h-5" />
-                    </a>
+                    </motion.a>
                   );
                 })}
               </div>
@@ -176,9 +179,10 @@ const Footer = () => {
                     <Link
                       to={link.url}
                       onClick={(e) => handleLinkClick(e, link.url)}
-                      className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+                      className="text-slate-400 hover:text-amber-400 transition-colors cursor-pointer relative group"
                     >
-                      {link.label}
+                      <span>{link.label}</span>
+                      <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-amber-400 transition-all duration-300 group-hover:w-full"></span>
                     </Link>
                   </li>
                 ))}
@@ -192,21 +196,27 @@ const Footer = () => {
             <ul className="space-y-3">
               {fullAddress && (
                 <li className="flex items-start space-x-3">
-                  <MapPin className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <motion.div whileHover={{ rotate: 15 }}>
+                    <MapPin className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                  </motion.div>
                   <span className="text-slate-400">{fullAddress}</span>
                 </li>
               )}
               {contact.phone && (
                 <li className="flex items-center space-x-3">
-                  <Phone className="w-5 h-5 text-amber-500" />
-                  <a href={`tel:${contact.phone.replace(/\s/g, '')}`} className="text-slate-400 hover:text-white transition-colors cursor-pointer">
+                  <motion.div whileHover={{ rotate: 15 }}>
+                    <Phone className="w-5 h-5 text-amber-500" />
+                  </motion.div>
+                  <a href={`tel:${contact.phone.replace(/\s/g, '')}`} className="text-slate-400 hover:text-amber-400 transition-colors cursor-pointer">
                     {contact.phone}
                   </a>
                 </li>
               )}
               {contact.email && (
                 <li className="flex items-center space-x-3">
-                  <Mail className="w-5 h-5 text-amber-500 flex-shrink-0" />
+                  <motion.div whileHover={{ rotate: 15 }}>
+                    <Mail className="w-5 h-5 text-amber-500 flex-shrink-0" />
+                  </motion.div>
                   <button
                     type="button"
                     onClick={() => {
@@ -214,7 +224,7 @@ const Footer = () => {
                       const body = 'Hi, I would like to get more information.';
                       window.open(`https://mail.google.com/mail/?view=cm&to=${contact.email}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
                     }}
-                    className="text-slate-400 hover:text-white transition-colors cursor-pointer break-all"
+                    className="text-slate-400 hover:text-amber-400 transition-colors cursor-pointer break-all"
                   >
                     {contact.email}
                   </button>
@@ -240,11 +250,13 @@ const Footer = () => {
               {footerSettings.copyrightText || `© ${currentYear} ${siteName}. All rights reserved.`}
             </p>
             <div className="flex space-x-4 text-sm">
-              <Link to="/privacy-policy" className="text-slate-500 hover:text-white transition-colors cursor-pointer">
-                Privacy Policy
+              <Link to="/privacy-policy" className="text-slate-500 hover:text-white transition-colors cursor-pointer relative group">
+                <span>Privacy Policy</span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full"></span>
               </Link>
-              <Link to="/terms-of-service" className="text-slate-500 hover:text-white transition-colors cursor-pointer">
-                Terms of Service
+              <Link to="/terms-of-service" className="text-slate-500 hover:text-white transition-colors cursor-pointer relative group">
+                <span>Terms of Service</span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all duration-300 group-hover:w-full"></span>
               </Link>
             </div>
           </div>

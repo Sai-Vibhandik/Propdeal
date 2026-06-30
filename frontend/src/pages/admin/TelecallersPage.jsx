@@ -18,6 +18,7 @@ const TelecallersPage = () => {
     email: '',
     phone: '',
     password: '',
+    isActive: true,
   });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
@@ -144,6 +145,8 @@ const TelecallersPage = () => {
         if (!dataToSend.password || dataToSend.password.trim() === '') {
           delete dataToSend.password;
         }
+        // Include isActive status
+        dataToSend.isActive = formData.isActive;
         await adminAPI.updateTelecaller(editingTelecaller._id, dataToSend);
         toast.success('Telecaller updated successfully');
       } else {
@@ -152,7 +155,8 @@ const TelecallersPage = () => {
       }
       setShowModal(false);
       setEditingTelecaller(null);
-      setFormData({ name: '', email: '', phone: '', password: '' });
+      setFormData({ name: '', email: '', phone: '', password: '', isActive: true });
+      setShowPassword(false);
       setErrors({});
       fetchTelecallers();
     } catch (error) {
@@ -169,7 +173,9 @@ const TelecallersPage = () => {
       email: telecaller.email,
       phone: telecaller.phone || '',
       password: '',
+      isActive: telecaller.isActive !== false, // Default to true if not set
     });
+    setShowPassword(false);
     setShowModal(true);
   };
 
@@ -232,7 +238,8 @@ const TelecallersPage = () => {
           <button
             onClick={() => {
               setEditingTelecaller(null);
-              setFormData({ name: '', email: '', phone: '', password: '' });
+              setFormData({ name: '', email: '', phone: '', password: '', isActive: true });
+              setShowPassword(false);
               setErrors({});
               setShowModal(true);
             }}
@@ -410,9 +417,9 @@ const TelecallersPage = () => {
 
         {/* Modal */}
         {showModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
-              <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+              <div className="p-6 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white rounded-t-xl">
                 <h2 className="text-xl font-bold text-gray-900">
                   {editingTelecaller ? 'Edit Telecaller' : 'Add New Telecaller'}
                 </h2>
@@ -421,6 +428,7 @@ const TelecallersPage = () => {
                   onClick={() => {
                     setShowModal(false);
                     setEditingTelecaller(null);
+                    setShowPassword(false);
                     setErrors({});
                   }}
                   className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
@@ -480,6 +488,44 @@ const TelecallersPage = () => {
                   />
                   {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
                 </div>
+
+                {/* Status Toggle - Only show when editing */}
+                {editingTelecaller && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Status
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, isActive: true })}
+                        className={`flex-1 px-4 py-2 rounded-lg border transition-colors cursor-pointer ${
+                          formData.isActive
+                            ? 'bg-green-50 border-green-500 text-green-700'
+                            : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
+                        }`}
+                      >
+                        Active
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, isActive: false })}
+                        className={`flex-1 px-4 py-2 rounded-lg border transition-colors cursor-pointer ${
+                          !formData.isActive
+                            ? 'bg-red-50 border-red-500 text-red-700'
+                            : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
+                        }`}
+                      >
+                        Inactive
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Inactive telecallers cannot access their dashboard
+                    </p>
+                  </div>
+                )}
+
+                {/* Password */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     {editingTelecaller ? 'New Password (leave empty to keep current)' : 'Password'}
@@ -534,6 +580,7 @@ const TelecallersPage = () => {
                     onClick={() => {
                       setShowModal(false);
                       setEditingTelecaller(null);
+                      setShowPassword(false);
                       setErrors({});
                     }}
                     className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"

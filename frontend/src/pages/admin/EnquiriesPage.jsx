@@ -423,9 +423,6 @@ const EnquiriesPage = () => {
                       Contact
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Message
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                       Source
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
@@ -471,11 +468,6 @@ const EnquiriesPage = () => {
                         </div>
                       </td>
                       <td className="px-4 py-4">
-                        <p className="text-gray-700 line-clamp-2 max-w-xs">
-                          {enquiry.message || "No message provided"}
-                        </p>
-                      </td>
-                      <td className="px-4 py-4">
                         <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                           {formatSource(enquiry.source)}
                         </span>
@@ -505,11 +497,6 @@ const EnquiriesPage = () => {
                           </select>
                           <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                         </div>
-                        {enquiry.assignedTo?.phone && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            {enquiry.assignedTo.phone}
-                          </p>
-                        )}
                       </td>
                       <td className="px-4 py-4">
                         <select
@@ -644,20 +631,20 @@ const EnquiriesPage = () => {
               </div>
               <div className="p-6 space-y-4 overflow-y-auto flex-1">
                 <div>
-                  <label className="text-sm text-gray-500">Name</label>
+                  <label className="block text-sm text-gray-500 mb-1">Name</label>
                   <p className="font-medium text-gray-900">
                     {selectedEnquiry.name}
                   </p>
                 </div>
                 <div>
-                  <label className="text-sm text-gray-500">Phone</label>
+                  <label className="block text-sm text-gray-500 mb-1">Phone</label>
                   <p className="font-medium text-gray-900">
                     {selectedEnquiry.phone}
                   </p>
                 </div>
                 {selectedEnquiry.email && (
                   <div>
-                    <label className="text-sm text-gray-500">Email</label>
+                    <label className="block text-sm text-gray-500 mb-1">Email</label>
                     <p className="font-medium text-gray-900">
                       {selectedEnquiry.email}
                     </p>
@@ -665,14 +652,14 @@ const EnquiriesPage = () => {
                 )}
                 {selectedEnquiry.message && (
                   <div>
-                    <label className="text-sm text-gray-500">Message</label>
+                    <label className="block text-sm text-gray-500 mb-1">Message</label>
                     <p className="text-gray-700 bg-gray-50 rounded-lg p-3">
                       {selectedEnquiry.message}
                     </p>
                   </div>
                 )}
                 <div>
-                  <label className="text-sm text-gray-500">Source</label>
+                  <label className="block text-sm text-gray-500 mb-1">Source</label>
                   <p className="font-medium text-gray-900 capitalize">
                     {selectedEnquiry.source
                       ?.replace(/-/g, " ")
@@ -680,7 +667,7 @@ const EnquiriesPage = () => {
                   </p>
                 </div>
                 <div>
-                  <label className="text-sm text-gray-500">Status</label>
+                  <label className="block text-sm text-gray-500 mb-2">Status</label>
                   <select
                     value={selectedEnquiry.status || "new"}
                     onChange={(e) =>
@@ -698,7 +685,7 @@ const EnquiriesPage = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="text-sm text-gray-500">
+                  <label className="block text-sm text-gray-500 mb-2">
                     Assign to Telecaller
                   </label>
                   <select
@@ -714,19 +701,18 @@ const EnquiriesPage = () => {
                         assignedTo: telecaller || null,
                       });
                     }}
-                    className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                   >
                     <option value="">Unassigned</option>
                     {telecallers.map((telecaller) => (
                       <option key={telecaller._id} value={telecaller._id}>
-                        {telecaller.name}{" "}
-                        {telecaller.phone ? `(${telecaller.phone})` : ""}
+                        {telecaller.name}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="text-sm text-gray-500">Submitted</label>
+                  <label className="block text-sm text-gray-500 mb-1">Submitted</label>
                   <p className="text-gray-900">
                     {new Date(selectedEnquiry.createdAt).toLocaleString()}
                   </p>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -75,6 +75,52 @@ const clearDraftFromStorage = (id) => {
   } catch (error) {
     console.error('[Draft] Error clearing from localStorage:', error);
   }
+};
+
+// Helper function to determine which steps are completed based on property data
+const calculateCompletedSteps = (propertyData) => {
+  const completed = new Set();
+
+  // Step 1: Basic Info - check if required fields are filled
+  if (
+    propertyData.name?.trim() &&
+    propertyData.builder?.trim() &&
+    propertyData.address?.fullAddress?.trim() &&
+    propertyData.address?.locality?.trim() &&
+    propertyData.address?.city?.trim() &&
+    propertyData.address?.state?.trim() &&
+    propertyData.address?.pincode?.trim()
+  ) {
+    completed.add(1);
+  }
+
+  // Step 2: Pricing Plans - check if at least one pricing plan exists
+  const validPlans = propertyData.pricingPlans?.filter(p => p.configuration && p.price);
+  if (validPlans && validPlans.length > 0) {
+    completed.add(2);
+  }
+
+  // Step 3: Sections - always considered complete (no required fields)
+  completed.add(3);
+
+  // Step 4: Media - check if at least one hero image exists
+  if (propertyData.heroImages && propertyData.heroImages.length > 0) {
+    completed.add(4);
+  }
+
+  // Step 5: AI Content - always considered complete (no required fields)
+  completed.add(5);
+
+  // Step 6: Theme/Branding - check if required branding fields are filled
+  if (
+    propertyData.branding?.companyName?.trim() &&
+    propertyData.branding?.phoneNumber?.trim() &&
+    propertyData.branding?.email?.trim()
+  ) {
+    completed.add(6);
+  }
+
+  return completed;
 };
 
 // Default property data structure
@@ -218,13 +264,14 @@ const PropertyBuilderPage = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
+  const [completedSteps, setCompletedSteps] = useState(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastSaved, setLastSaved] = useState(null);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-  const [draftRestored, setDraftRestored] = useState(false);
-  const [showDraftModal, setShowDraftModal] = useState(false);
-  const [pendingDraft, setPendingDraft] = useState(null);
   const [showClearModal, setShowClearModal] = useState(false);
+
+  // Ref to track if draft restore toast has been shown (prevents double toast in StrictMode)
+  const draftToastShownRef = useRef(false);
 
   // Check if this is a fresh start (new property without editing)
   const isFreshStart = searchParams.get('fresh') === 'true';
@@ -239,33 +286,54 @@ const PropertyBuilderPage = () => {
   useEffect(() => {
     if (isFreshStart) {
       // Clear the draft on fresh start
-      clearDraftFromStorage(null);
+      clearDraftFromStorage(id || null);
       console.log('[FreshStart] Cleared draft and removing fresh=true from URL');
       // Remove ?fresh=true from URL without reloading
       const newUrl = window.location.pathname;
       window.history.replaceState({}, '', newUrl);
     }
-  }, [isFreshStart]);
+  }, [isFreshStart, id]);
 
-  // Initialize propertyData with lazy initialization to ensure it only runs once
+  // Initialize propertyData with lazy initialization
   const [propertyData, setPropertyData] = useState(() => {
     const defaultData = getDefaultPropertyData();
     console.log('[PropertyBuilder] Lazy init, id:', id, 'isFreshStart:', isFreshStart);
 
-    // For new properties (no id), try to load draft from localStorage
+    // For new properties (no id), try to load draft from localStorage and auto-restore
     if (isNewProp && !isFreshStart) {
       const draft = loadDraftFromStorage(null);
       if (draft && draft.data) {
-        console.log('[PropertyBuilder] Found draft, will show modal...');
-        // Store draft for modal and return default data initially
-        // The modal will handle whether to restore or discard
-        return defaultData;
+        console.log('[PropertyBuilder] Auto-restoring draft for new property');
+        const normalizedDraft = {
+          ...defaultData,
+          ...draft.data,
+          propertyCategory: draft.data.propertyCategory?.toLowerCase() || 'residential',
+        };
+        return normalizedDraft;
       }
     }
 
     console.log('[PropertyBuilder] No draft found, using default data');
     return defaultData;
   });
+
+  // Show toast and set completed steps after draft restoration (in useEffect to avoid double toast in StrictMode)
+  useEffect(() => {
+    // Only run for new properties with draft, and only once
+    if (!id && !isFreshStart && !draftToastShownRef.current) {
+      draftToastShownRef.current = true;
+      const draft = loadDraftFromStorage(null);
+      if (draft && draft.data) {
+        const timestamp = localStorage.getItem(`${getDraftKey(null)}_timestamp`);
+        if (timestamp) {
+          setLastSaved(new Date(timestamp));
+        }
+        setCompletedSteps(calculateCompletedSteps(propertyData));
+        toast.success('Draft restored');
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount - propertyData from closure has draft data
 
   // Debug: Log state changes
   useEffect(() => {
@@ -276,78 +344,6 @@ const PropertyBuilderPage = () => {
     console.log('[Debug] loadingProperty changed to:', loadingProperty, 'id:', id);
   }, [loadingProperty, id]);
 
-  // Check for saved draft on initial load and show modal
-  useEffect(() => {
-    if (isNewProp && !isFreshStart && !draftRestored) {
-      const draft = loadDraftFromStorage(null);
-      if (draft && draft.data) {
-        console.log('[DraftModal] Found saved draft, showing modal...');
-        setPendingDraft(draft);
-        setShowDraftModal(true);
-      }
-    }
-  }, [isNewProp, isFreshStart, draftRestored]);
-
-  // Handler to continue with the saved draft
-  const handleContinueDraft = () => {
-    if (pendingDraft) {
-      console.log('[DraftModal] User chose to continue with draft');
-      const draftId = pendingDraft.isEdit ? id : null;
-      const normalizedDraft = {
-        ...getDefaultPropertyData(),
-        ...pendingDraft.data,
-        propertyCategory: pendingDraft.data.propertyCategory?.toLowerCase() || 'residential',
-      };
-      setPropertyData(normalizedDraft);
-      setCurrentStep(pendingDraft.step || 1);
-      const timestamp = localStorage.getItem(`${getDraftKey(draftId)}_timestamp`);
-      if (timestamp) {
-        setLastSaved(new Date(timestamp));
-      }
-      toast.success('Draft restored');
-    }
-    setShowDraftModal(false);
-    setPendingDraft(null);
-    setDraftRestored(true);
-  };
-
-  // Handler to discard draft and use fresh/original data
-  const handleDiscardDraft = () => {
-    console.log('[DraftModal] User chose to discard draft');
-    const draftId = pendingDraft?.isEdit ? id : null;
-    clearDraftFromStorage(draftId);
-
-    if (pendingDraft?.isEdit && pendingDraft?.existingProperty) {
-      // For editing, load the original property data from API
-      const normalizedProperty = {
-        ...getDefaultPropertyData(),
-        ...pendingDraft.existingProperty,
-        propertyCategory: pendingDraft.existingProperty.propertyCategory?.toLowerCase() || 'residential',
-      };
-      setPropertyData(normalizedProperty);
-    } else {
-      // For new property, reset to default
-      setPropertyData(getDefaultPropertyData());
-      setCurrentStep(1);
-    }
-
-    setShowDraftModal(false);
-    setPendingDraft(null);
-    setDraftRestored(true);
-    setLastSaved(null);
-    toast.success('Starting fresh');
-  };
-
-  // Handler to start fresh (clear draft)
-  const handleStartFresh = () => {
-    console.log('[DraftModal] User chose to start fresh');
-    clearDraftFromStorage(null);
-    setShowDraftModal(false);
-    setPendingDraft(null);
-    setDraftRestored(true);
-    toast.success('Starting with fresh form');
-  };
-
   // Handler to clear draft manually from header
   const handleClearDraft = () => {
     setShowClearModal(true);
@@ -355,9 +351,10 @@ const PropertyBuilderPage = () => {
 
   // Handler to confirm clear draft
   const handleConfirmClear = () => {
-    clearDraftFromStorage(id);
+    clearDraftFromStorage(id || null);
     setPropertyData(getDefaultPropertyData());
     setCurrentStep(1);
+    setCompletedSteps(new Set());
     setLastSaved(null);
     setShowClearModal(false);
     toast.success('Draft cleared');
@@ -373,26 +370,19 @@ const PropertyBuilderPage = () => {
     }
 
     if (id && existingProperty) {
-      console.log('[LoadEffect] Editing existing property, checking for local draft...');
-      // Editing existing property - check for local draft first
-      const draft = loadDraftFromStorage(id);
-      if (draft && draft.data) {
-        console.log('[LoadEffect] Found local draft, showing modal...');
-        // Show modal for existing property draft too
-        setPendingDraft({ ...draft, isEdit: true, existingProperty });
-        setShowDraftModal(true);
-      } else {
-        console.log('[LoadEffect] No local draft, using API data');
-        // No local draft, use data from API
-        const normalizedProperty = {
-          ...getDefaultPropertyData(),
-          ...existingProperty,
-          propertyCategory: existingProperty.propertyCategory?.toLowerCase() || 'residential',
-        };
-        setPropertyData(normalizedProperty);
-      }
+      console.log('[LoadEffect] Editing existing property, loading from API');
+      // For existing properties, always use the API data (ignore any localStorage draft)
+      clearDraftFromStorage(id); // Clear any stale local draft
+      const normalizedProperty = {
+        ...getDefaultPropertyData(),
+        ...existingProperty,
+        propertyCategory: existingProperty.propertyCategory?.toLowerCase() || 'residential',
+      };
+      setPropertyData(normalizedProperty);
+      // Calculate completed steps based on existing data
+      setCompletedSteps(calculateCompletedSteps(normalizedProperty));
     } else if (!id) {
-      console.log('[LoadEffect] New property, draft modal handled by separate effect');
+      console.log('[LoadEffect] New property - draft restoration handled in lazy init');
     }
 
     console.log('[LoadEffect] Setting initialLoadComplete to true');
@@ -476,6 +466,9 @@ const PropertyBuilderPage = () => {
       toast.error('Please fill in all required fields');
       return;
     }
+
+    // Mark current step as completed
+    setCompletedSteps(prev => new Set([...prev, currentStep]));
 
     if (currentStep < STEPS.length) {
       setCurrentStep(currentStep + 1);
@@ -724,10 +717,10 @@ const PropertyBuilderPage = () => {
               {lastSaved && (
                 <button
                   onClick={handleClearDraft}
-                  className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  title="Clear draft and start fresh"
+                  className="hidden sm:inline-flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors text-sm font-medium"
                 >
                   <Trash2 className="w-4 h-4" />
+                  <span>Clear</span>
                 </button>
               )}
               <button
@@ -778,7 +771,7 @@ const PropertyBuilderPage = () => {
             {STEPS.map((step, index) => {
               const Icon = step.icon;
               const isActive = currentStep === step.id;
-              const isCompleted = currentStep > step.id;
+              const isCompleted = completedSteps.has(step.id);
 
               return (
                 <div key={step.id} className="flex items-center">
@@ -807,7 +800,7 @@ const PropertyBuilderPage = () => {
                   {index < STEPS.length - 1 && (
                     <div
                       className={`hidden sm:block w-6 md:w-12 h-0.5 mx-1 sm:mx-2 flex-shrink-0 ${
-                        currentStep > step.id ? 'bg-emerald-300' : 'bg-gray-200'
+                        completedSteps.has(step.id) ? 'bg-emerald-300' : 'bg-gray-200'
                       }`}
                     />
                   )}
@@ -862,60 +855,6 @@ const PropertyBuilderPage = () => {
           </button>
         </div>
       </div>
-
-      {/* Draft Restoration Modal */}
-      <AnimatePresence>
-        {showDraftModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-xl shadow-xl max-w-md w-full p-4 sm:p-6 max-h-[90vh] overflow-y-auto"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900">Unsaved Draft Found</h3>
-                <button
-                  onClick={handleDiscardDraft}
-                  className="text-gray-400 hover:text-gray-600 flex-shrink-0"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
-                We found an unsaved draft from your previous session. Would you like to continue where you left off or start fresh?
-              </p>
-              {pendingDraft?.data?.name && (
-                <div className="bg-gray-50 rounded-lg p-3 mb-4 sm:mb-6">
-                  <p className="text-xs sm:text-sm text-gray-500">Draft Property:</p>
-                  <p className="font-medium text-gray-900 truncate text-sm sm:text-base">{pendingDraft.data.name || 'Untitled'}</p>
-                </div>
-              )}
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                <button
-                  onClick={handleContinueDraft}
-                  className="flex-1 inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-blue-800 text-white rounded-lg hover:bg-blue-900 font-medium text-sm sm:text-base"
-                >
-                  <Check className="w-4 h-4 flex-shrink-0" />
-                  <span className="truncate">Continue with Draft</span>
-                </button>
-                <button
-                  onClick={handleDiscardDraft}
-                  className="flex-1 inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm sm:text-base"
-                >
-                  <Trash2 className="w-4 h-4 flex-shrink-0" />
-                  <span className="truncate">Start Fresh</span>
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Clear Draft Modal */}
       <AnimatePresence>

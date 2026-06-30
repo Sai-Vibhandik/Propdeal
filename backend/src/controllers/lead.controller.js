@@ -1,4 +1,4 @@
-import { Lead, Property } from '../models/index.js';
+import { Lead, Property, User } from '../models/index.js';
 
 // @desc    Submit a lead (public)
 // @route   POST /api/leads
@@ -17,18 +17,32 @@ export const submitLead = async (req, res) => {
       const property = await Property.findById(leadData.propertyId);
 
       if (property && property.distributeLeads && property.assignedTelecallers?.length > 0) {
-        // Round-robin assignment
-        const telecallers = property.assignedTelecallers;
-        const currentIndex = property.lastAssignedIndex || 0;
-        const nextIndex = (currentIndex + 1) % telecallers.length;
+        // Get all assigned telecallers and filter for active ones only
+        const telecallerIds = property.assignedTelecallers;
+        const activeTelecallers = await User.find({
+          _id: { $in: telecallerIds },
+          isActive: true,
+          role: 'telecaller'
+        }).select('_id');
 
-        // Assign to next telecaller in round-robin
-        leadData.assignedTo = telecallers[currentIndex];
+        const activeTelecallerIds = activeTelecallers.map(t => t._id.toString());
 
-        // Update the last assigned index for next lead
-        await Property.findByIdAndUpdate(leadData.propertyId, {
-          lastAssignedIndex: nextIndex
-        });
+        // Only assign if there are active telecallers
+        if (activeTelecallerIds.length > 0) {
+          // Round-robin assignment using only active telecallers
+          // Find the index within active telecallers based on lastAssignedIndex
+          const lastIndex = property.lastAssignedIndex || 0;
+          const activeIndex = lastIndex % activeTelecallerIds.length;
+          const nextIndex = (activeIndex + 1) % activeTelecallerIds.length;
+
+          // Assign to next active telecaller in round-robin
+          leadData.assignedTo = activeTelecallerIds[activeIndex];
+
+          // Update the last assigned index for next lead
+          await Property.findByIdAndUpdate(leadData.propertyId, {
+            lastAssignedIndex: nextIndex
+          });
+        }
       }
     }
 
