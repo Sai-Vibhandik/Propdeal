@@ -23,12 +23,12 @@ const getDraftKey = (id) => id ? `property_draft_${id}` : 'property_draft_new';
 const DRAFT_TIMESTAMP_KEY = 'property_draft_timestamp';
 
 const STEPS = [
-  { id: 1, name: 'Basic Info', icon: Building2, description: 'Property details & location' },
+  { id: 1, name: 'Basic Info', icon: Building2, description: 'Property, location & branding' },
   { id: 2, name: 'Pricing', icon: DollarSign, description: 'Plans & configurations' },
   { id: 3, name: 'Sections', icon: Layers, description: 'Configure layout' },
   { id: 4, name: 'Media', icon: Image, description: 'Upload images' },
   { id: 5, name: 'AI Content', icon: Sparkles, description: 'Generate content' },
-  { id: 6, name: 'Theme', icon: Palette, description: 'Branding & style' },
+  { id: 6, name: 'Theme', icon: Palette, description: 'Colors & fonts' },
   { id: 7, name: 'Review', icon: Eye, description: 'Preview & publish' },
 ];
 
@@ -81,7 +81,7 @@ const clearDraftFromStorage = (id) => {
 const calculateCompletedSteps = (propertyData) => {
   const completed = new Set();
 
-  // Step 1: Basic Info - check if required fields are filled
+  // Step 1: Basic Info - check if required fields are filled (including branding)
   if (
     propertyData.name?.trim() &&
     propertyData.builder?.trim() &&
@@ -89,7 +89,10 @@ const calculateCompletedSteps = (propertyData) => {
     propertyData.address?.locality?.trim() &&
     propertyData.address?.city?.trim() &&
     propertyData.address?.state?.trim() &&
-    propertyData.address?.pincode?.trim()
+    propertyData.address?.pincode?.trim() &&
+    propertyData.branding?.companyName?.trim() &&
+    propertyData.branding?.phoneNumber?.trim() &&
+    propertyData.branding?.email?.trim()
   ) {
     completed.add(1);
   }
@@ -111,14 +114,8 @@ const calculateCompletedSteps = (propertyData) => {
   // Step 5: AI Content - always considered complete (no required fields)
   completed.add(5);
 
-  // Step 6: Theme/Branding - check if required branding fields are filled
-  if (
-    propertyData.branding?.companyName?.trim() &&
-    propertyData.branding?.phoneNumber?.trim() &&
-    propertyData.branding?.email?.trim()
-  ) {
-    completed.add(6);
-  }
+  // Step 6: Theme - always considered complete (no required fields, just visual styling)
+  completed.add(6);
 
   return completed;
 };
@@ -447,14 +444,6 @@ const PropertyBuilderPage = () => {
 
     if (currentStep === 2 && window.pricingPlansStepValidation) {
       const isValid = window.pricingPlansStepValidation();
-      if (!isValid) {
-        toast.error('Please fill in all required fields correctly');
-        return;
-      }
-    }
-
-    if (currentStep === 6 && window.themeStepValidation) {
-      const isValid = window.themeStepValidation();
       if (!isValid) {
         toast.error('Please fill in all required fields correctly');
         return;

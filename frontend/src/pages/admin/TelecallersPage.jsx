@@ -80,7 +80,7 @@ const TelecallersPage = () => {
       setTelecallers(response.data.data || []);
     } catch (error) {
       console.error('Error fetching telecallers:', error);
-      toast.error('Failed to load telecallers');
+      toast.error('Failed to load sales partners');
     } finally {
       setLoading(false);
     }
@@ -148,10 +148,10 @@ const TelecallersPage = () => {
         // Include isActive status
         dataToSend.isActive = formData.isActive;
         await adminAPI.updateTelecaller(editingTelecaller._id, dataToSend);
-        toast.success('Telecaller updated successfully');
+        toast.success('Sales partner updated successfully');
       } else {
         await adminAPI.createTelecaller(formData);
-        toast.success('Telecaller created successfully');
+        toast.success('Sales partner created successfully');
       }
       setShowModal(false);
       setEditingTelecaller(null);
@@ -161,7 +161,7 @@ const TelecallersPage = () => {
       fetchTelecallers();
     } catch (error) {
       console.error('Error saving telecaller:', error);
-      const message = error.response?.data?.message || 'Failed to save telecaller';
+      const message = error.response?.data?.message || 'Failed to save sales partner';
       toast.error(message);
     }
   };
@@ -180,26 +180,26 @@ const TelecallersPage = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this telecaller?')) return;
+    if (!window.confirm('Are you sure you want to delete this sales partner?')) return;
 
     try {
       await adminAPI.deleteTelecaller(id);
-      toast.success('Telecaller deleted successfully');
+      toast.success('Sales partner deleted successfully');
       fetchTelecallers();
     } catch (error) {
       console.error('Error deleting telecaller:', error);
-      toast.error('Failed to delete telecaller');
+      toast.error('Failed to delete sales partner');
     }
   };
 
   const handleToggleActive = async (telecaller) => {
     try {
       await adminAPI.updateTelecaller(telecaller._id, { isActive: !telecaller.isActive });
-      toast.success(`Telecaller ${telecaller.isActive ? 'deactivated' : 'activated'} successfully`);
+      toast.success(`Sales partner ${telecaller.isActive ? 'deactivated' : 'activated'} successfully`);
       fetchTelecallers();
     } catch (error) {
       console.error('Error updating telecaller:', error);
-      toast.error('Failed to update telecaller');
+      toast.error('Failed to update sales partner');
     }
   };
 
@@ -232,8 +232,8 @@ const TelecallersPage = () => {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Telecallers</h1>
-            <p className="text-gray-600 mt-1">Manage telecaller accounts for lead distribution</p>
+            <h1 className="text-2xl font-bold text-gray-900">Sales Partners</h1>
+            <p className="text-gray-600 mt-1">Manage sales partner accounts for lead distribution</p>
           </div>
           <button
             onClick={() => {
@@ -246,7 +246,7 @@ const TelecallersPage = () => {
             className="flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 bg-blue-800 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer text-sm sm:text-base w-full sm:w-auto"
           >
             <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span>Add Telecaller</span>
+            <span>Add Sales Partner</span>
           </button>
         </div>
 
@@ -256,7 +256,7 @@ const TelecallersPage = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search telecallers..."
+              placeholder="Search sales partners..."
               value={searchTerm}
               onChange={handleSearchChange}
               maxLength={100}
@@ -265,14 +265,14 @@ const TelecallersPage = () => {
           </div>
         </div>
 
-        {/* Telecallers List */}
+        {/* Sales Partners List */}
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-800"></div>
           </div>
         ) : filteredTelecallers.length === 0 ? (
           <div className="bg-white rounded-xl p-12 text-center text-gray-500">
-            {searchTerm ? 'No telecallers found matching your search' : 'No telecallers added yet'}
+            {searchTerm ? 'No sales partners found matching your search' : 'No sales partners added yet'}
           </div>
         ) : (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden overflow-x-auto">
@@ -356,7 +356,7 @@ const TelecallersPage = () => {
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
                 <div className="text-sm text-gray-500">
-                  Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredTelecallers.length)} of {filteredTelecallers.length} telecallers
+                  Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredTelecallers.length)} of {filteredTelecallers.length} sales partners
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -408,7 +408,7 @@ const TelecallersPage = () => {
             {totalPages === 1 && (
               <div className="px-4 py-3 border-t border-gray-200">
                 <p className="text-sm text-gray-500">
-                  Showing {filteredTelecallers.length} telecallers
+                  Showing {filteredTelecallers.length} sales partners
                 </p>
               </div>
             )}
@@ -421,7 +421,7 @@ const TelecallersPage = () => {
             <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
               <div className="p-6 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white rounded-t-xl">
                 <h2 className="text-xl font-bold text-gray-900">
-                  {editingTelecaller ? 'Edit Telecaller' : 'Add New Telecaller'}
+                  {editingTelecaller ? 'Edit Sales Partner' : 'Add New Sales Partner'}
                 </h2>
                 <button
                   type="button"
@@ -520,7 +520,7 @@ const TelecallersPage = () => {
                       </button>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      Inactive telecallers cannot access their dashboard
+                      Inactive sales partners cannot access their dashboard
                     </p>
                   </div>
                 )}

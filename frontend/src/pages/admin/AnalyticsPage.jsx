@@ -523,7 +523,7 @@ const AnalyticsPage = () => {
               >
                 {selectedProperty ? (
                   <>
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Top Telecallers</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Top Sales Partners</h2>
                     {topTelecallers.length > 0 ? (
                       <div className="space-y-4">
                         {topTelecallers.map((telecaller, index) => (

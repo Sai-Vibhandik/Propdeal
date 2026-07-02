@@ -363,10 +363,10 @@ const AIContentStep = ({ propertyData, updatePropertyData }) => {
               <Wifi className="w-5 h-5 text-emerald-500" />
               <div>
                 <p className="text-emerald-800 font-medium">
-                  AI Connected: {aiStatus.provider}
+                  AI Connected
                 </p>
                 <p className="text-emerald-600 text-sm">
-                  Model: {aiStatus.model}
+                  Ready to generate content
                 </p>
               </div>
             </>
@@ -374,9 +374,9 @@ const AIContentStep = ({ propertyData, updatePropertyData }) => {
             <>
               <WifiOff className="w-5 h-5 text-amber-500" />
               <div>
-                <p className="text-amber-800 font-medium">AI Not Available</p>
+                <p className="text-amber-800 font-medium">AI Not Connected</p>
                 <p className="text-amber-600 text-sm">
-                  {aiStatus?.error || 'Check your AI configuration in .env'}
+                  Content will use templates
                 </p>
               </div>
             </>

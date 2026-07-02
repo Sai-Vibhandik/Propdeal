@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Palette, Type, Image, Upload, X, Layers, Sun, Moon, Eye, Trash2 } from 'lucide-react';
+import { Palette, Type, Layers, Sun, Moon, Eye, Trash2, Upload, X } from 'lucide-react';
 import { mediaAPI, getFileUrl } from '../../../services/api.js';
 import { getThemeStyles, suggestDarkMode } from '../../../utils/theme.js';
 
@@ -96,23 +96,11 @@ const LAYOUT_OPTIONS = [
   { value: 'split-right', label: 'Split Right', description: 'Content on left, image on right half', icon: '➡️' },
 ];
 
-// Field character limits
-const FIELD_LIMITS = {
-  companyName: { max: 100 },
-  tagline: { max: 100 },
-  aboutUs: { max: 500 },
-  phoneNumber: { max: 20 },
-  email: { max: 100 },
-  customCtaText: { max: 30 },
-};
-
 const ThemeStep = ({ propertyData, updatePropertyData }) => {
   const [uploading, setUploading] = useState(false);
   const [activeTab, setActiveTab] = useState('theme');
-  const [errors, setErrors] = useState({});
 
   const theme = propertyData.theme || {};
-  const branding = propertyData.branding || {};
 
   // Get live theme styles for preview
   const liveStyles = getThemeStyles(theme);
@@ -129,54 +117,6 @@ const ThemeStep = ({ propertyData, updatePropertyData }) => {
 
   const handleThemeChange = (field, value) => {
     updatePropertyData('theme', { ...theme, [field]: value });
-  };
-
-  const handleBrandingChange = (field, value) => {
-    updatePropertyData('branding', { ...branding, [field]: value });
-    // Clear error when user types
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  };
-
-  const handleLogoUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setUploading(true);
-    try {
-      const response = await mediaAPI.uploadImage(file);
-      if (response.data.success) {
-        updatePropertyData('branding', {
-          ...branding,
-          logo: response.data.data.url,
-        });
-      }
-    } catch (error) {
-      console.error('Logo upload failed:', error);
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleFaviconUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setUploading(true);
-    try {
-      const response = await mediaAPI.uploadImage(file);
-      if (response.data.success) {
-        updatePropertyData('branding', {
-          ...branding,
-          favicon: response.data.data.url,
-        });
-      }
-    } catch (error) {
-      console.error('Favicon upload failed:', error);
-    } finally {
-      setUploading(false);
-    }
   };
 
   const handleBackgroundUpload = async (section, file) => {
@@ -235,55 +175,12 @@ const ThemeStep = ({ propertyData, updatePropertyData }) => {
     updatePropertyData('theme', newTheme);
   };
 
-  // Expose validation function for parent component
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.themeStepValidation = () => {
-        const newErrors = {};
-
-        // Company Name - required
-        if (!branding.companyName?.trim()) {
-          newErrors.companyName = 'Company/Builder Name is required';
-        } else if (branding.companyName.length > FIELD_LIMITS.companyName.max) {
-          newErrors.companyName = `Maximum ${FIELD_LIMITS.companyName.max} characters allowed`;
-        }
-
-        // Contact Number - required and valid format
-        if (!branding.phoneNumber?.trim()) {
-          newErrors.phoneNumber = 'Contact Number is required';
-        } else {
-          // Remove all non-digit characters to count digits
-          const digitsOnly = branding.phoneNumber.replace(/\D/g, '');
-          if (digitsOnly.length < 10) {
-            newErrors.phoneNumber = 'Contact Number must have at least 10 digits';
-          } else if (digitsOnly.length > 15) {
-            newErrors.phoneNumber = 'Contact Number cannot have more than 15 digits';
-          } else if (!/^[0-9+\-\s]+$/.test(branding.phoneNumber)) {
-            newErrors.phoneNumber = 'Contact Number must contain only digits, +, - or spaces';
-          }
-        }
-
-        // Email - required and valid format
-        if (!branding.email?.trim()) {
-          newErrors.email = 'Email is required';
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(branding.email)) {
-          newErrors.email = 'Please enter a valid email address';
-        } else if (branding.email.length > FIELD_LIMITS.email.max) {
-          newErrors.email = `Maximum ${FIELD_LIMITS.email.max} characters allowed`;
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-      };
-    }
-  }, [branding]);
-
   return (
     <div className="space-y-8">
       {/* Section Header */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Branding & Theme</h2>
-        <p className="text-gray-600 mt-1">Customize the look and feel of your landing page</p>
+        <h2 className="text-2xl font-bold text-gray-900">Theme</h2>
+        <p className="text-gray-600 mt-1">Customize the visual appearance of your landing page</p>
       </div>
 
       {/* Tabs */}
@@ -298,17 +195,6 @@ const ThemeStep = ({ propertyData, updatePropertyData }) => {
         >
           <Palette className="w-4 h-4 inline mr-2" />
           Theme
-        </button>
-        <button
-          onClick={() => setActiveTab('branding')}
-          className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
-            activeTab === 'branding'
-              ? 'border-blue-800 text-blue-800'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          <Image className="w-4 h-4 inline mr-2" />
-          Branding
         </button>
         <button
           onClick={() => setActiveTab('layout')}
@@ -603,207 +489,6 @@ const ThemeStep = ({ propertyData, updatePropertyData }) => {
               Preview shows how your theme will look on the landing page
             </p>
           </div>
-        </div>
-      )}
-
-      {/* Branding Tab */}
-      {activeTab === 'branding' && (
-        <div className="space-y-8">
-          {/* Logo Upload */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Logo & Branding</h3>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Logo Upload */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Project/Company Logo</label>
-                {branding.logo ? (
-                  <div className="space-y-3">
-                    <div className="relative group inline-block">
-                      <img
-                        src={getFileUrl(branding.logo)}
-                        alt="Logo"
-                        className="h-20 object-contain bg-gray-50 rounded-lg p-2 border"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <label className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-800 text-white rounded-lg cursor-pointer hover:bg-blue-900 transition-colors">
-                        <Upload className="w-4 h-4" />
-                        <span className="text-sm font-medium">Change</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleLogoUpload}
-                          disabled={uploading}
-                        />
-                      </label>
-                      <button
-                        onClick={() => handleBrandingChange('logo', '')}
-                        className="flex items-center justify-center gap-2 px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors cursor-pointer"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <label className="block border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition-colors">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleLogoUpload}
-                      disabled={uploading}
-                    />
-                    {uploading ? (
-                      <div className="w-8 h-8 border-2 border-blue-800 border-t-transparent rounded-full animate-spin mx-auto" />
-                    ) : (
-                      <>
-                        <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                        <p className="text-sm text-gray-500">Upload logo</p>
-                      </>
-                    )}
-                  </label>
-                )}
-              </div>
-
-              {/* Favicon Upload */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Favicon</label>
-                <p className="text-xs text-gray-500 mb-2">Icon displayed in browser tab (32x32 or 16x16 pixels recommended)</p>
-                {branding.favicon ? (
-                  <div className="space-y-3">
-                    <div className="relative group inline-block">
-                      <img
-                        src={getFileUrl(branding.favicon)}
-                        alt="Favicon"
-                        className="w-16 h-16 object-contain bg-gray-50 rounded-lg p-2 border"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <label className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-800 text-white rounded-lg cursor-pointer hover:bg-blue-900 transition-colors">
-                        <Upload className="w-4 h-4" />
-                        <span className="text-sm font-medium">Change</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleFaviconUpload}
-                          disabled={uploading}
-                        />
-                      </label>
-                      <button
-                        onClick={() => handleBrandingChange('favicon', '')}
-                        className="flex items-center justify-center gap-2 px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors cursor-pointer"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <label className="block border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition-colors">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleFaviconUpload}
-                      disabled={uploading}
-                    />
-                    {uploading ? (
-                      <div className="w-6 h-6 border-2 border-blue-800 border-t-transparent rounded-full animate-spin mx-auto" />
-                    ) : (
-                      <>
-                        <Upload className="w-6 h-6 text-gray-400 mx-auto mb-1" />
-                        <p className="text-xs text-gray-500">Upload favicon</p>
-                      </>
-                    )}
-                  </label>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Company Info */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Company Information</h3>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Company/Builder Name<sup className="text-red-500">*</sup>
-                </label>
-                <input
-                  type="text"
-                  value={branding.companyName || ''}
-                  onChange={(e) => handleBrandingChange('companyName', e.target.value)}
-                  placeholder="e.g., ABC Builders Pvt Ltd"
-                  maxLength={FIELD_LIMITS.companyName.max}
-                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.companyName ? 'border-red-500' : 'border-gray-200'}`}
-                />
-                {errors.companyName && <p className="text-xs text-red-500 mt-1">{errors.companyName}</p>}
-                <p className="text-xs text-gray-400 mt-1">{(branding.companyName || '').length}/{FIELD_LIMITS.companyName.max}</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tagline/Slogan</label>
-                <input
-                  type="text"
-                  value={branding.tagline || ''}
-                  onChange={(e) => handleBrandingChange('tagline', e.target.value)}
-                  placeholder="e.g., Building Dreams Since 1990"
-                  maxLength={FIELD_LIMITS.tagline.max}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <p className="text-xs text-gray-400 mt-1">{(branding.tagline || '').length}/{FIELD_LIMITS.tagline.max}</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Contact Number<sup className="text-red-500">*</sup>
-                </label>
-                <input
-                  type="text"
-                  value={branding.phoneNumber || ''}
-                  onChange={(e) => handleBrandingChange('phoneNumber', e.target.value)}
-                  placeholder="e.g., +91 9876543210"
-                  maxLength={FIELD_LIMITS.phoneNumber.max}
-                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.phoneNumber ? 'border-red-500' : 'border-gray-200'}`}
-                />
-                {errors.phoneNumber && <p className="text-xs text-red-500 mt-1">{errors.phoneNumber}</p>}
-                <p className="text-xs text-gray-400 mt-1">{(branding.phoneNumber || '').length}/{FIELD_LIMITS.phoneNumber.max}</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email<sup className="text-red-500">*</sup>
-                </label>
-                <input
-                  type="text"
-                  value={branding.email || ''}
-                  onChange={(e) => handleBrandingChange('email', e.target.value)}
-                  placeholder="e.g., info@example.com"
-                  maxLength={FIELD_LIMITS.email.max}
-                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.email ? 'border-red-500' : 'border-gray-200'}`}
-                />
-                {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
-                <p className="text-xs text-gray-400 mt-1">{(branding.email || '').length}/{FIELD_LIMITS.email.max}</p>
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Custom CTA Button Text</label>
-                <input
-                  type="text"
-                  value={branding.customCtaText || ''}
-                  onChange={(e) => handleBrandingChange('customCtaText', e.target.value)}
-                  placeholder="e.g., Schedule a Site Visit"
-                  maxLength={FIELD_LIMITS.customCtaText.max}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <p className="text-xs text-gray-500 mt-1">Leave empty to use default. {(branding.customCtaText || '').length}/{FIELD_LIMITS.customCtaText.max}</p>
-              </div>
-            </div>
-          </div>
-
         </div>
       )}
 

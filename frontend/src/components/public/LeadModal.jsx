@@ -7,7 +7,7 @@ import { getThemeStyles } from '../../utils/theme.js';
 import toast from 'react-hot-toast';
 
 const LeadModal = () => {
-  const { isOpen, property, source, closeModal } = useLead();
+  const { isOpen, property, source, closeModal, onSuccess } = useLead();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -74,6 +74,8 @@ const LeadModal = () => {
     // Other unique sources
     const uniqueModals = {
       'cta-plans': { title: 'Get Floor Plans', subtitle: 'Detailed layout options', button: 'Get Plans' },
+      'cta-plans-view': { title: 'View Floor Plans', subtitle: 'Enter details to view plans', button: 'View Plans' },
+      'cta-unit-plans-view': { title: 'View Unit Plans', subtitle: 'Enter details to view unit plans', button: 'View Plans' },
       'cta-callback': { title: 'Request Callback', subtitle: 'Expert will call you soon', button: 'Request Callback' },
       'cta-faq': { title: 'Schedule a Call', subtitle: 'Expert will call you soon', button: 'Schedule Call' },
       'cta-amenities': { title: 'Get Amenities Info', subtitle: 'Learn about amenities', button: 'Get Info' },
@@ -153,11 +155,18 @@ const LeadModal = () => {
       setIsSuccess(true);
       toast.success('Thank you! We will contact you soon.');
 
+      // Mark this source as submitted in sessionStorage
+      if (property?._id && source) {
+        const submittedKey = `lead_submitted_${property._id}_${source}`;
+        sessionStorage.setItem(submittedKey, 'true');
+      }
+
       setTimeout(() => {
         setFormData({ name: '', email: '', phone: '' });
         setErrors({});
         setIsSuccess(false);
         closeModal();
+        onSuccess();
       }, 2000);
     } catch (error) {
       console.error('Error submitting lead:', error);

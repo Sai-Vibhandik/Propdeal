@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Plus, Search, Eye, Edit, Trash2, Star, StarOff, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Search, Eye, Edit, Trash2, Star, StarOff, Loader2, ChevronLeft, ChevronRight, X, AlertTriangle } from 'lucide-react';
 import AdminLayout from '../../components/admin/AdminLayout.jsx';
 import Button from '../../components/common/Button.jsx';
 import { PROPERTY_TYPES, PROPERTY_CATEGORIES, PROPERTY_STATUSES } from '../../utils/constants.js';
@@ -17,6 +17,8 @@ const AdminPropertiesPage = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, property: null });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { properties, loading, error, refetch } = useAdminProperties({
     status: statusFilter,
@@ -61,15 +63,27 @@ const AdminPropertiesPage = () => {
     setCurrentPage(1);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this property?')) return;
+  const openDeleteModal = (property) => {
+    setDeleteModal({ isOpen: true, property });
+  };
 
+  const closeDeleteModal = () => {
+    setDeleteModal({ isOpen: false, property: null });
+  };
+
+  const handleDelete = async () => {
+    if (!deleteModal.property) return;
+
+    setIsDeleting(true);
     try {
-      await propertiesAPI.delete(id);
+      await propertiesAPI.delete(deleteModal.property._id);
       toast.success('Property deleted successfully');
+      closeDeleteModal();
       refetch();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to delete property');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -281,7 +295,7 @@ const AdminPropertiesPage = () => {
                               <Edit className="w-4 h-4" />
                             </Link>
                             <button
-                              onClick={() => handleDelete(property._id)}
+                              onClick={() => openDeleteModal(property)}
                               className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -358,6 +372,64 @@ const AdminPropertiesPage = () => {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900">Delete Property</h2>
+              </div>
+              <button
+                onClick={closeDeleteModal}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-4">
+              <p className="text-gray-600">
+                Are you sure you want to delete <span className="font-semibold text-gray-900">{deleteModal.property?.name}</span>?
+              </p>
+              <p className="text-sm text-gray-500 mt-2">
+                This action cannot be undone. All data associated with this property will be permanently removed.
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 p-4 border-t border-gray-200">
+              <button
+                onClick={closeDeleteModal}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete Property'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 };

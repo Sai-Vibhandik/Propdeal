@@ -46,7 +46,7 @@ const TelecallerAssignment = ({ propertyId }) => {
 
   const handleAssignTelecaller = async (telecallerId) => {
     if (!propertyId) {
-      toast.error('Please save the property first before assigning telecallers');
+      toast.error('Please save the property first before assigning sales partners');
       return;
     }
 
@@ -61,7 +61,7 @@ const TelecallerAssignment = ({ propertyId }) => {
 
       await propertiesAPI.assignTelecallers(propertyId, newAssigned, distributeLeads);
       setAssignedTelecallers(newAssigned);
-      toast.success('Telecaller assignment updated');
+      toast.success('Sales partner assignment updated');
     } catch (error) {
       console.error('Error assigning telecaller:', error);
       toast.error('Failed to update assignment');
@@ -77,7 +77,7 @@ const TelecallerAssignment = ({ propertyId }) => {
     }
 
     if (assignedTelecallers.length === 0) {
-      toast.error('Please assign at least one telecaller first');
+      toast.error('Please assign at least one sales partner first');
       return;
     }
 
@@ -108,7 +108,7 @@ const TelecallerAssignment = ({ propertyId }) => {
       <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
         <div className="flex items-center gap-2 text-amber-700">
           <UserCog className="w-5 h-5" />
-          <p className="text-sm">Save the property as draft first to assign telecallers</p>
+          <p className="text-sm">Save the property as draft first to assign sales partners</p>
         </div>
       </div>
     );
@@ -120,9 +120,9 @@ const TelecallerAssignment = ({ propertyId }) => {
         <div className="flex items-center gap-2 text-gray-600">
           <Users className="w-5 h-5" />
           <p className="text-sm">
-            No telecallers available.{' '}
+            No sales partners available.{' '}
             <a href="/admin/telecallers" className="text-blue-800 hover:underline">
-              Add telecallers
+              Add sales partners
             </a>{' '}
             first.
           </p>
@@ -168,15 +168,15 @@ const TelecallerAssignment = ({ propertyId }) => {
       {assignedTelecallers.length === 0 && (
         <div className="text-sm text-amber-600 flex items-center gap-2">
           <Users className="w-4 h-4" />
-          Assign at least one telecaller to enable lead distribution
+          Assign at least one sales partner to enable lead distribution
         </div>
       )}
 
       {/* Telecaller List */}
       <div className="space-y-3">
-        <h4 className="font-medium text-gray-900">Assigned Telecallers</h4>
+        <h4 className="font-medium text-gray-900">Assigned Sales Partners</h4>
         <p className="text-sm text-gray-500">
-          Select telecallers to receive leads from this property. Leads will be distributed in round-robin order when enabled.
+          Select sales partners to receive leads from this property. Leads will be distributed in round-robin order when enabled.
         </p>
 
         <div className="grid gap-3">
@@ -234,7 +234,7 @@ const TelecallerAssignment = ({ propertyId }) => {
       {assignedTelecallers.length > 0 && distributeLeads && (
         <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
           <p className="text-sm text-emerald-700">
-            <strong>Active:</strong> Leads will be distributed to {assignedTelecallers.length} telecaller
+            <strong>Active:</strong> Leads will be distributed to {assignedTelecallers.length} sales partner
             {assignedTelecallers.length > 1 ? 's' : ''} in round-robin order.
           </p>
         </div>
@@ -243,7 +243,7 @@ const TelecallerAssignment = ({ propertyId }) => {
       {assignedTelecallers.length > 0 && !distributeLeads && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
           <p className="text-sm text-amber-700">
-            <strong>Disabled:</strong> Enable lead distribution to assign leads to telecallers.
+            <strong>Disabled:</strong> Enable lead distribution to assign leads to sales partners.
           </p>
         </div>
       )}

@@ -686,7 +686,7 @@ const EnquiriesPage = () => {
                 </div>
                 <div>
                   <label className="block text-sm text-gray-500 mb-2">
-                    Assign to Telecaller
+                    Assign to Sales Partner
                   </label>
                   <select
                     value={selectedEnquiry.assignedTo?._id || ""}

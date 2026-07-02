@@ -752,7 +752,7 @@ useEffect(() => {
                 </div>
                 <div>
                   <label className="text-sm text-gray-500">
-                    Assigned Telecaller
+                    Assigned Sales Partner
                   </label>
                   <select
                     value={selectedLead.assignedTo?._id || ""}

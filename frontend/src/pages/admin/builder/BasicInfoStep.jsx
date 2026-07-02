@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Building2, Calendar, Layers, Hash, Plus, X, Trash2, ShoppingBag, Heart, Book, Train, Utensils, Dumbbell, TreePine, Fuel, Banknote, Upload, Edit3 } from 'lucide-react';
+import { MapPin, Building2, Calendar, Layers, Hash, Plus, X, Trash2, ShoppingBag, Heart, Book, Train, Utensils, Dumbbell, TreePine, Fuel, Banknote, Upload, Edit3, Image, FileCheck } from 'lucide-react';
 import { mediaAPI, getFileUrl } from '../../../services/api.js';
 
 // Place types for nearby places
@@ -16,6 +16,15 @@ const placeTypes = [
   { value: 'fuel', label: 'Fuel Station', icon: Fuel },
   { value: 'other', label: 'Other', icon: MapPin },
 ];
+
+// Field character limits for branding
+const BRANDING_LIMITS = {
+  companyName: { max: 100 },
+  tagline: { max: 100 },
+  phoneNumber: { max: 20 },
+  email: { max: 100 },
+  customCtaText: { max: 30 },
+};
 
 // Property type specific field configurations
 const propertyTypeFields = {
@@ -78,9 +87,14 @@ const fieldLimits = {
 const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
   const [errors, setErrors] = useState({});
   const [uploadingReraQr, setUploadingReraQr] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingFavicon, setUploadingFavicon] = useState(false);
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [newPlace, setNewPlace] = useState({ name: '', distance: '', type: 'school' });
   const [newCustomField, setNewCustomField] = useState({ label: '', value: '' });
+
+  // Get branding data
+  const branding = propertyData.branding || {};
 
   // Get fields configuration based on property type
   const fieldConfig = propertyTypeFields[propertyData.propertyType] || propertyTypeFields.apartment;
@@ -91,6 +105,40 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
       updatePropertyData('propertyCategory', propertyData.propertyCategory.toLowerCase());
     }
   }, []);
+
+  // Initialize default RERA values for new properties (run once)
+  useEffect(() => {
+    const needsDefaults = !propertyData.reraSection?.headerText &&
+                          !propertyData.reraSection?.disclaimer &&
+                          !propertyData.branding?.advertiserName;
+
+    if (needsDefaults) {
+      const defaults = {
+        reraSection: {
+          headerText: 'Project Registered under Government of India RERA Act 2016',
+          reraWebsite: 'https://maharera.com',
+          advertiserName: 'PropDeal',
+          advertiserRegNo: 'A51234567890',
+          projectRegNo: 'PRM1234567890',
+          disclaimer: "We're an authorized marketing channel partner (PropDeal). The provided content, images & video are sourced from respective owners and are provided only for information purposes, it does not constitute an offer to buy any service. The price plans are subject to change without prior notice, and the properties mentioned are subject to availability. You can receive a call, SMS, or emails on contact details registered with us.",
+          enabled: true,
+        },
+        branding: {
+          ...propertyData.branding,
+          advertiserName: propertyData.branding?.advertiserName || 'PropDeal',
+          advertiserRegNo: propertyData.branding?.advertiserRegNo || 'A51234567890',
+          reraWebsite: propertyData.branding?.reraWebsite || 'https://maharera.com',
+        },
+        reraNumber: propertyData.reraNumber || 'PRM1234567890',
+      };
+
+      // Update all at once
+      updatePropertyData('reraSection', defaults.reraSection);
+      updatePropertyData('branding', defaults.branding);
+      updatePropertyData('reraNumber', defaults.reraNumber);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount
 
   // Auto-generate slug from name if not manually edited
   useEffect(() => {
@@ -221,6 +269,39 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
           newErrors['address.pincode'] = 'Pincode must contain only numbers';
         }
 
+        // Branding validation
+        const branding = propertyData.branding || {};
+
+        // Company Name - required
+        if (!branding.companyName?.trim()) {
+          newErrors.companyName = 'Company/Builder Name is required';
+        } else if (branding.companyName.length > BRANDING_LIMITS.companyName.max) {
+          newErrors.companyName = `Maximum ${BRANDING_LIMITS.companyName.max} characters allowed`;
+        }
+
+        // Contact Number - required and valid format
+        if (!branding.phoneNumber?.trim()) {
+          newErrors.phoneNumber = 'Contact Number is required';
+        } else {
+          const digitsOnly = branding.phoneNumber.replace(/\D/g, '');
+          if (digitsOnly.length < 10) {
+            newErrors.phoneNumber = 'Contact Number must have at least 10 digits';
+          } else if (digitsOnly.length > 15) {
+            newErrors.phoneNumber = 'Contact Number cannot have more than 15 digits';
+          } else if (!/^[0-9+\-\s]+$/.test(branding.phoneNumber)) {
+            newErrors.phoneNumber = 'Contact Number must contain only digits, +, - or spaces';
+          }
+        }
+
+        // Email - required and valid format
+        if (!branding.email?.trim()) {
+          newErrors.email = 'Email is required';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(branding.email)) {
+          newErrors.email = 'Please enter a valid email address';
+        } else if (branding.email.length > BRANDING_LIMITS.email.max) {
+          newErrors.email = `Maximum ${BRANDING_LIMITS.email.max} characters allowed`;
+        }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
       };
@@ -320,6 +401,60 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
       ...propertyData.branding,
       reraQrCode: '',
     });
+  };
+
+  // Logo upload
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploadingLogo(true);
+    try {
+      const response = await mediaAPI.uploadImage(file);
+      if (response.data.success) {
+        updatePropertyData('branding', {
+          ...propertyData.branding,
+          logo: response.data.data.url,
+        });
+      }
+    } catch (err) {
+      console.error('Failed to upload logo:', err);
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  // Favicon upload
+  const handleFaviconUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploadingFavicon(true);
+    try {
+      const response = await mediaAPI.uploadImage(file);
+      if (response.data.success) {
+        updatePropertyData('branding', {
+          ...propertyData.branding,
+          favicon: response.data.data.url,
+        });
+      }
+    } catch (err) {
+      console.error('Failed to upload favicon:', err);
+    } finally {
+      setUploadingFavicon(false);
+    }
+  };
+
+  // Handle branding field change
+  const handleBrandingChange = (field, value) => {
+    updatePropertyData('branding', {
+      ...propertyData.branding,
+      [field]: value,
+    });
+    // Clear error when user types
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: null }));
+    }
   };
 
   return (
@@ -692,6 +827,44 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <p className="text-xs text-gray-500 mt-1">{propertyData.branding?.advertiserRegNo?.length || 0}/{fieldLimits.advertiserRegNo.max} characters (min {fieldLimits.advertiserRegNo.min})</p>
+          </div>
+
+          {/* RERA Header Text */}
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              RERA Header Text
+              <span className="text-gray-400 font-normal ml-1">(optional)</span>
+            </label>
+            <input
+              type="text"
+              value={propertyData.reraSection?.headerText || ''}
+              onChange={(e) => updatePropertyData('reraSection', {
+                ...propertyData.reraSection,
+                headerText: e.target.value,
+              })}
+              placeholder="Project Registered under Government of India RERA Act 2016"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <p className="text-xs text-gray-500 mt-1">Default: "Project Registered under Government of India RERA Act 2016"</p>
+          </div>
+
+          {/* RERA Disclaimer */}
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              RERA Disclaimer
+              <span className="text-gray-400 font-normal ml-1">(optional)</span>
+            </label>
+            <textarea
+              value={propertyData.reraSection?.disclaimer || ''}
+              onChange={(e) => updatePropertyData('reraSection', {
+                ...propertyData.reraSection,
+                disclaimer: e.target.value,
+              })}
+              rows={4}
+              maxLength={1000}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            />
+            <p className="text-xs text-gray-500 mt-1">{propertyData.reraSection?.disclaimer?.length || 0}/1000 characters. Leave empty to use default disclaimer.</p>
           </div>
         </div>
       </div>
@@ -1113,6 +1286,204 @@ const BasicInfoStep = ({ propertyData, updatePropertyData }) => {
                 {suggestion}
               </button>
             ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Branding Section */}
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <Image className="w-5 h-5" />
+          Branding
+        </h3>
+        <p className="text-sm text-gray-500 mb-6">Add your company logo and contact details for the landing page</p>
+
+        <div className="space-y-6">
+          {/* Logo & Favicon */}
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Logo Upload */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Project/Company Logo</label>
+              {branding.logo ? (
+                <div className="space-y-3">
+                  <div className="relative group inline-block">
+                    <img
+                      src={getFileUrl(branding.logo)}
+                      alt="Logo"
+                      className="h-20 object-contain bg-gray-50 rounded-lg p-2 border"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <label className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-800 text-white rounded-lg cursor-pointer hover:bg-blue-900 transition-colors">
+                      <Upload className="w-4 h-4" />
+                      <span className="text-sm font-medium">Change</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleLogoUpload}
+                        disabled={uploadingLogo}
+                      />
+                    </label>
+                    <button
+                      onClick={() => handleBrandingChange('logo', '')}
+                      className="flex items-center justify-center gap-2 px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <label className="block border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleLogoUpload}
+                    disabled={uploadingLogo}
+                  />
+                  {uploadingLogo ? (
+                    <div className="w-8 h-8 border-2 border-blue-800 border-t-transparent rounded-full animate-spin mx-auto" />
+                  ) : (
+                    <>
+                      <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-sm text-gray-500">Upload logo</p>
+                    </>
+                  )}
+                </label>
+              )}
+            </div>
+
+            {/* Favicon Upload */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Favicon</label>
+              <p className="text-xs text-gray-500 mb-2">Icon displayed in browser tab (32x32 or 16x16 pixels recommended)</p>
+              {branding.favicon ? (
+                <div className="space-y-3">
+                  <div className="relative group inline-block">
+                    <img
+                      src={getFileUrl(branding.favicon)}
+                      alt="Favicon"
+                      className="w-16 h-16 object-contain bg-gray-50 rounded-lg p-2 border"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <label className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-800 text-white rounded-lg cursor-pointer hover:bg-blue-900 transition-colors">
+                      <Upload className="w-4 h-4" />
+                      <span className="text-sm font-medium">Change</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleFaviconUpload}
+                        disabled={uploadingFavicon}
+                      />
+                    </label>
+                    <button
+                      onClick={() => handleBrandingChange('favicon', '')}
+                      className="flex items-center justify-center gap-2 px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <label className="block border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleFaviconUpload}
+                    disabled={uploadingFavicon}
+                  />
+                  {uploadingFavicon ? (
+                    <div className="w-6 h-6 border-2 border-blue-800 border-t-transparent rounded-full animate-spin mx-auto" />
+                  ) : (
+                    <>
+                      <Upload className="w-6 h-6 text-gray-400 mx-auto mb-1" />
+                      <p className="text-xs text-gray-500">Upload favicon</p>
+                    </>
+                  )}
+                </label>
+              )}
+            </div>
+          </div>
+
+          {/* Company Information */}
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Company/Builder Name<sup className="text-red-500">*</sup>
+              </label>
+              <input
+                type="text"
+                value={branding.companyName || ''}
+                onChange={(e) => handleBrandingChange('companyName', e.target.value)}
+                placeholder="e.g., ABC Builders Pvt Ltd"
+                maxLength={BRANDING_LIMITS.companyName.max}
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.companyName ? 'border-red-500' : 'border-gray-200'}`}
+              />
+              {errors.companyName && <p className="text-xs text-red-500 mt-1">{errors.companyName}</p>}
+              <p className="text-xs text-gray-400 mt-1">{(branding.companyName || '').length}/{BRANDING_LIMITS.companyName.max}</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Tagline/Slogan</label>
+              <input
+                type="text"
+                value={branding.tagline || ''}
+                onChange={(e) => handleBrandingChange('tagline', e.target.value)}
+                placeholder="e.g., Building Dreams Since 1990"
+                maxLength={BRANDING_LIMITS.tagline.max}
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-xs text-gray-400 mt-1">{(branding.tagline || '').length}/{BRANDING_LIMITS.tagline.max}</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Contact Number<sup className="text-red-500">*</sup>
+              </label>
+              <input
+                type="text"
+                value={branding.phoneNumber || ''}
+                onChange={(e) => handleBrandingChange('phoneNumber', e.target.value)}
+                placeholder="e.g., +91 9876543210"
+                maxLength={BRANDING_LIMITS.phoneNumber.max}
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.phoneNumber ? 'border-red-500' : 'border-gray-200'}`}
+              />
+              {errors.phoneNumber && <p className="text-xs text-red-500 mt-1">{errors.phoneNumber}</p>}
+              <p className="text-xs text-gray-400 mt-1">{(branding.phoneNumber || '').length}/{BRANDING_LIMITS.phoneNumber.max}</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email<sup className="text-red-500">*</sup>
+              </label>
+              <input
+                type="text"
+                value={branding.email || ''}
+                onChange={(e) => handleBrandingChange('email', e.target.value)}
+                placeholder="e.g., info@example.com"
+                maxLength={BRANDING_LIMITS.email.max}
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.email ? 'border-red-500' : 'border-gray-200'}`}
+              />
+              {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
+              <p className="text-xs text-gray-400 mt-1">{(branding.email || '').length}/{BRANDING_LIMITS.email.max}</p>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Custom CTA Button Text</label>
+              <input
+                type="text"
+                value={branding.customCtaText || ''}
+                onChange={(e) => handleBrandingChange('customCtaText', e.target.value)}
+                placeholder="e.g., Schedule a Site Visit"
+                maxLength={BRANDING_LIMITS.customCtaText.max}
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Leave empty to use default. {(branding.customCtaText || '').length}/{BRANDING_LIMITS.customCtaText.max}</p>
+            </div>
           </div>
         </div>
       </div>

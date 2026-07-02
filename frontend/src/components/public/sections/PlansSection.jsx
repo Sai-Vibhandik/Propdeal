@@ -5,6 +5,8 @@ import { getThemeStyles, getCardClasses, getCardBorderClasses, getSectionBgClass
 import { getFileUrl } from '../../../services/api.js';
 import { useLead } from '../../../context/LeadContext.jsx';
 
+const PLANS_VIEW_SOURCE = 'cta-plans-view';
+
 const PlansSection = ({ property, theme = {}, bgVariant = 'white' }) => {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [showLightbox, setShowLightbox] = useState(false);
@@ -12,6 +14,13 @@ const PlansSection = ({ property, theme = {}, bgVariant = 'white' }) => {
   const { openModal } = useLead();
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
+
+  // Check if user has already submitted lead for viewing plans
+  const hasSubmittedPlansLead = () => {
+    if (!property?._id) return false;
+    const key = `lead_submitted_${property._id}_${PLANS_VIEW_SOURCE}`;
+    return sessionStorage.getItem(key) === 'true';
+  };
 
   // Get section and card classes for proper contrast
   const sectionBgClass = getSectionBgClasses(bgVariant, isDark);
@@ -65,28 +74,23 @@ const PlansSection = ({ property, theme = {}, bgVariant = 'white' }) => {
     });
   }
 
-  // 4. Unit Plans (from pricing plans)
-  if (property.pricingPlans?.length > 0) {
-    property.pricingPlans.forEach((pp, index) => {
-      if (pp.unitPlan?.url) {
-        plans.push({
-          type: 'unit',
-          title: pp.configuration || `Unit Plan ${index + 1}`,
-          subtitle: pp.size || '',
-          url: getFileUrl(pp.unitPlan.url),
-          publicId: pp.unitPlan.publicId,
-          icon: Home,
-        });
-      }
-    });
-  }
+  // Note: Unit Plans are shown in PricingSection, not here
 
   // Don't render if no plans available
   if (plans.length === 0) return null;
 
   const openLightbox = (plan) => {
-    setSelectedPlan(plan);
-    setShowLightbox(true);
+    // Check if user has submitted lead for viewing plans
+    if (hasSubmittedPlansLead()) {
+      setSelectedPlan(plan);
+      setShowLightbox(true);
+    } else {
+      // Open lead form first, then show lightbox after successful submission
+      openModal(property, PLANS_VIEW_SOURCE, () => {
+        setSelectedPlan(plan);
+        setShowLightbox(true);
+      });
+    }
   };
 
   const closeLightbox = () => {

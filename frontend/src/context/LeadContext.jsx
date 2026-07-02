@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useRef } from 'react';
 import { analyticsAPI } from '../services/api.js';
 
 const LeadContext = createContext(null);
@@ -7,11 +7,13 @@ export const LeadProvider = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [property, setProperty] = useState(null);
   const [source, setSource] = useState('cta-price');
+  const onSuccessCallback = useRef(null);
 
-  const openModal = (propertyData, sourceType = 'cta-price') => {
+  const openModal = (propertyData, sourceType = 'cta-price', onSuccess = null) => {
     setProperty(propertyData);
     setSource(sourceType);
     setIsOpen(true);
+    onSuccessCallback.current = onSuccess;
 
     // Track CTA click (fire and forget)
     if (propertyData?._id) {
@@ -37,6 +39,8 @@ export const LeadProvider = ({ children }) => {
         'cta-price': 'priceDetails',
         // Other buttons
         'cta-plans': 'getFloorPlans',
+        'cta-plans-view': 'viewFloorPlans',
+        'cta-unit-plans-view': 'viewUnitPlans',
         'cta-callback': 'requestCallback',
         'cta-faq': 'faqScheduleCall',
         'cta-amenities': 'amenitiesInfo',
@@ -59,8 +63,15 @@ export const LeadProvider = ({ children }) => {
     setSource('cta-price');
   };
 
+  const onSuccess = () => {
+    if (onSuccessCallback.current) {
+      onSuccessCallback.current();
+      onSuccessCallback.current = null;
+    }
+  };
+
   return (
-    <LeadContext.Provider value={{ isOpen, property, source, openModal, closeModal }}>
+    <LeadContext.Provider value={{ isOpen, property, source, openModal, closeModal, onSuccess }}>
       {children}
     </LeadContext.Provider>
   );

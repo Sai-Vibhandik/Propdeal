@@ -40,7 +40,7 @@ const HeroSection = ({ property, layout = 'full-screen', theme = {}, branding = 
   const showReraBadge = reraNumber && brandingData.showReraBadge !== false;
 
   return (
-    <section className="relative">
+    <section className="relative pt-16 md:pt-20">
       <div className="flex flex-col lg:flex-row">
 
         {/* Left Side - Image Carousel (70%) */}

@@ -20,6 +20,10 @@ const SearchBar = ({ onSearch, initialValues = {}, variant = 'default' }) => {
   const typeRef = useRef(null);
   const configRef = useRef(null);
 
+  // Check if selected property type is residential
+  const selectedType = PROPERTY_TYPES.find((t) => t.value === formData.propertyType);
+  const isResidential = selectedType?.category === 'residential';
+
   // Close dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -39,7 +43,19 @@ const SearchBar = ({ onSearch, initialValues = {}, variant = 'default' }) => {
   }, []);
 
   const handleChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => {
+      const newData = { ...prev, [field]: value };
+
+      // Clear configuration if property type is not residential
+      if (field === 'propertyType') {
+        const selectedType = PROPERTY_TYPES.find((t) => t.value === value);
+        if (selectedType?.category !== 'residential') {
+          newData.configuration = '';
+        }
+      }
+
+      return newData;
+    });
   };
 
   const handleSearch = () => {
@@ -59,7 +75,6 @@ const SearchBar = ({ onSearch, initialValues = {}, variant = 'default' }) => {
   };
 
   const selectedCity = INDIAN_CITIES.find((c) => c === formData.city);
-  const selectedType = PROPERTY_TYPES.find((t) => t.value === formData.propertyType);
   const selectedConfig = formData.configuration;
 
   return (
@@ -194,71 +209,73 @@ const SearchBar = ({ onSearch, initialValues = {}, variant = 'default' }) => {
           </AnimatePresence>
         </div>
 
-        {/* Configuration Dropdown */}
-        <div className="relative flex-1" ref={configRef}>
-          <button
-            type="button"
-            onClick={() => {
-              setShowConfigDropdown(!showConfigDropdown);
-              setShowCityDropdown(false);
-              setShowTypeDropdown(false);
-            }}
-            className="w-full flex items-center gap-3 px-4 py-3.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors text-left cursor-pointer"
-          >
-            <div className="w-5 h-5 flex-shrink-0">
-              <svg className="w-5 h-5 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6z" />
-              </svg>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-slate-500 mb-0.5">Configuration</p>
-              <p className="font-medium text-slate-800 truncate">
-                {selectedConfig || 'All Configs'}
-              </p>
-            </div>
-            <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${showConfigDropdown ? 'rotate-180' : ''}`} />
-          </button>
+        {/* Configuration Dropdown - Only show for residential properties */}
+        {isResidential && (
+          <div className="relative flex-1" ref={configRef}>
+            <button
+              type="button"
+              onClick={() => {
+                setShowConfigDropdown(!showConfigDropdown);
+                setShowCityDropdown(false);
+                setShowTypeDropdown(false);
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3.5 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors text-left cursor-pointer"
+            >
+              <div className="w-5 h-5 flex-shrink-0">
+                <svg className="w-5 h-5 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6z" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-slate-500 mb-0.5">Configuration</p>
+                <p className="font-medium text-slate-800 truncate">
+                  {selectedConfig || 'All Configs'}
+                </p>
+              </div>
+              <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${showConfigDropdown ? 'rotate-180' : ''}`} />
+            </button>
 
-          <AnimatePresence>
-            {showConfigDropdown && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl shadow-slate-200/50 z-50"
-              >
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleChange('configuration', '');
-                    setShowConfigDropdown(false);
-                  }}
-                  className={`w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors cursor-pointer ${
-                    !formData.configuration ? 'bg-slate-100 text-slate-800 font-medium' : 'text-slate-700'
-                  }`}
+            <AnimatePresence>
+              {showConfigDropdown && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl shadow-slate-200/50 z-50"
                 >
-                  All Configurations
-                </button>
-                {CONFIGURATIONS.map((config) => (
                   <button
-                    key={config}
                     type="button"
                     onClick={() => {
-                      handleChange('configuration', config);
+                      handleChange('configuration', '');
                       setShowConfigDropdown(false);
                     }}
                     className={`w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors cursor-pointer ${
-                      formData.configuration === config ? 'bg-slate-100 text-slate-800 font-medium' : 'text-slate-700'
+                      !formData.configuration ? 'bg-slate-100 text-slate-800 font-medium' : 'text-slate-700'
                     }`}
                   >
-                    {config}
+                    All Configurations
                   </button>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+                  {CONFIGURATIONS.map((config) => (
+                    <button
+                      key={config}
+                      type="button"
+                      onClick={() => {
+                        handleChange('configuration', config);
+                        setShowConfigDropdown(false);
+                      }}
+                      className={`w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors cursor-pointer ${
+                        formData.configuration === config ? 'bg-slate-100 text-slate-800 font-medium' : 'text-slate-700'
+                      }`}
+                    >
+                      {config}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
 
         {/* Search Button */}
         <motion.button
@@ -274,7 +291,7 @@ const SearchBar = ({ onSearch, initialValues = {}, variant = 'default' }) => {
       </div>
 
       {/* Selected Filters */}
-      {(formData.city || formData.propertyType || formData.configuration) && (
+      {(formData.city || formData.propertyType || (formData.configuration && isResidential)) && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
@@ -298,7 +315,7 @@ const SearchBar = ({ onSearch, initialValues = {}, variant = 'default' }) => {
               </button>
             </span>
           )}
-          {formData.configuration && (
+          {formData.configuration && isResidential && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-800 text-sm font-medium rounded-full">
               {formData.configuration}
               <button onClick={() => handleClear('configuration')} className="hover:text-slate-600 cursor-pointer">

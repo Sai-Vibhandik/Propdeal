@@ -231,6 +231,17 @@ const propertySchema = new mongoose.Schema({
     email: { type: String, default: '' },
   },
 
+  // RERA & Legal Disclaimer Section
+  reraSection: {
+    enabled: { type: Boolean, default: true },
+    headerText: { type: String, default: 'Project Registered under Government of India RERA Act 2016' },
+    reraWebsite: { type: String, default: 'https://maharera.com' },
+    advertiserName: { type: String, default: 'PropDeal' },
+    advertiserRegNo: { type: String, default: 'A51234567890' },
+    projectRegNo: { type: String, default: 'PRM1234567890' },
+    disclaimer: { type: String, default: "We're an authorized marketing channel partner (PropDeal). The provided content, images & video are sourced from respective owners and are provided only for information purposes, it does not constitute an offer to buy any service. The price plans are subject to change without prior notice, and the properties mentioned are subject to availability. You can receive a call, SMS, or emails on contact details registered with us." },
+  },
+
   // Media
   heroImages: [{
     url: String,

@@ -8,18 +8,34 @@ const RERASection = ({ property, theme = {}, bgVariant = 'gray' }) => {
   // Get section background class for proper contrast
   const sectionBgClass = getSectionBgClasses(bgVariant, isDark);
 
-  // Get RERA details from property
-  const reraNumber = property.reraNumber || '';
+  // Get RERA details from property with defaults
   const branding = property.branding || {};
+  const reraSection = property.reraSection || {};
 
-  // RERA details
-  const reraWebsite = branding.reraWebsite || '';
-  const advertiserName = branding.advertiserName || '';
-  const advertiserRegNo = branding.advertiserRegNo || '';
+  // Default values - will be used if fields are empty
+  const defaults = {
+    headerText: 'Project Registered under Government of India RERA Act 2016',
+    reraWebsite: 'https://maharera.com',
+    advertiserName: 'PropDeal',
+    advertiserRegNo: 'A51234567890',
+    projectRegNo: 'PRM1234567890',
+    disclaimer: "We're an authorized marketing channel partner (PropDeal). The provided content, images & video are sourced from respective owners and are provided only for information purposes, it does not constitute an offer to buy any service. The price plans are subject to change without prior notice, and the properties mentioned are subject to availability. You can receive a call, SMS, or emails on contact details registered with us.",
+  };
+
+  // RERA details - use property fields first, then fall back to defaults
+  const headerText = reraSection.headerText || defaults.headerText;
+  const reraWebsite = branding.reraWebsite || defaults.reraWebsite;
+  const advertiserName = branding.advertiserName || defaults.advertiserName;
+  const advertiserRegNo = branding.advertiserRegNo || defaults.advertiserRegNo;
+  const projectRegNo = property.reraNumber || reraSection.projectRegNo || defaults.projectRegNo;
+  const disclaimer = reraSection.disclaimer || defaults.disclaimer;
   const reraQrCode = branding.reraQrCode ? getFileUrl(branding.reraQrCode) : '';
 
-  // Don't render if no RERA info at all
-  if (!reraNumber && !reraWebsite && !advertiserName && !reraQrCode) {
+  // Check if section is enabled
+  const isEnabled = reraSection.enabled !== false; // Default to true
+
+  // Don't render if disabled
+  if (!isEnabled) {
     return null;
   }
 
@@ -45,10 +61,10 @@ const RERASection = ({ property, theme = {}, bgVariant = 'gray' }) => {
         {/* RERA Info - Second */}
         <div className="mb-4 space-y-2">
           {/* Line 1: RERA Registration Info */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Building2 className="w-5 h-5 flex-shrink-0" style={{ color: colors.primary }} />
             <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              Project Registered under Government of India RERA Act 2016
+              {headerText}
             </p>
             {reraWebsite && (
               <>
@@ -66,11 +82,11 @@ const RERASection = ({ property, theme = {}, bgVariant = 'gray' }) => {
           </div>
 
           {/* Line 2: Advertiser Info */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <User className="w-5 h-5 flex-shrink-0" style={{ color: colors.primary }} />
             <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
               <span className="font-medium">Government RERA Authorised Advertiser's:</span>{' '}
-              {advertiserName || 'N/A'}
+              {advertiserName}
               {advertiserRegNo && <span className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}>, Registration No.: {advertiserRegNo}</span>}
             </p>
           </div>
@@ -80,7 +96,7 @@ const RERASection = ({ property, theme = {}, bgVariant = 'gray' }) => {
             <FileCheck className="w-5 h-5 flex-shrink-0" style={{ color: colors.primary }} />
             <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
               <span className="font-medium">Project Registration No.:</span>{' '}
-              <span className="font-semibold">{reraNumber || 'N/A'}</span>
+              <span className="font-semibold">{projectRegNo}</span>
             </p>
           </div>
         </div>
@@ -88,7 +104,7 @@ const RERASection = ({ property, theme = {}, bgVariant = 'gray' }) => {
         {/* Disclaimer - Third */}
         <div className={`pt-4 ${isDark ? 'border-t border-gray-700' : 'border-t border-gray-300'}`}>
           <p className={`text-xs leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            <span className="font-medium">Disclaimer:</span> We're an authorized marketing channel partner{advertiserName && ` (${advertiserName})`}. The provided content, images & video are sourced from respective owners and are provided only for information purposes, it does not constitute an offer to buy any service. The price plans are subject to change without prior notice, and the properties mentioned are subject to availability. You can receive a call, SMS, or emails on contact details registered with us.
+            <span className="font-medium">Disclaimer:</span> {disclaimer}
           </p>
         </div>
       </div>

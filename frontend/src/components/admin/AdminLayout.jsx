@@ -88,7 +88,7 @@ const AdminLayout = ({ children }) => {
         label: 'Management',
         items: [
           { path: '/admin/properties', label: 'Properties', icon: Building2 },
-          { path: '/admin/telecallers', label: 'Telecallers', icon: UserCog },
+          { path: '/admin/telecallers', label: 'Sales Partners', icon: UserCog },
           { path: '/admin/leads', label: 'Leads', icon: Users },
           { path: '/admin/enquiries', label: 'Enquiries', icon: MessageSquareText },
         ],

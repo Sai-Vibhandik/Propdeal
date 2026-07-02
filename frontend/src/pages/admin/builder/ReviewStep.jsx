@@ -314,7 +314,7 @@ const ReviewStep = ({ propertyData, onSaveDraft, onPublish }) => {
             <h3 className="text-lg font-semibold text-gray-900">Lead Distribution</h3>
           </div>
           <p className="text-sm text-gray-500 mt-1">
-            Assign telecallers to distribute leads in round-robin order
+            Assign sales partners to distribute leads in round-robin order
           </p>
         </div>
         <div className="p-6">

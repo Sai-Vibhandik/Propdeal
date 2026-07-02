@@ -214,7 +214,8 @@ const PropertyLandingPage = () => {
         )
         .length;
       const reraBgVariant = renderedSectionsWithBgVariant % 2 === 1 ? 'gray' : 'white';
-      const hasRERAContent = property.reraNumber || property.branding?.reraWebsite || property.branding?.advertiserName || property.branding?.reraQrCode;
+      // RERA section shows with defaults, so just check if it's enabled
+      const hasRERAContent = property.reraSection?.enabled !== false;
       const footerBgVariant = hasRERAContent
         ? (renderedSectionsWithBgVariant + 1) % 2 === 1 ? 'gray' : 'white'
         : reraBgVariant;
@@ -336,8 +337,9 @@ const PropertyLandingPage = () => {
         // RERA gets the next bgVariant in sequence
         const reraBgVariant = renderedSectionsWithBgVariant % 2 === 1 ? 'gray' : 'white';
 
-        // Check if RERA will render (has content)
-        const hasRERAContent = property.reraNumber || property.branding?.reraWebsite || property.branding?.advertiserName || property.branding?.reraQrCode;
+        // Check if RERA will render (has content or enabled)
+        // RERA section shows with defaults, so just check if it's enabled
+        const hasRERAContent = property.reraSection?.enabled !== false;
 
         // Footer gets the next bgVariant after RERA (if RERA renders) or same as RERA (if RERA doesn't render)
         const footerBgVariant = hasRERAContent

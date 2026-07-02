@@ -46,6 +46,10 @@ const leadSchema = new mongoose.Schema({
       'cta-pricing-table', 'cta-pricing-sheet', 'cta-pricing-card', 'cta-price',
       // Other buttons
       'cta-callback', 'cta-faq', 'cta-amenities', 'cta-plans', 'cta-brochure', 'cta-homeloan',
+      // View Plans (requires lead form before viewing)
+      'cta-plans-view',
+      // View Unit Plans (requires lead form before viewing)
+      'cta-unit-plans-view',
     ],
     default: 'property-page',
   },

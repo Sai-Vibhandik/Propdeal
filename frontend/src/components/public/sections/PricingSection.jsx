@@ -5,6 +5,8 @@ import { useLead } from '../../../context/LeadContext.jsx';
 import { getThemeStyles, getCardClasses, getCardBorderClasses, getSectionBgClasses } from '../../../utils/theme.js';
 import { getFileUrl } from '../../../services/api.js';
 
+const UNIT_PLANS_VIEW_SOURCE = 'cta-unit-plans-view';
+
 const PricingSection = ({ property, layout = 'cards', theme = {}, bgVariant = 'white' }) => {
   // Use pricingPlans (new) or fall back to floorPlans (legacy)
   const pricingPlans = property.pricingPlans?.length > 0
@@ -24,11 +26,28 @@ const PricingSection = ({ property, layout = 'cards', theme = {}, bgVariant = 'w
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedConfig, setSelectedConfig] = useState(null);
 
-  // Open lightbox with image
+  // Check if user has already submitted lead for viewing unit plans
+  const hasSubmittedUnitPlansLead = () => {
+    if (!property?._id) return false;
+    const key = `lead_submitted_${property._id}_${UNIT_PLANS_VIEW_SOURCE}`;
+    return sessionStorage.getItem(key) === 'true';
+  };
+
+  // Open lightbox with image - requires lead form first
   const openLightbox = (imageUrl, configuration) => {
-    setSelectedImage(imageUrl);
-    setSelectedConfig(configuration);
-    setLightboxOpen(true);
+    // Check if user has submitted lead for viewing unit plans
+    if (hasSubmittedUnitPlansLead()) {
+      setSelectedImage(imageUrl);
+      setSelectedConfig(configuration);
+      setLightboxOpen(true);
+    } else {
+      // Open lead form first, then show lightbox after successful submission
+      openModal(property, UNIT_PLANS_VIEW_SOURCE, () => {
+        setSelectedImage(imageUrl);
+        setSelectedConfig(configuration);
+        setLightboxOpen(true);
+      });
+    }
   };
 
   // Close lightbox
