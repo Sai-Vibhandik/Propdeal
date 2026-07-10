@@ -7,7 +7,7 @@ import { enquiriesAPI } from '../../services/api.js';
 
 // EnquiryModal - handles general enquiries from main website
 const EnquiryModal = () => {
-  const { isOpen, source, closeModal } = useEnquiry();
+  const { isOpen, source, location, closeModal } = useEnquiry();
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -33,6 +33,8 @@ const EnquiryModal = () => {
       'partner-with-us': { title: 'Partner With Us', subtitle: 'Let\'s discuss how we can help market your properties', button: 'Get Started' },
       'developer-contact': { title: 'Contact Us', subtitle: 'We\'ll get back to you within 24 hours', button: 'Send Message' },
       'developer-cta': { title: 'Get Started Today', subtitle: 'Join leading developers who trust us', button: 'Submit' },
+      'advertise-project': { title: 'Advertise Your Project', subtitle: 'Let us help you market your property', button: 'Get Started' },
+      'regional-partnership': { title: 'Regional Partnership', subtitle: 'Apply for exclusive regional partnership opportunities', button: 'Apply Now' },
       'general': { title: 'Enquire Now', subtitle: 'We\'ll get back to you soon', button: 'Submit' },
     };
     return modals[source] || modals['general'];
@@ -113,6 +115,7 @@ const EnquiryModal = () => {
         phone: formData.phone.trim(),
         message: formData.message.trim(),
         source: source,
+        location: location,
       });
 
       setIsSuccess(true);

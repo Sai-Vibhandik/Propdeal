@@ -55,8 +55,14 @@ const enquirySchema = new mongoose.Schema({
   // Source (where the enquiry came from)
   source: {
     type: String,
-    enum: ['contact-section', 'home-loan', 'general', 'partner-with-us', 'developer-contact', 'developer-cta'],
+    enum: ['contact-section', 'home-loan', 'general', 'partner-with-us', 'developer-contact', 'developer-cta', 'advertise-project', 'regional-partnership'],
     default: 'contact-section',
+  },
+
+  // Location on page where the button was clicked
+  location: {
+    type: String,
+    trim: true,
   },
 }, {
   timestamps: true,

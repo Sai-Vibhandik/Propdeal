@@ -58,6 +58,9 @@ const sourceNames = {
   'cta-plans': 'Floor Plans - Get Details',
   'cta-brochure': 'Download Brochure',
   'cta-homeloan': 'Home Loan Assistance',
+  // View Plans
+  'cta-plans-view': 'View Floor Plans',
+  'cta-unit-plans-view': 'View Unit Plans',
   // Homepage / Developers page
   'home-loan': 'Home Loan Form',
   'general': 'General Enquiry',
@@ -67,6 +70,8 @@ const sourceNames = {
   'partner-with-us': 'Partner With Us',
   'developer-contact': 'Developer Contact',
   'developer-cta': 'Developer CTA',
+  'advertise-project': 'Advertise Project',
+  'regional-partnership': 'Regional Partnership',
 };
 
 // Source colors for chart
@@ -100,6 +105,9 @@ const SOURCE_CHART_COLORS = {
   'cta-plans': '#fb923c',
   'cta-brochure': '#fbbf24',
   'cta-homeloan': '#f59e0b',
+  // View Plans
+  'cta-plans-view': '#f97316',
+  'cta-unit-plans-view': '#ea580c',
   // Homepage / Developers page
   'home-loan': '#059669',
   'general': '#6b7280',
@@ -109,6 +117,8 @@ const SOURCE_CHART_COLORS = {
   'partner-with-us': '#7c3aed',
   'developer-contact': '#9333ea',
   'developer-cta': '#a855f7',
+  'advertise-project': '#f59e0b',
+  'regional-partnership': '#10b981',
 };
 
 const STATUS_CHART_COLORS = {
@@ -121,6 +131,17 @@ const STATUS_CHART_COLORS = {
 const getStatusColor = (status) => STATUS_CHART_COLORS[status] || '#6b7280';
 const getSourceColor = (source) => SOURCE_CHART_COLORS[source] || '#6b7280';
 const getSourceName = (source) => sourceNames[source] || source?.replace(/-/g, ' ') || 'Unknown';
+
+// Location name mappings for display
+const locationNames = {
+  hero: 'Hero Section',
+  card: 'Card',
+  cta: 'CTA Section',
+  footer: 'Footer',
+  section: 'Section',
+};
+
+const getLocationName = (location) => locationNames[location] || location?.replace(/-/g, ' ') || '';
 
 const AnalyticsPage = () => {
   const [loading, setLoading] = useState(true);

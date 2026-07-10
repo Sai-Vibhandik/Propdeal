@@ -50,6 +50,8 @@ const leadSchema = new mongoose.Schema({
       'cta-plans-view',
       // View Unit Plans (requires lead form before viewing)
       'cta-unit-plans-view',
+      // Contact section
+      'contact-section',
     ],
     default: 'property-page',
   },

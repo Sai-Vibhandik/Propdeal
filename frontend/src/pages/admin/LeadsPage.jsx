@@ -39,6 +39,50 @@ const statusLabels = {
   lost: "Lost",
 };
 
+// Source name mappings for display
+const sourceLabels = {
+  // Legacy sources
+  homepage: "Homepage",
+  "property-page": "Property Page",
+  "contact-page": "Contact Page",
+  // Get Details buttons
+  "cta-hero": "Hero - Get Details",
+  "cta-highlights": "Highlights - Get Details",
+  "cta-overview": "Overview - Get Details",
+  "cta-investment": "Investment - Get Details",
+  "cta-navbar": "Navbar - Get Details",
+  "cta-sticky": "Sticky Bar - Get Details",
+  // Book Site Visit buttons
+  "cta-hero-visit": "Hero - Site Visit",
+  "cta-gallery-visit": "Gallery - Site Visit",
+  "cta-footer-visit": "Footer - Site Visit",
+  "cta-video-visit": "Video - Site Visit",
+  "cta-visit": "Site Visit",
+  // Get Price Details buttons
+  "cta-pricing-table": "Pricing Table",
+  "cta-pricing-sheet": "Price Sheet Download",
+  "cta-pricing-card": "Pricing Card",
+  "cta-price": "Price Details",
+  // Other buttons
+  "cta-callback": "Request Callback",
+  "cta-faq": "FAQ - Schedule Call",
+  "cta-amenities": "Amenities - Get Info",
+  "cta-plans": "Floor Plans - Get Details",
+  "cta-brochure": "Download Brochure",
+  "cta-homeloan": "Home Loan Assistance",
+  // View Plans
+  "cta-plans-view": "View Floor Plans",
+  "cta-unit-plans-view": "View Unit Plans",
+  // Contact section
+  "contact-section": "Contact Form",
+};
+
+const formatSource = (source) => {
+  if (!source) return "Website";
+  if (sourceLabels[source]) return sourceLabels[source];
+  return source.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+};
+
 const ITEMS_PER_PAGE = 10;
 
 const LeadsPage = () => {
@@ -554,15 +598,10 @@ useEffect(() => {
                           </select>
                           <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                         </div>
-                        {lead.assignedTo?.phone && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            {lead.assignedTo.phone}
-                          </p>
-                        )}
                       </td>
                       <td className="px-4 py-4">
-                        <span className="text-sm text-gray-600 capitalize">
-                          {lead.source || "Website"}
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                          {formatSource(lead.source)}
                         </span>
                       </td>
                       <td className="px-4 py-4">
@@ -728,8 +767,8 @@ useEffect(() => {
                 </div>
                 <div>
                   <label className="text-sm text-gray-500">Source</label>
-                  <p className="font-medium text-gray-900 capitalize">
-                    {selectedLead.source || "Website"}
+                  <p className="font-medium text-gray-900">
+                    {formatSource(selectedLead.source)}
                   </p>
                 </div>
                 {selectedLead.message && (

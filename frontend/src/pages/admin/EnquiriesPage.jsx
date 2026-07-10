@@ -42,15 +42,31 @@ const sourceLabels = {
   "partner-with-us": "Partner With Us",
   "developer-contact": "Developer Contact",
   "developer-cta": "Developer CTA",
+  "advertise-project": "Advertise Project",
+  "regional-partnership": "Regional Partnership",
   general: "General",
   homepage: "Homepage",
   "property-page": "Property Page",
+};
+
+const locationLabels = {
+  hero: "Hero Section",
+  card: "Card",
+  cta: "CTA Section",
+  footer: "Footer",
+  section: "Section",
 };
 
 const formatSource = (source) => {
   if (!source) return "Website";
   if (sourceLabels[source]) return sourceLabels[source];
   return source.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+};
+
+const formatLocation = (location) => {
+  if (!location) return "";
+  if (locationLabels[location]) return locationLabels[location];
+  return location.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 };
 
 const ITEMS_PER_PAGE = 10;
@@ -468,9 +484,16 @@ const EnquiriesPage = () => {
                         </div>
                       </td>
                       <td className="px-4 py-4">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                          {formatSource(enquiry.source)}
-                        </span>
+                        <div className="flex flex-col gap-1">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                            {formatSource(enquiry.source)}
+                          </span>
+                          {enquiry.location && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+                              {formatLocation(enquiry.location)}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-4">
                         <div className="relative">
@@ -660,11 +683,18 @@ const EnquiriesPage = () => {
                 )}
                 <div>
                   <label className="block text-sm text-gray-500 mb-1">Source</label>
-                  <p className="font-medium text-gray-900 capitalize">
-                    {selectedEnquiry.source
-                      ?.replace(/-/g, " ")
-                      .replace(/\b\w/g, (l) => l.toUpperCase()) || "Website"}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-gray-900 capitalize">
+                      {selectedEnquiry.source
+                        ?.replace(/-/g, " ")
+                        .replace(/\b\w/g, (l) => l.toUpperCase()) || "Website"}
+                    </p>
+                    {selectedEnquiry.location && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+                        {formatLocation(selectedEnquiry.location)}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm text-gray-500 mb-2">Status</label>

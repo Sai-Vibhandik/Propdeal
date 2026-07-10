@@ -135,7 +135,7 @@ const DevelopersPage = () => {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <motion.button
-                    onClick={() => openModal('advertise-project')}
+                    onClick={() => openModal('advertise-project', 'hero')}
                     className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-400 to-amber-600 text-slate-900 font-bold rounded-xl hover:shadow-lg hover:shadow-amber-500/30 hover:scale-105 active:scale-100 active:shadow-md transition-all duration-300 cursor-pointer relative overflow-hidden"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -156,7 +156,7 @@ const DevelopersPage = () => {
                     <span className="relative">Partner With PropDeal</span>
                   </motion.button>
                   <motion.button
-                    onClick={() => openModal('partner-with-us')}
+                    onClick={() => openModal('partner-with-us', 'hero')}
                     className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 text-white font-semibold rounded-xl hover:bg-white/20 hover:scale-105 active:scale-100 active:bg-white/30 transition-all duration-300 border border-white/20 cursor-pointer"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -343,7 +343,7 @@ const DevelopersPage = () => {
             {/* Developer Card */}
             <AnimatedSection animation="fadeInUp" delay={0.2}>
               <motion.button
-                onClick={() => openModal('advertise-project')}
+                onClick={() => openModal('advertise-project', 'card')}
                 whileHover={{ y: -8 }}
                 className="bg-white rounded-2xl p-8 border border-slate-200 h-full shadow-sm hover:shadow-xl hover:border-amber-300 transition-all duration-300 group cursor-pointer w-full text-left"
               >
@@ -366,7 +366,7 @@ const DevelopersPage = () => {
             {/* Partner Card */}
             <AnimatedSection animation="fadeInUp" delay={0.3}>
               <motion.button
-                onClick={() => openModal('partner-with-us')}
+                onClick={() => openModal('partner-with-us', 'card')}
                 whileHover={{ y: -8 }}
                 className="bg-white rounded-2xl p-8 border border-slate-200 h-full shadow-sm hover:shadow-xl hover:border-green-300 transition-all duration-300 group cursor-pointer w-full text-left"
               >
@@ -611,7 +611,7 @@ const DevelopersPage = () => {
                     ))}
                   </ul>
                   <motion.button
-                    onClick={() => openModal('regional-partnership')}
+                    onClick={() => openModal('regional-partnership', 'section')}
                     className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-400 to-amber-600 text-slate-900 font-bold rounded-xl hover:shadow-lg hover:shadow-amber-500/30 hover:scale-105 active:scale-100 transition-all duration-300 cursor-pointer"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -941,7 +941,7 @@ const DevelopersPage = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <motion.button
-                onClick={() => openModal('advertise-project')}
+                onClick={() => openModal('advertise-project', 'cta')}
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-400 to-amber-600 text-slate-900 font-bold rounded-xl hover:shadow-lg hover:shadow-amber-500/30 hover:scale-105 active:scale-100 active:shadow-md transition-all duration-300 cursor-pointer"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -950,7 +950,7 @@ const DevelopersPage = () => {
                 Partner With PropDeal
               </motion.button>
               <motion.button
-                onClick={() => openModal('partner-with-us')}
+                onClick={() => openModal('partner-with-us', 'cta')}
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 text-white font-semibold rounded-xl hover:bg-white/20 hover:scale-105 active:scale-100 active:bg-white/30 transition-all duration-300 border border-white/20 cursor-pointer"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -1382,7 +1382,7 @@ const DevelopersPage = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <motion.button
-                onClick={() => openModal('developer-contact')}
+                onClick={() => openModal('developer-contact', 'section')}
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-slate-700 font-semibold rounded-xl hover:bg-slate-50 hover:shadow-lg border border-slate-200 transition-all duration-300 cursor-pointer"
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
@@ -1463,7 +1463,7 @@ const DevelopersPage = () => {
                 </li>
                 <li>
                   <motion.button
-                    onClick={() => openModal('advertise-project')}
+                    onClick={() => openModal('advertise-project', 'footer')}
                     className="text-slate-400 hover:text-amber-400 transition-colors cursor-pointer relative group"
                   >
                     <span>Advertise Project</span>
@@ -1472,7 +1472,7 @@ const DevelopersPage = () => {
                 </li>
                 <li>
                   <motion.button
-                    onClick={() => openModal('partner-with-us')}
+                    onClick={() => openModal('partner-with-us', 'footer')}
                     className="text-slate-400 hover:text-amber-400 transition-colors cursor-pointer relative group"
                   >
                     <span>Partner With Us</span>
